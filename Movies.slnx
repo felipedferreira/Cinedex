@@ -18,5 +18,7 @@
   <Folder Name="/src/Adapters/">
     <Project Path="src\Adapters\Movies.Persistance.Postgres\Movies.Persistance.Postgres.csproj" Type="Classic C#" />
   </Folder>
-  <Folder Name="/tests/" />
+  <Folder Name="/tests/">
+    <Project Path="tests\Movies.WebService.IntegrationTests\Movies.WebService.IntegrationTests.csproj" Type="Classic C#" />
+  </Folder>
 </Solution>

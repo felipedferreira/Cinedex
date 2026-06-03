@@ -2,11 +2,25 @@ using Scalar.AspNetCore;
 
 namespace Movies.WebService;
 
-public static class Program
+public class Program
 {
     public static async Task Main(string[] args)
     {
         var builder = WebApplication.CreateBuilder(args);
+
+        // Configure Kestrel server timeouts
+        builder.WebHost.ConfigureKestrel((context, options) =>
+        {
+            var timeoutSeconds = context.Configuration.GetValue("WebServer:RequestTimeoutSeconds", 30);
+
+            // RequestHeadersTimeout: Maximum time to receive complete HTTP request headers per request
+            // Protects against slowloris attacks where clients slowly send header data
+            options.Limits.RequestHeadersTimeout = TimeSpan.FromSeconds(timeoutSeconds);
+
+            // KeepAliveTimeout: Maximum time server waits for next request on idle connection
+            // Prevents idle connections from consuming server resources indefinitely
+            options.Limits.KeepAliveTimeout = TimeSpan.FromMinutes(1);
+        });
 
         // Add services to the container.
         // Learn more about configuring OpenAPI at https://aka.ms/aspnet/openapi

@@ -119,6 +119,55 @@ dotnet run --project src/Movies.WebService
 docker-compose up
 ```
 
+## Testing & Code Coverage
+
+### Running the tests
+Run the full test suite (all test projects in the solution):
+```bash
+dotnet test
+```
+
+### Generating a coverage report
+Coverage is **opt-in** — a plain `dotnet test` reports pass/fail only. To produce a
+browsable HTML coverage report, use the `coverage.ps1` script at the repo root:
+
+```bash
+# Windows
+.\coverage.ps1
+
+# Ubuntu / macOS (requires PowerShell 7+: `pwsh`)
+pwsh ./coverage.ps1
+```
+
+Add the `-Open` switch to launch the report in your browser when it finishes
+(`.\coverage.ps1 -Open`).
+
+The script:
+1. Clears stale results from previous runs.
+2. Runs every test project with cross-platform coverage collection (`--collect:"XPlat Code Coverage"`).
+3. Merges all results into one HTML report, excluding auto-generated OpenAPI code so the
+   percentage reflects hand-written code.
+4. Prints a text summary and writes the full report to `CoverageReport/index.html`.
+
+> If tests fail, the report is **not** generated.
+
+### Prerequisites
+| Tool | Notes |
+|------|-------|
+| .NET SDK 10 | Required to build and test |
+| PowerShell 7+ (`pwsh`) | Only needed on Ubuntu/macOS; Windows can use built-in PowerShell |
+| `dotnet-reportgenerator-globaltool` | Install once: `dotnet tool install -g dotnet-reportgenerator-globaltool` |
+
+> On Ubuntu/macOS, ensure `~/.dotnet/tools` is on your `PATH` so `reportgenerator` is found.
+
+### Reading the report
+Coverage measures the union of all assemblies referenced by the test projects. As tests are
+added for the domain and application layers, those assemblies appear in the report
+automatically. New test projects are picked up with no script changes, provided they are
+added to the solution and reference the `coverlet.collector` package.
+
+> Both `TestResults/` and `CoverageReport/` are git-ignored build artifacts.
+
 ## Design Benefits
 
 - **Testability:** Business logic in Domain and Application can be tested without databases

@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="utf-8"?>
+<RunSettings>
+  <DataCollectionRunSettings>
+    <DataCollectors>
+      <DataCollector friendlyName="XPlat Code Coverage">
+        <Configuration>
+          <Format>cobertura</Format>
+          <!-- Exclude source-generator output (e.g. OpenAPI XmlComment support) from
+               coverage. Such code carries [GeneratedCode] and lives in *.generated.cs
+               files that are regenerated between builds, so leaving them in produces
+               noisy "file does not exist (any more)" warnings and a misleading %.
+               NOTE: do NOT exclude CompilerGeneratedAttribute - async methods compile to
+               [CompilerGenerated] state machines, so excluding it drops real code. -->
+          <ExcludeByAttribute>GeneratedCodeAttribute,ExcludeFromCodeCoverageAttribute</ExcludeByAttribute>
+          <ExcludeByFile>**/*.generated.cs</ExcludeByFile>
+        </Configuration>
+      </DataCollector>
+    </DataCollectors>
+  </DataCollectionRunSettings>
+</RunSettings>

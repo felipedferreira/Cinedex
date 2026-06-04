@@ -155,6 +155,12 @@ csharp_using_directive_placement = outside_namespace:silent
 # SA1402: File may only contain a single type
 dotnet_diagnostic.SA1402.severity = error
 
+# IDE0005: Remove unnecessary imports
+dotnet_diagnostic.IDE0005.severity = error
+
+# CS1591: Missing XML comment for publicly visible type or member
+dotnet_diagnostic.CS1591.severity = none
+
 # All other StyleCop rules disabled (suppressed)
 dotnet_diagnostic.SA0001.severity = none
 dotnet_diagnostic.SA1009.severity = none

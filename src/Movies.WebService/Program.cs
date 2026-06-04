@@ -1,5 +1,7 @@
 using Scalar.AspNetCore;
 
+using Serilog;
+
 namespace Movies.WebService;
 
 public class Program
@@ -7,6 +9,14 @@ public class Program
     public static async Task Main(string[] args)
     {
         var builder = WebApplication.CreateBuilder(args);
+
+        // Configure Serilog
+        builder.Host.UseSerilog((context, configuration) =>
+        {
+            configuration
+                .MinimumLevel.Information()
+                .WriteTo.Console();
+        });
 
         // Configure Kestrel server timeouts
         builder.WebHost.ConfigureKestrel((context, options) =>
@@ -27,6 +37,9 @@ public class Program
         builder.Services.AddOpenApi();
 
         var app = builder.Build();
+
+        // Wire up Serilog request logging middleware
+        app.UseSerilogRequestLogging();
 
         // Configure the HTTP request pipeline.
         if (app.Environment.IsDevelopment())

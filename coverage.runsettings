@@ -12,7 +12,7 @@
                NOTE: do NOT exclude CompilerGeneratedAttribute - async methods compile to
                [CompilerGenerated] state machines, so excluding it drops real code. -->
           <ExcludeByAttribute>GeneratedCodeAttribute,ExcludeFromCodeCoverageAttribute</ExcludeByAttribute>
-          <ExcludeByFile>**/*.generated.cs</ExcludeByFile>
+          <ExcludeByFile>**/*.generated.cs,**/obj/**</ExcludeByFile>
         </Configuration>
       </DataCollector>
     </DataCollectors>

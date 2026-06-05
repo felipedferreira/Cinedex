@@ -1,6 +1,8 @@
 using System.Diagnostics;
 using System.Text.Json;
 
+using Microsoft.AspNetCore.Mvc;
+
 namespace Movies.WebService.Middleware;
 
 public class ExceptionHandlingMiddleware(RequestDelegate next, ILogger<ExceptionHandlingMiddleware> logger)
@@ -17,25 +19,24 @@ public class ExceptionHandlingMiddleware(RequestDelegate next, ILogger<Exception
         }
     }
 
-    private static async Task HandleExceptionAsync(HttpContext context, Exception exception, ILogger<ExceptionHandlingMiddleware> logger)
+    private static Task HandleExceptionAsync(HttpContext context, Exception exception, ILogger<ExceptionHandlingMiddleware> logger)
     {
         var traceId = Activity.Current?.Id ?? context.TraceIdentifier;
 
         context.Response.ContentType = "application/problem+json";
         context.Response.StatusCode = StatusCodes.Status500InternalServerError;
 
-        var response = new
+        var problemDetails = new ProblemDetails
         {
-            type = "https://httpwg.org/specs/rfc7231.html#status.500",
-            title = "Internal Server Error",
-            status = StatusCodes.Status500InternalServerError,
-            detail = "An unhandled exception occurred.",
-            instance = context.Request.Path.Value,
-            extensions = new { traceId, },
+            Type = "https://httpwg.org/specs/rfc7231.html#status.500",
+            Title = "Internal Server Error",
+            Status = StatusCodes.Status500InternalServerError,
+            Detail = "An unhandled exception occurred.",
+            Instance = context.Request.Path,
         };
 
-        var jsonOptions = new JsonSerializerOptions { PropertyNamingPolicy = JsonNamingPolicy.CamelCase };
-        var json = JsonSerializer.Serialize(response, jsonOptions);
-        await context.Response.WriteAsync(json);
+        problemDetails.Extensions["traceId"] = traceId;
+
+        return context.Response.WriteAsJsonAsync(problemDetails);
     }
 }

@@ -1,5 +1,5 @@
+using Movies.WebService.Middleware;
 using Scalar.AspNetCore;
-
 using Serilog;
 
 namespace Movies.WebService;
@@ -11,7 +11,7 @@ public class Program
         var builder = WebApplication.CreateBuilder(args);
 
         // Configure Serilog
-        builder.Host.UseSerilog((context, configuration) =>
+        builder.Host.UseSerilog((_, configuration) =>
         {
             configuration
                 .MinimumLevel.Information()
@@ -35,8 +35,18 @@ public class Program
         // Add services to the container.
         // Learn more about configuring OpenAPI at https://aka.ms/aspnet/openapi
         builder.Services.AddOpenApi();
+        builder.Services.AddProblemDetails();
 
         var app = builder.Build();
+
+        // Handle unhandled exceptions and convert them to Problem Details (RFC 7807)
+        app.UseMiddleware<ExceptionHandlingMiddleware>();
+
+        // Capture or generate correlation ID for request tracking
+        app.UseMiddleware<CorrelationIdMiddleware>();
+
+        // Convert HTTP status codes to Problem Details responses
+        app.UseStatusCodePages();
 
         // Wire up Serilog request logging middleware
         app.UseSerilogRequestLogging();
@@ -45,7 +55,13 @@ public class Program
         if (app.Environment.IsDevelopment())
         {
             app.MapOpenApi();
-            app.MapScalarApiReference();
+            app.MapScalarApiReference(options =>
+            {
+                options.EnabledClients = [ScalarClient.HttpClient, ScalarClient.Axios, ScalarClient.Fetch];
+                options.EnabledTargets = [ScalarTarget.CSharp, ScalarTarget.JavaScript];
+
+                options.Theme = ScalarTheme.Solarized;
+            });
         }
 
         app.UseHttpsRedirection();

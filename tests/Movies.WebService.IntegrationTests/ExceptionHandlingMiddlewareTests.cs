@@ -13,11 +13,11 @@ public class ExceptionHandlingMiddlewareTests : IClassFixture<WebApplicationFixt
     }
 
     [Fact]
-    public async Task TestException_ReturnsOK()
+    public async Task TestException_ReturnsInternalServerError()
     {
         var response = await this.fixture.Client.GetAsync("/test-exception");
 
-        Assert.Equal(HttpStatusCode.OK, response.StatusCode);
+        Assert.Equal(HttpStatusCode.InternalServerError, response.StatusCode);
     }
 
     [Fact]

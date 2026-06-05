@@ -22,6 +22,17 @@ indent_size = 2
 # C# files
 [*.cs]
 
+#### Blank Lines (ReSharper) ####
+
+# Enforce blank lines around auto-properties
+resharper_blank_lines_around_auto_property = 1
+
+# Enforce blank lines around properties
+resharper_blank_lines_around_property = 1
+
+# Enforce blank lines after block statements
+resharper_blank_lines_after_block_statements = 1
+
 #### Core EditorConfig Options ####
 
 # Indentation and spacing

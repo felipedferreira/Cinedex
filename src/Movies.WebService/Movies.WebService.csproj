@@ -20,6 +20,7 @@
     <ItemGroup>
       <ProjectReference Include="..\Adapters\Movies.Persistance.Postgres\Movies.Persistance.Postgres.csproj" />
       <ProjectReference Include="..\Movies.Application\Movies.Application.csproj" />
+      <ProjectReference Include="..\Movies.WebService.Contracts\Movies.WebService.Contracts.csproj" />
     </ItemGroup>
 
 </Project>

@@ -21,8 +21,6 @@ public class ExceptionHandlingMiddleware(RequestDelegate next, ILogger<Exception
     {
         var traceId = Activity.Current?.Id ?? context.TraceIdentifier;
 
-        logger.LogError(exception, "An unhandled exception occurred (TraceId: {TraceId})", traceId);
-
         context.Response.ContentType = "application/problem+json";
         context.Response.StatusCode = StatusCodes.Status500InternalServerError;
 

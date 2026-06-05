@@ -26,4 +26,4 @@ jobs:
 
     - name: Run tests
       run: dotnet test --no-build --verbosity normal --configuration Release
-      continue-on-error: true
+      continue-on-error: false

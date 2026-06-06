@@ -31,11 +31,10 @@ public class ExceptionHandlingMiddleware(RequestDelegate next, ILogger<Exception
             status = StatusCodes.Status500InternalServerError,
             detail = "An unhandled exception occurred.",
             instance = context.Request.Path.Value,
-            extensions = new { traceId, },
+            extensions = new { traceId },
         };
 
-        var jsonOptions = new JsonSerializerOptions { PropertyNamingPolicy = JsonNamingPolicy.CamelCase };
-        var json = JsonSerializer.Serialize(response, jsonOptions);
+        var json = JsonSerializer.Serialize(response);
         await context.Response.WriteAsync(json);
     }
 }

@@ -1,6 +1,31 @@
-# Movies Project Architecture
+# Movies Project
 
-This document explains the architecture and relationships between the projects in the Movies solution, which follows **Clean Architecture** (Hexagonal Architecture) principles.
+[![Build and Test](https://github.com/felipedferreira/Movies/actions/workflows/build-and-test.yml/badge.svg)](https://github.com/felipedferreira/Movies/actions/workflows/build-and-test.yml)
+
+A clean architecture .NET solution for managing movies with a focus on separation of concerns, testability, and maintainability.
+
+## 📚 Documentation
+
+- **[Architecture Guide](README.md)** (this file) - Project structure and design patterns
+- **[Changelog](CHANGELOG.md)** - Version history and release notes
+- **[Packages](src/Packages/Movies.WebService.Contracts/README.md)** - NuGet package documentation
+  - Movies.WebService.Contracts - API contracts and DTOs
+
+## 🚀 Quick Start
+
+```bash
+# Build the solution
+dotnet build
+
+# Run tests
+dotnet test
+
+# Run the web service
+dotnet run --project src/Applications/Movies.WebService
+
+# Generate coverage report
+.\coverage.ps1 -Open
+```
 
 ## Architecture Overview
 

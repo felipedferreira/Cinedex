@@ -1,7 +1,7 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 
     <ItemGroup>
-      <ProjectReference Include="..\..\Movies.Application.Abstractions\Movies.Application.Abstractions.csproj" />
+      <ProjectReference Include="..\..\Core\Movies.Application.Abstractions\Movies.Application.Abstractions.csproj" />
     </ItemGroup>
 
 </Project>

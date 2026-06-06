@@ -21,6 +21,12 @@
     <EnableNETAnalyzers>true</EnableNETAnalyzers>
     <AnalysisLevel>latest</AnalysisLevel>
     <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
+
+    <!-- Documentation -->
+    <GenerateDocumentationFile>true</GenerateDocumentationFile>
+
+    <!-- Default: projects are not packable unless explicitly set -->
+    <IsPackable Condition="'$(IsPackable)' == ''">false</IsPackable>
   </PropertyGroup>
 
   <!-- NuGet package versions (centralized) -->
@@ -36,5 +42,18 @@
   <ItemGroup>
     <PackageReference Include="StyleCop.Analyzers" />
   </ItemGroup>
+
+  <!-- NuGet Package Properties (when IsPackable = true) -->
+  <PropertyGroup Condition="'$(IsPackable)' == 'true'">
+    <!-- Symbol packages for debugging -->
+    <IncludeSymbols>true</IncludeSymbols>
+    <SymbolPackageFormat>snupkg</SymbolPackageFormat>
+
+    <!-- Repository information for packages -->
+    <RepositoryType>git</RepositoryType>
+
+    <!-- License -->
+    <LicenseExpression>MIT</LicenseExpression>
+  </PropertyGroup>
 
 </Project>

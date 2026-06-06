@@ -1,14 +1,7 @@
 <Solution>
-  <Folder Name="/docs/">
-    <File Path="CHANGELOG.md" />
-    <File Path="CONTRIBUTING.md" />
-    <File Path="README.md" />
-  </Folder>
-  <Folder Name="/lib/">
-    <Project Path="src\Packages\Movies.WebService.Contracts\Movies.WebService.Contracts.csproj" Type="Classic C#" />
-  </Folder>
-  <Folder Name="/misc/">
+  <Folder Name="/Solution Items/">
     <File Path="compose.yaml" />
+    <File Path="README.md" />
     <File Path=".gitignore" />
     <File Path="Directory.Build.props" />
     <File Path="Directory.Packages.props" />
@@ -16,17 +9,18 @@
     <File Path="global.json" />
     <File Path=".github\workflows\build-and-test.yml" />
     <File Path="coverage.runsettings" />
+    <File Path="CHANGELOG.md" />
+    <File Path="CONTRIBUTING.md" />
   </Folder>
   <Folder Name="/src/">
-    <Project Path="src\Core\Movies.Application.Abstractions\Movies.Application.Abstractions.csproj" Type="Classic C#" />
-    <Project Path="src\Core\Movies.Application\Movies.Application.csproj" Type="Classic C#" />
-    <Project Path="src\Core\Movies.Domain\Movies.Domain.csproj" Type="Classic C#" />
+    <Project Path="src\Movies.Application.Abstractions\Movies.Application.Abstractions.csproj" Type="Classic C#" />
+    <Project Path="src\Movies.Application\Movies.Application.csproj" Type="Classic C#" />
+    <Project Path="src\Movies.Domain\Movies.Domain.csproj" Type="Classic C#" />
+    <Project Path="src\Movies.WebService.Contracts\Movies.WebService.Contracts.csproj" Type="Classic C#" />
+    <Project Path="src\Movies.WebService\Movies.WebService.csproj" Type="Classic C#" />
   </Folder>
   <Folder Name="/src/Adapters/">
     <Project Path="src\Adapters\Movies.Persistance.Postgres\Movies.Persistance.Postgres.csproj" Type="Classic C#" />
-  </Folder>
-  <Folder Name="/src/Presentation/">
-    <Project Path="src\Applications\Movies.WebService\Movies.WebService.csproj" Type="Classic C#" />
   </Folder>
   <Folder Name="/tests/">
     <Project Path="tests\Movies.WebService.IntegrationTests\Movies.WebService.IntegrationTests.csproj" Type="Classic C#" />

@@ -1,5 +1,5 @@
 <Solution>
-  <Folder Name="/Solution Items/">
+  <Folder Name="/etc/">
     <File Path="compose.yaml" />
     <File Path="README.md" />
     <File Path=".gitignore" />
@@ -12,19 +12,20 @@
     <File Path="CHANGELOG.md" />
     <File Path="CONTRIBUTING.md" />
   </Folder>
-  <Folder Name="/src/Core/">
-    <Project Path="src\Core\Movies.Domain\Movies.Domain.csproj" Type="Classic C#" />
-    <Project Path="src\Core\Movies.Application.Abstractions\Movies.Application.Abstractions.csproj" Type="Classic C#" />
-    <Project Path="src\Core\Movies.Application\Movies.Application.csproj" Type="Classic C#" />
-  </Folder>
-  <Folder Name="/src/Packages/">
+  <Folder Name="/packages/">
     <Project Path="src\Movies.WebService.Contracts\Movies.WebService.Contracts.csproj" Type="Classic C#" />
   </Folder>
-  <Folder Name="/src/Applications/">
+  <Folder Name="/src/" />
+  <Folder Name="/src/1 - Applications/">
     <Project Path="src\Applications\Movies.WebService\Movies.WebService.csproj" Type="Classic C#" />
   </Folder>
-  <Folder Name="/src/Adapters/">
+  <Folder Name="/src/2 - Adapters/">
     <Project Path="src\Adapters\Movies.Persistance.Postgres\Movies.Persistance.Postgres.csproj" Type="Classic C#" />
+  </Folder>
+  <Folder Name="/src/3 - Core/">
+    <Project Path="src\Core\Movies.Application.Abstractions\Movies.Application.Abstractions.csproj" Type="Classic C#" />
+    <Project Path="src\Core\Movies.Application\Movies.Application.csproj" Type="Classic C#" />
+    <Project Path="src\Core\Movies.Domain\Movies.Domain.csproj" Type="Classic C#" />
   </Folder>
   <Folder Name="/tests/">
     <Project Path="tests\Movies.WebService.IntegrationTests\Movies.WebService.IntegrationTests.csproj" Type="Classic C#" />

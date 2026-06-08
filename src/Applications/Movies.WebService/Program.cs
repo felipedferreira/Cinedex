@@ -63,6 +63,10 @@ public class Program
                 options.EnabledTargets = [ScalarTarget.CSharp, ScalarTarget.JavaScript];
 
                 options.Theme = ScalarTheme.Solarized;
+                
+                options.Favicon = "/favicon.ico";
+                options.EndpointPathPrefix = "/api-docs/{documentName}";
+                options.Title = "API Documentation - {documentName}";
             });
         }
 

@@ -2,7 +2,40 @@
 
 [![Build and Test](https://github.com/felipedferreira/Movies/actions/workflows/build-and-test.yml/badge.svg)](https://github.com/felipedferreira/Movies/actions/workflows/build-and-test.yml)
 
-A clean architecture .NET solution for managing movies with a focus on separation of concerns, testability, and maintainability.
+A clean architecture .NET solution for managing movies, crew members, and their roles — inspired by IMDB. Built with a focus on separation of concerns, testability, and maintainability.
+
+## 🗄️ Database
+
+This project uses **PostgreSQL** via **Entity Framework Core 10**.
+
+### Prerequisites
+- PostgreSQL running locally (or via Docker: `docker-compose up`)
+- Connection string configured in `appsettings.json`:
+  ```json
+  "ConnectionStrings": {
+    "DefaultConnection": "Host=localhost;Database=movies;Username=postgres;Password=postgres"
+  }
+  ```
+
+### Migrations
+
+Run from the solution root, specifying the persistence project and the WebService as the startup project:
+
+```bash
+# Add a new migration
+dotnet ef migrations add <MigrationName> \
+  --project src/Adapters/Movies.Persistance.Postgres \
+  --startup-project src/Applications/Movies.WebService
+
+# Apply migrations to the database
+dotnet ef database update \
+  --project src/Adapters/Movies.Persistance.Postgres \
+  --startup-project src/Applications/Movies.WebService
+```
+
+> **Domain models** live in `Movies.Domain`. EF entity configurations use **Fluent API** in `Movies.Persistance.Postgres`, keeping the domain layer free of any EF dependencies.
+
+---
 
 ## 📚 Documentation
 
@@ -64,9 +97,9 @@ The solution is organized into layers that enforce separation of concerns and de
 **Purpose:** Core business logic and domain entities  
 **Dependencies:** None  
 **Responsibilities:**
-- Domain entities and value objects
+- Domain entities — `Movie`, `CrewMember`, `Role`, etc.
 - Business rules and invariants
-- No external dependencies (database, web frameworks, etc.)
+- No external dependencies (no EF, no web frameworks)
 
 ### 2. **Movies.Application.Abstractions** (Contract Layer)
 **Purpose:** Defines interfaces and contracts for the application layer  
@@ -90,10 +123,10 @@ The solution is organized into layers that enforce separation of concerns and de
 **Purpose:** Implements data persistence using PostgreSQL  
 **Dependencies:** `Movies.Application.Abstractions`  
 **Responsibilities:**
+- `MoviesDbContext` — EF Core DbContext with Fluent API entity configurations
 - Concrete repository implementations
-- Database access and ORM integration
-- Adapts PostgreSQL to the repository contracts
 - Database migrations and schema management
+- Adapts PostgreSQL to the repository contracts defined in `Movies.Application.Abstractions`
 - *Note: Listed under `Adapters/` to reflect that it's an interchangeable persistence adapter*
 
 ### 5. **Movies.WebService** (Presentation/Entry Point Layer)

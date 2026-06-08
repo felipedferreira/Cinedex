@@ -7,6 +7,37 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+- **Docker Compose configuration** - Complete multi-container setup with PostgreSQL:
+  - `compose.yaml` with web service and PostgreSQL 17 Alpine
+  - Health checks for database readiness before application startup
+  - Environment variables for database configuration
+
+### Changed
+- **Dockerfile** - Fixed build paths to match actual project structure:
+  - Updated COPY paths from `src/Movies.WebService/` to `src/Applications/Movies.WebService/`
+  - Added copying of `Directory.Build.props` and `Directory.Packages.props` before restore
+  - Added explicit COPY steps for domain and persistence layer dependencies
+
+### Fixed
+- **Docker build** - Corrected path references to resolve NuGet restore failures
+
+---
+
+## [0.5.0] - Entity Framework Core with PostgreSQL
+
+### Added
+- **Entity Framework Core 10** - ORM integration using `Npgsql.EntityFrameworkCore.PostgreSQL`
+- **`MoviesDbContext`** - EF Core `DbContext` in `Movies.Persistance.Postgres`; uses Fluent API configuration via `ApplyConfigurationsFromAssembly` to keep domain models free of EF annotations
+- **`MoviesDbContextFactory`** - `IDesignTimeDbContextFactory` implementation enabling `dotnet ef` CLI tools to run without starting the full application
+- **Database connection string** - `DefaultConnection` added to `appsettings.json` with a default local PostgreSQL configuration
+
+### Changed
+- **`Program.cs`** - Registers `MoviesDbContext` via `AddDbContext<MoviesDbContext>` wired to `ConnectionStrings:DefaultConnection`
+- **`Directory.Packages.props`** - Centralized versions for `Microsoft.EntityFrameworkCore.Design` and `Npgsql.EntityFrameworkCore.PostgreSQL`
+- **`Movies.Persistance.Postgres.csproj`** - Added EF Core and Npgsql package references
+- **`Movies.WebService.csproj`** - Added `Microsoft.EntityFrameworkCore.Design` (required as the migrations startup project)
+
 ---
 
 ## [0.4.1] - Exception Handling Tests and Formatting Rules

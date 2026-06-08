@@ -1,6 +1,6 @@
 using Serilog.Context;
 
-namespace Movies.WebService.Middleware;
+namespace Movies.WebService;
 
 public class CorrelationIdMiddleware(RequestDelegate next, ILogger<CorrelationIdMiddleware> logger)
 {

@@ -1,13 +1,36 @@
 ﻿services:
+  postgres:
+    image: postgres:17-alpine
+    container_name: movies-db
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+      POSTGRES_DB: movies
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
   movies.webservice:
     image: movies.webservice
     build:
       context: .
-      dockerfile: Movies.WebService/Dockerfile
+      dockerfile: src/Applications/Movies.WebService/Dockerfile
+    container_name: movies-web
+    ports:
+      - "8080:8080"
+      - "8081:8081"
+    depends_on:
+      postgres:
+        condition: service_healthy
+    environment:
+      ConnectionStrings__DefaultConnection: "Host=postgres;Database=movies;Username=postgres;Password=postgres"
 
-  movies.webservice-1:
-    image: movies.webservice-1
-    build:
-      context: .
-      dockerfile: src/Movies.WebService/Dockerfile
+volumes:
+  postgres_data:
 

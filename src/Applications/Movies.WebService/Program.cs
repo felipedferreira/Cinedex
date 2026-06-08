@@ -1,4 +1,5 @@
-using Movies.WebService.Middleware;
+using Microsoft.EntityFrameworkCore;
+using Movies.Persistance.Postgres;
 
 using Scalar.AspNetCore;
 
@@ -33,6 +34,10 @@ public class Program
             // Prevents idle connections from consuming server resources indefinitely
             options.Limits.KeepAliveTimeout = TimeSpan.FromMinutes(1);
         });
+
+        // Register MoviesDbContext with PostgreSQL
+        builder.Services.AddDbContext<MoviesDbContext>(options =>
+            options.UseNpgsql(builder.Configuration.GetConnectionString("DefaultConnection")));
 
         // Add services to the container.
         // Learn more about configuring OpenAPI at https://aka.ms/aspnet/openapi

@@ -3,8 +3,8 @@
     image: postgres:17-alpine
     container_name: movies-db
     environment:
-      POSTGRES_USER: postgres
-      POSTGRES_PASSWORD: postgres
+      POSTGRES_USER: movies_rw
+      POSTGRES_PASSWORD: P@ssw0rd!Secure#2024
       POSTGRES_DB: movies
     ports:
       - "5432:5432"
@@ -29,7 +29,10 @@
       postgres:
         condition: service_healthy
     environment:
-      ConnectionStrings__DefaultConnection: "Host=postgres;Database=movies;Username=postgres;Password=postgres"
+      ASPNETCORE_ENVIRONMENT: Production
+      Features__ApiDocumentationEnabled: "true"
+      ConnectionStrings__DefaultConnection: "Host=postgres;Database=movies;Username=movies_rw;Password=P@ssw0rd!Secure#2024"
+      Kestrel__Endpoints__Http__Url: "http://0:0:0:0:8080"
 
 volumes:
   postgres_data:

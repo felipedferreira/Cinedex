@@ -1,8 +1,6 @@
 using Microsoft.EntityFrameworkCore;
 using Movies.Persistance.Postgres;
-
 using Scalar.AspNetCore;
-
 using Serilog;
 
 namespace Movies.WebService;
@@ -58,8 +56,10 @@ public class Program
         // Wire up Serilog request logging middleware
         app.UseSerilogRequestLogging();
 
-        // Configure the HTTP request pipeline.
-        if (app.Environment.IsDevelopment())
+        // Configure the HTTP request pipeline
+        // API documentation is enabled via Features:ApiDocumentationEnabled configuration
+        var apiDocumentationEnabled = app.Configuration.GetValue("Features:ApiDocumentationEnabled", false);
+        if (apiDocumentationEnabled)
         {
             app.MapOpenApi();
             app.MapScalarApiReference(options =>

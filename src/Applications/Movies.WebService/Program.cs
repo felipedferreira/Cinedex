@@ -1,9 +1,7 @@
 using Microsoft.EntityFrameworkCore;
 
 using Movies.Persistance.Postgres;
-
 using Scalar.AspNetCore;
-
 using Serilog;
 
 namespace Movies.WebService;

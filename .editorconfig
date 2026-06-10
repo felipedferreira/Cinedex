@@ -46,7 +46,7 @@ insert_final_newline = false
 [*.{cs,vb}]
 
 # Organize usings
-dotnet_separate_import_directive_groups = true
+dotnet_separate_import_directive_groups = false
 dotnet_sort_system_directives_first = true
 file_header_template = unset
 
@@ -168,6 +168,9 @@ dotnet_diagnostic.SA1402.severity = error
 
 # IDE0005: Remove unnecessary imports
 dotnet_diagnostic.IDE0005.severity = error
+
+# IDE0055: Fix formatting
+dotnet_diagnostic.IDE0055.severity = error
 
 # CS1591: Missing XML comment for publicly visible type or member
 dotnet_diagnostic.CS1591.severity = none
@@ -418,7 +421,23 @@ dotnet_naming_style.camelcase.word_separator =
 dotnet_naming_style.camelcase.capitalization = camel_case
 
 dotnet_naming_style.s_camelcase.required_prefix = s_
-dotnet_naming_style.s_camelcase.required_suffix = 
-dotnet_naming_style.s_camelcase.word_separator = 
+dotnet_naming_style.s_camelcase.required_suffix =
+dotnet_naming_style.s_camelcase.word_separator =
 dotnet_naming_style.s_camelcase.capitalization = camel_case
 
+#### EF Core Generated Code - Exclude from Strict Rules ####
+[**/Migrations/*.cs]
+
+# Disable ALL style analyzer rules for EF-generated migrations
+dotnet_diagnostic.IDE0005.severity = none
+dotnet_diagnostic.IDE0055.severity = none
+dotnet_diagnostic.SA1402.severity = none
+dotnet_diagnostic.SA1516.severity = none
+dotnet_diagnostic.SA1413.severity = none
+resharper_blank_lines_between_using_groups = 0
+
+[src/Adapters/Movies.Persistance.Postgres/MoviesDbContext.cs]
+dotnet_diagnostic.IDE0055.severity = none
+
+[src/Adapters/Movies.Persistance.Postgres/Configurations/MovieConfiguration.cs]
+dotnet_diagnostic.IDE0055.severity = none

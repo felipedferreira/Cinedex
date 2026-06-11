@@ -6,6 +6,7 @@
     </PropertyGroup>
 
     <ItemGroup>
+        <PackageReference Include="FastEndpoints" />
         <PackageReference Include="Microsoft.AspNetCore.OpenApi" />
         <PackageReference Include="Microsoft.EntityFrameworkCore.Design">
             <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
@@ -24,6 +25,7 @@
     <ItemGroup>
       <ProjectReference Include="..\..\Adapters\Movies.Persistance.Postgres\Movies.Persistance.Postgres.csproj" />
       <ProjectReference Include="..\..\Core\Movies.Application\Movies.Application.csproj" />
+      <ProjectReference Include="..\..\Libraries\Movies.WebService.Contracts\Movies.WebService.Contracts.csproj" />
     </ItemGroup>
 
 </Project>

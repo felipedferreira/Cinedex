@@ -8,12 +8,26 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 ### Added
+- **Movies CRUD API** - First real resource, implemented with [FastEndpoints](https://fast-endpoints.com/) using the REPR (Request-Endpoint-Response) pattern — one class per endpoint under `Endpoints/Movies/`:
+  - `GET /api/movies`, `GET /api/movies/{id}`, `POST /api/movies`, `PUT /api/movies/{id}`, `DELETE /api/movies/{id}`
+  - `MovieMappings` - single translation point between `Contracts` DTOs and the `Domain.Movie` model
+- **Application use-case layer** - Fills the previously empty `Movies.Application` project:
+  - `IMovieService` - application use-case port consumed by the web layer
+  - `IMovieRepository` - persistence port
+  - `MovieService` - implements `IMovieService`, orchestrating via `IMovieRepository`
+  - `AddApplication()` DI registration extension
+- **`MovieRepository`** - EF Core implementation of `IMovieRepository` in `Movies.Persistance.Postgres` (uses `ExecuteUpdateAsync`/`ExecuteDeleteAsync`)
+- **`AddPersistence(connectionString)`** - DI extension that now owns the `MoviesDbContext` and repository registrations
 - **Docker Compose configuration** - Complete multi-container setup with PostgreSQL:
   - `compose.yaml` with web service and PostgreSQL 17 Alpine
   - Health checks for database readiness before application startup
   - Environment variables for database configuration
 
 ### Changed
+- **`Program.cs`** - Registers `AddApplication()` + `AddPersistence()` and `AddFastEndpoints()`/`UseFastEndpoints()`; serves the app under the `/api` base path via `UsePathBase`; `MoviesDbContext` registration moved out into `AddPersistence`
+- **`Directory.Packages.props`** - Centralized versions for `FastEndpoints` and `Microsoft.Extensions.DependencyInjection.Abstractions`
+- **`Movies.WebService.csproj`** - Added `FastEndpoints` package reference and a project reference to `Movies.WebService.Contracts`
+- **`Movies.Application.csproj`** - Added `Microsoft.Extensions.DependencyInjection.Abstractions` (for the `AddApplication` extension)
 - **Dockerfile** - Fixed build paths to match actual project structure:
   - Updated COPY paths from `src/Movies.WebService/` to `src/Applications/Movies.WebService/`
   - Added copying of `Directory.Build.props` and `Directory.Packages.props` before restore

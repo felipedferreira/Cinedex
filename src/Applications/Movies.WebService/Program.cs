@@ -1,5 +1,5 @@
-using Microsoft.EntityFrameworkCore;
-
+using FastEndpoints;
+using Movies.Application;
 using Movies.Persistance.Postgres;
 using Scalar.AspNetCore;
 using Serilog;
@@ -34,9 +34,15 @@ public class Program
             options.Limits.KeepAliveTimeout = TimeSpan.FromMinutes(1);
         });
 
-        // Register MoviesDbContext with PostgreSQL
-        builder.Services.AddDbContext<MoviesDbContext>(options =>
-            options.UseNpgsql(builder.Configuration.GetConnectionString("DefaultConnection")));
+        // Register application use cases and the PostgreSQL persistence adapter
+        var connectionString = builder.Configuration.GetConnectionString("DefaultConnection") ?? string.Empty;
+
+        builder.Services
+            .AddApplication()
+            .AddPersistence(connectionString);
+
+        // Register FastEndpoints (discovers endpoint classes in this assembly)
+        builder.Services.AddFastEndpoints();
 
         // Add services to the container.
         // Learn more about configuring OpenAPI at https://aka.ms/aspnet/openapi
@@ -61,6 +67,9 @@ public class Program
                 app.Logger.LogError("Unable to connect to the database.");
             }
         }
+
+        // Serve the application under the "/api" base path
+        app.UsePathBase("/api");
 
         // Handle unhandled exceptions and convert them to Problem Details (RFC 7807)
         app.UseMiddleware<ExceptionHandlingMiddleware>();
@@ -94,6 +103,9 @@ public class Program
         app.UseHttpsRedirection();
         app.UseDefaultFiles();
         app.UseStaticFiles();
+
+        // Map FastEndpoints (Movies, ...)
+        app.UseFastEndpoints();
 
         var summaries = new[]
         {

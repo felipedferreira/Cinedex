@@ -1,0 +1,26 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <!-- Mark as packable (triggers conditional properties in Directory.Build.props) -->
+    <IsPackable>true</IsPackable>
+
+    <!-- NuGet Package Metadata (package-specific) -->
+    <PackageId>Movies.WebService.Contracts</PackageId>
+    <Title>Movies Web Service Contracts</Title>
+    <Authors>Felipe Ferreira</Authors>
+    <Description>DTOs and contract classes for the Movies Web Service API</Description>
+    <ProjectUrl>https://github.com/felipedferreira/Movies</ProjectUrl>
+    <RepositoryUrl>https://github.com/felipedferreira/Movies</RepositoryUrl>
+    <PackageTags>movies;api;contracts;dto</PackageTags>
+    <PackageReadmeFile>README.md</PackageReadmeFile>
+  </PropertyGroup>
+
+  <!-- Include README in package -->
+  <ItemGroup>
+    <None Include="README.md" Pack="true" PackagePath="\" />
+  </ItemGroup>
+
+  <!-- Exclude build-only analyzers from package dependencies -->
+  <ItemGroup>
+    <PackageReference Update="StyleCop.Analyzers" PrivateAssets="all" />
+  </ItemGroup>
+</Project>

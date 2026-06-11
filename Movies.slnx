@@ -13,8 +13,8 @@
     <File Path="CONTRIBUTING.md" />
     <File Path="LICENSE" />
   </Folder>
-  <Folder Name="/packages/">
-    <Project Path="src\Packages\Movies.WebService.Contracts\Movies.WebService.Contracts.csproj" Type="Classic C#" />
+  <Folder Name="/libraries/">
+    <Project Path="src\Libraries\Movies.WebService.Contracts\Movies.WebService.Contracts.csproj" Type="Classic C#" />
   </Folder>
   <Folder Name="/src/" />
   <Folder Name="/src/1 - Applications/">

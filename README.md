@@ -61,7 +61,7 @@ dotnet ef database update \
 
 - **[Architecture Guide](README.md)** (this file) - Project structure and design patterns
 - **[Changelog](CHANGELOG.md)** - Version history and release notes
-- **[Packages](src/Packages/Movies.WebService.Contracts/README.md)** - NuGet package documentation
+- **[Libraries](src/Libraries/Movies.WebService.Contracts/README.md)** - NuGet package documentation
   - Movies.WebService.Contracts - API contracts and DTOs
 
 ## 🚀 Quick Start

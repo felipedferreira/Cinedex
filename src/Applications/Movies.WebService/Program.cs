@@ -91,6 +91,8 @@ public class Program
             app.MapOpenApi();
             app.MapScalarApiReference(options =>
             {
+                // Group endpoints by HTTP method (Scalar's supported operation sorter)
+                options.OperationSorter = OperationSorter.Method;
                 options.EnabledClients = [ScalarClient.HttpClient, ScalarClient.Axios, ScalarClient.Fetch];
                 options.EnabledTargets = [ScalarTarget.CSharp, ScalarTarget.JavaScript];
                 options.Theme = ScalarTheme.Solarized;
@@ -106,31 +108,6 @@ public class Program
 
         // Map FastEndpoints (Movies, ...)
         app.UseFastEndpoints();
-
-        var summaries = new[]
-        {
-            "Freezing", "Bracing", "Chilly", "Cool", "Mild", "Warm", "Balmy", "Hot", "Sweltering", "Scorching",
-        };
-
-        app.MapGet("/test-exception", () =>
-            {
-                throw new InvalidOperationException("This is a test exception to verify exception handling middleware.");
-            })
-            .WithName("TestException");
-
-        app.MapGet("/weatherforecast", () =>
-            {
-                var forecast = Enumerable.Range(1, 5).Select(index =>
-                        new WeatherForecast
-                        (
-                            DateOnly.FromDateTime(DateTime.Now.AddDays(index)),
-                            Random.Shared.Next(-20, 55),
-                            summaries[Random.Shared.Next(summaries.Length)]
-                        ))
-                    .ToArray();
-                return forecast;
-            })
-            .WithName("GetWeatherForecast");
 
         await app.RunAsync();
     }

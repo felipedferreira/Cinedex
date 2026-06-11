@@ -33,6 +33,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - Added copying of `Directory.Build.props` and `Directory.Packages.props` before restore
   - Added explicit COPY steps for domain and persistence layer dependencies
 
+### Removed
+- **Template sample endpoints** - Deleted the project-template placeholders now that Movies is the first real resource:
+  - `GET /weatherforecast` endpoint and the `WeatherForecast` record, plus `WeatherForecastEndpointTests`
+  - `GET /test-exception` endpoint and `ExceptionHandlingMiddlewareTests` (the endpoint existed only to exercise the exception middleware)
+
 ### Fixed
 - **Docker build** - Corrected path references to resolve NuGet restore failures
 

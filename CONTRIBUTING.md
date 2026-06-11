@@ -151,7 +151,7 @@ Key rules:
 - Write integration tests for endpoint behavior
 - Use xUnit for testing framework
 - Follow the pattern: `When<Action>_<ExpectedResult>`
-- Example: `TestException_ReturnsInternalServerError`
+- Example: `GetMovie_WithUnknownId_ReturnsNotFound`
 - Tests should be isolated and deterministic
 
 ### Documentation

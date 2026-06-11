@@ -1,6 +1,6 @@
 @Movies.WebService_HostAddress = http://localhost:5186
 
-GET {{Movies.WebService_HostAddress}}/weatherforecast/
+GET {{Movies.WebService_HostAddress}}/api/movies/
 Accept: application/json
 
 ###

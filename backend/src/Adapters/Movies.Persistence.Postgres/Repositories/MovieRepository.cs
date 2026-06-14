@@ -2,7 +2,7 @@ using Microsoft.EntityFrameworkCore;
 using Movies.Application.Abstractions;
 using Movies.Domain;
 
-namespace Movies.Persistance.Postgres.Repositories;
+namespace Movies.Persistence.Postgres.Repositories;
 
 internal sealed class MovieRepository(MoviesDbContext dbContext) : IMovieRepository
 {

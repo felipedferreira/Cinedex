@@ -11,7 +11,7 @@ COPY ["Directory.Build.props", "Directory.Build.props"]
 COPY ["Directory.Packages.props", "Directory.Packages.props"]
 COPY ["src/Applications/Movies.WebService/Movies.WebService.csproj", "src/Applications/Movies.WebService/"]
 COPY ["src/Core/Movies.Domain/Movies.Domain.csproj", "src/Core/Movies.Domain/"]
-COPY ["src/Adapters/Movies.Persistance.Postgres/Movies.Persistance.Postgres.csproj", "src/Adapters/Movies.Persistance.Postgres/"]
+COPY ["src/Adapters/Movies.Persistence.Postgres/Movies.Persistence.Postgres.csproj", "src/Adapters/Movies.Persistence.Postgres/"]
 RUN dotnet restore "src/Applications/Movies.WebService/Movies.WebService.csproj"
 COPY . .
 WORKDIR "/src/src/Applications/Movies.WebService"

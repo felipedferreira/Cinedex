@@ -4,12 +4,12 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
-using Movies.Persistance.Postgres;
+using Movies.Persistence.Postgres;
 using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 
 #nullable disable
 
-namespace Movies.Persistance.Postgres.Migrations
+namespace Movies.Persistence.Postgres.Migrations
 {
     [DbContext(typeof(MoviesDbContext))]
     [Migration("20260610022703_InitialCreate")]

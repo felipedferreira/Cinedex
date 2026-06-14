@@ -1,6 +1,6 @@
 using FastEndpoints;
 using Movies.Application;
-using Movies.Persistance.Postgres;
+using Movies.Persistence.Postgres;
 using Scalar.AspNetCore;
 using Serilog;
 

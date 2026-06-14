@@ -2,7 +2,7 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
 using Movies.Domain;
 
-namespace Movies.Persistance.Postgres.Configurations;
+namespace Movies.Persistence.Postgres.Configurations;
 
 internal sealed class MovieConfiguration : IEntityTypeConfiguration<Movie>
 {

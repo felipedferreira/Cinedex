@@ -46,16 +46,16 @@ Run from this folder, specifying the persistence project and the WebService as t
 ```bash
 # Add a new migration
 dotnet ef migrations add <MigrationName> \
-  --project src/Adapters/Movies.Persistance.Postgres \
+  --project src/Adapters/Movies.Persistence.Postgres \
   --startup-project src/Applications/Movies.WebService
 
 # Apply migrations to the database
 dotnet ef database update \
-  --project src/Adapters/Movies.Persistance.Postgres \
+  --project src/Adapters/Movies.Persistence.Postgres \
   --startup-project src/Applications/Movies.WebService
 ```
 
-> **Domain models** live in `Movies.Domain`. EF entity configurations use **Fluent API** in `Movies.Persistance.Postgres`, keeping the domain layer free of any EF dependencies.
+> **Domain models** live in `Movies.Domain`. EF entity configurations use **Fluent API** in `Movies.Persistence.Postgres`, keeping the domain layer free of any EF dependencies.
 
 ---
 
@@ -136,25 +136,19 @@ The solution is organized into layers that enforce separation of concerns and de
 │              (Web API / Entry Point)            │
 └──────────────────┬──────────────────────────────┘
                    │
-       ┌───────────┴───────────┐
-       │                       │
-┌──────▼────────────────┐ ┌───▼──────────────────────────────┐
-│  Movies.Application   │ │  Movies.Persistance.Postgres    │
-│   (Use Cases)         │ │    (Persistence Adapter)         │
-└──────┬────────────────┘ └───┬──────────────────────────────┘
-       │                       │
-       └───────────┬───────────┘
-                   │
-         ┌─────────▼──────────┐
-         │   Movies.Application│
-         │   .Abstractions     │
-         │  (Contracts/Ports)  │
-         └─────────┬───────────┘
-                   │
-         ┌─────────▼──────────┐
-         │  Movies.Domain     │
-         │  (Business Logic)  │
-         └────────────────────┘
+       ┌───────────┴────────────────┐
+       │                            │
+┌──────▼───────────────┐  ┌─────────▼────────────────────────┐
+│  Movies.Application  │◄─┤  Movies.Persistence.Postgres     │
+│  (Use Cases + Ports) │  │     (Persistence Adapter)        │
+└──────┬───────────────┘  └─────────┬────────────────────────┘
+       │                            │
+       └─────────────┬──────────────┘
+                     │
+           ┌─────────▼──────────┐
+           │   Movies.Domain    │
+           │  (Business Logic)  │
+           └────────────────────┘
 ```
 
 ## Project Descriptions
@@ -167,37 +161,28 @@ The solution is organized into layers that enforce separation of concerns and de
 - Business rules and invariants
 - No external dependencies (no EF, no web frameworks)
 
-### 2. **Movies.Application.Abstractions** (Contract Layer)
-**Purpose:** Defines interfaces and contracts for the application layer  
+### 2. **Movies.Application** (Use Cases Layer)
+**Purpose:** Implements application use cases and defines the ports they depend on  
 **Dependencies:** `Movies.Domain`  
 **Responsibilities:**
-- Repository interfaces (ports)
-- Service interfaces
-- DTOs and application models
-- Acts as the boundary between business logic and infrastructure
-
-### 3. **Movies.Application** (Use Cases Layer)
-**Purpose:** Implements application use cases and business workflows  
-**Dependencies:** `Movies.Application.Abstractions`  
-**Responsibilities:**
-- Use case implementations
-- Application services
+- Use case implementations and application services
+- Repository and service interfaces (ports), grouped under `Abstractions/`
 - Orchestrates domain logic with persistence
 - Coordinates between domain and external systems
 
-### 4. **Movies.Persistance.Postgres** (Adapter Layer)
+### 3. **Movies.Persistence.Postgres** (Adapter Layer)
 **Purpose:** Implements data persistence using PostgreSQL  
-**Dependencies:** `Movies.Application.Abstractions`  
+**Dependencies:** `Movies.Application`, `Movies.Domain`  
 **Responsibilities:**
 - `MoviesDbContext` — EF Core DbContext with Fluent API entity configurations
 - Concrete repository implementations
 - Database migrations and schema management
-- Adapts PostgreSQL to the repository contracts defined in `Movies.Application.Abstractions`
+- Adapts PostgreSQL to the repository ports defined in `Movies.Application`
 - *Note: Listed under `Adapters/` to reflect that it's an interchangeable persistence adapter*
 
-### 5. **Movies.WebService** (Presentation/Entry Point Layer)
+### 4. **Movies.WebService** (Presentation/Entry Point Layer)
 **Purpose:** Web API and HTTP request handling  
-**Dependencies:** `Movies.Application`, `Movies.Persistance.Postgres`  
+**Dependencies:** `Movies.Application`, `Movies.Persistence.Postgres`  
 **Responsibilities:**
 - ASP.NET Core web API endpoints
 - HTTP request/response handling
@@ -212,18 +197,17 @@ The architecture enforces these dependency directions:
 | From | To | Allowed? |
 |------|-----|----------|
 | Domain | Anything | ❌ No (Domain has no outward dependencies) |
-| Abstractions | Domain | ✅ Yes |
-| Application | Abstractions | ✅ Yes |
-| Adapters (Persistence) | Abstractions | ✅ Yes |
+| Application | Domain | ✅ Yes |
+| Adapters (Persistence) | Application, Domain | ✅ Yes |
 | WebService | Application, Adapters | ✅ Yes |
 | WebService | Domain | ✅ Yes (transitively) |
 
 ## How It Works Together
 
 1. **WebService** is the entry point—it handles HTTP requests and delegates to **Application**
-2. **Application** implements business logic by orchestrating **Domain** entities using abstractions
-3. **Application** calls repository methods defined in **Abstractions** (interfaces)
-4. **Persistance.Postgres** implements those interfaces, translating repository calls to database operations
+2. **Application** implements business logic by orchestrating **Domain** entities
+3. **Application** calls repository methods defined by its own ports (interfaces under `Abstractions/`)
+4. **Persistence.Postgres** implements those ports, translating repository calls to database operations
 5. **Domain** contains the pure business rules that drive everything
 
 ## Building and Running

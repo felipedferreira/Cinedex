@@ -1,9 +1,9 @@
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
 using Movies.Application.Abstractions;
-using Movies.Persistance.Postgres.Repositories;
+using Movies.Persistence.Postgres.Repositories;
 
-namespace Movies.Persistance.Postgres;
+namespace Movies.Persistence.Postgres;
 
 public static class DependencyInjection
 {

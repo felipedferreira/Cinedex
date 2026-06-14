@@ -21,10 +21,9 @@
     <Project Path="src\Applications\Movies.WebService\Movies.WebService.csproj" Type="Classic C#" />
   </Folder>
   <Folder Name="/src/2 - Adapters/">
-    <Project Path="src\Adapters\Movies.Persistance.Postgres\Movies.Persistance.Postgres.csproj" Type="Classic C#" />
+    <Project Path="src\Adapters\Movies.Persistence.Postgres\Movies.Persistence.Postgres.csproj" Type="Classic C#" />
   </Folder>
   <Folder Name="/src/3 - Core/">
-    <Project Path="src\Core\Movies.Application.Abstractions\Movies.Application.Abstractions.csproj" Type="Classic C#" />
     <Project Path="src\Core\Movies.Application\Movies.Application.csproj" Type="Classic C#" />
     <Project Path="src\Core\Movies.Domain\Movies.Domain.csproj" Type="Classic C#" />
   </Folder>

@@ -1,7 +1,7 @@
 using Microsoft.EntityFrameworkCore;
 using Movies.Domain;
 
-namespace Movies.Persistance.Postgres;
+namespace Movies.Persistence.Postgres;
 
 public class MoviesDbContext(DbContextOptions<MoviesDbContext> options) : DbContext(options)
 {

@@ -3,12 +3,12 @@ using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
-using Movies.Persistance.Postgres;
+using Movies.Persistence.Postgres;
 using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 
 #nullable disable
 
-namespace Movies.Persistance.Postgres.Migrations
+namespace Movies.Persistence.Postgres.Migrations
 {
     [DbContext(typeof(MoviesDbContext))]
     partial class MoviesDbContextModelSnapshot : ModelSnapshot

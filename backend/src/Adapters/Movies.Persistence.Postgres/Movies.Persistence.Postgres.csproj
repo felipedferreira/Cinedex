@@ -9,7 +9,7 @@
     </ItemGroup>
 
     <ItemGroup>
-      <ProjectReference Include="..\..\Core\Movies.Application.Abstractions\Movies.Application.Abstractions.csproj" />
+      <ProjectReference Include="..\..\Core\Movies.Application\Movies.Application.csproj" />
       <ProjectReference Include="..\..\Core\Movies.Domain\Movies.Domain.csproj" />
     </ItemGroup>
 

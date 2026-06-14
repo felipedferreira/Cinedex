@@ -3,7 +3,7 @@ using Microsoft.EntityFrameworkCore.Migrations;
 
 #nullable disable
 
-namespace Movies.Persistance.Postgres.Migrations
+namespace Movies.Persistence.Postgres.Migrations
 {
     /// <inheritdoc />
     public partial class InitialCreate : Migration

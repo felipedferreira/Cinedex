@@ -21,7 +21,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - `IMovieRepository` - persistence port
   - `MovieService` - implements `IMovieService`, orchestrating via `IMovieRepository`
   - `AddApplication()` DI registration extension
-- **`MovieRepository`** - EF Core implementation of `IMovieRepository` in `Movies.Persistance.Postgres` (uses `ExecuteUpdateAsync`/`ExecuteDeleteAsync`)
+- **`MovieRepository`** - EF Core implementation of `IMovieRepository` in `Movies.Persistence.Postgres` (uses `ExecuteUpdateAsync`/`ExecuteDeleteAsync`)
 - **`AddPersistence(connectionString)`** - DI extension that now owns the `MoviesDbContext` and repository registrations
 - **Docker Compose configuration** - Complete multi-container setup with PostgreSQL:
   - `compose.yaml` with web service and PostgreSQL 17 Alpine
@@ -37,6 +37,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - Updated COPY paths from `src/Movies.WebService/` to `src/Applications/Movies.WebService/`
   - Added copying of `Directory.Build.props` and `Directory.Packages.props` before restore
   - Added explicit COPY steps for domain and persistence layer dependencies
+- **Clean-architecture cleanup** - Tidied the Core and adapter layout:
+  - Renamed `Movies.Persistance.Postgres` → `Movies.Persistence.Postgres` (project, folder, and namespace) to fix the long-standing typo
+  - Merged `Movies.Application.Abstractions` into `Movies.Application`; the `IMovieRepository`/`IMovieService` ports now live under `Movies.Application/Abstractions/` with their namespace unchanged
+  - Rewired references accordingly: `Movies.Persistence.Postgres` now references `Movies.Application` for the ports, and `Movies.Application` references `Movies.Domain` directly. Dependency direction is unchanged (still inward-only)
 
 ### Removed
 - **Template sample endpoints** - Deleted the project-template placeholders now that Movies is the first real resource:

@@ -29,8 +29,19 @@ jobs:
       run: dotnet build --no-restore --configuration Release
 
     - name: Run tests
-      run: dotnet test --no-build --verbosity normal --configuration Release
-      continue-on-error: false
+      run: >
+        dotnet test --no-build --configuration Release --verbosity normal
+        --logger "liquid.md;LogFileName=test-results.md"
+        --results-directory TestResults
+
+    - name: Publish test summary
+      if: always()
+      run: |
+        if [ -f TestResults/test-results.md ]; then
+          cat TestResults/test-results.md >> "$GITHUB_STEP_SUMMARY"
+        else
+          echo "No test report was generated." >> "$GITHUB_STEP_SUMMARY"
+        fi
 
   frontend:
     runs-on: ubuntu-latest

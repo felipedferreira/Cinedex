@@ -20,7 +20,7 @@
     image: movies.webservice
     build:
       context: ./backend
-      dockerfile: src/Applications/Movies.WebService/Dockerfile
+      dockerfile: src/Presentation/Movies.WebService/Dockerfile
     container_name: movies-web
     ports:
       - "8080:8080"

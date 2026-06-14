@@ -17,15 +17,17 @@
     <Project Path="src\Libraries\Movies.WebService.Contracts\Movies.WebService.Contracts.csproj" Type="Classic C#" />
   </Folder>
   <Folder Name="/src/" />
-  <Folder Name="/src/1 - Applications/">
-    <Project Path="src\Applications\Movies.WebService\Movies.WebService.csproj" Type="Classic C#" />
+  <Folder Name="/src/1 - Presentation/">
+    <Project Path="src\Presentation\Movies.WebService\Movies.WebService.csproj" Type="Classic C#" />
   </Folder>
   <Folder Name="/src/2 - Adapters/">
     <Project Path="src\Adapters\Movies.Persistence.Postgres\Movies.Persistence.Postgres.csproj" Type="Classic C#" />
   </Folder>
-  <Folder Name="/src/3 - Core/">
-    <Project Path="src\Core\Movies.Application\Movies.Application.csproj" Type="Classic C#" />
-    <Project Path="src\Core\Movies.Domain\Movies.Domain.csproj" Type="Classic C#" />
+  <Folder Name="/src/3 - Application/">
+    <Project Path="src\Movies.Application\Movies.Application.csproj" Type="Classic C#" />
+  </Folder>
+  <Folder Name="/src/4 - Domain/">
+    <Project Path="src\Movies.Domain\Movies.Domain.csproj" Type="Classic C#" />
   </Folder>
   <Folder Name="/tests/">
     <Project Path="tests\Movies.WebService.IntegrationTests\Movies.WebService.IntegrationTests.csproj" Type="Classic C#" />

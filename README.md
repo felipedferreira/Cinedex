@@ -9,12 +9,12 @@ A full-stack portfolio application for managing movies, crew members, and their 
 ```
 Movies/
 ├── backend/      # .NET solution (Web API, application core, persistence, tests)
-├── frontend/     # Standalone SPA (planned) consuming the backend's OpenAPI spec
+├── frontend/     # Standalone SPA consuming the backend's OpenAPI spec
 └── compose.yaml  # Orchestrates PostgreSQL and the web service
 ```
 
 - **[Backend](backend/README.md)** — clean architecture .NET solution: architecture guide, build/test/migration instructions
-- **[Frontend](frontend/README.md)** — placeholder for the standalone SPA (Angular or React)
+- **[Frontend](frontend/README.md)** — standalone React + TypeScript + Vite SPA (`cinadex-ui`)
 - **[Changelog](CHANGELOG.md)** — version history and release notes
 
 ## 🚀 Quick Start

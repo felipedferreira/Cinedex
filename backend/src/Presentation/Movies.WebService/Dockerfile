@@ -9,12 +9,13 @@ ARG BUILD_CONFIGURATION=Release
 WORKDIR /src
 COPY ["Directory.Build.props", "Directory.Build.props"]
 COPY ["Directory.Packages.props", "Directory.Packages.props"]
-COPY ["src/Applications/Movies.WebService/Movies.WebService.csproj", "src/Applications/Movies.WebService/"]
-COPY ["src/Core/Movies.Domain/Movies.Domain.csproj", "src/Core/Movies.Domain/"]
+COPY ["src/Presentation/Movies.WebService/Movies.WebService.csproj", "src/Presentation/Movies.WebService/"]
+COPY ["src/Movies.Application/Movies.Application.csproj", "src/Movies.Application/"]
+COPY ["src/Movies.Domain/Movies.Domain.csproj", "src/Movies.Domain/"]
 COPY ["src/Adapters/Movies.Persistence.Postgres/Movies.Persistence.Postgres.csproj", "src/Adapters/Movies.Persistence.Postgres/"]
-RUN dotnet restore "src/Applications/Movies.WebService/Movies.WebService.csproj"
+RUN dotnet restore "src/Presentation/Movies.WebService/Movies.WebService.csproj"
 COPY . .
-WORKDIR "/src/src/Applications/Movies.WebService"
+WORKDIR "/src/src/Presentation/Movies.WebService"
 RUN dotnet build "./Movies.WebService.csproj" -c $BUILD_CONFIGURATION -o /app/build
 
 FROM build AS publish

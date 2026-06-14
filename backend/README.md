@@ -47,12 +47,12 @@ Run from this folder, specifying the persistence project and the WebService as t
 # Add a new migration
 dotnet ef migrations add <MigrationName> \
   --project src/Adapters/Movies.Persistence.Postgres \
-  --startup-project src/Applications/Movies.WebService
+  --startup-project src/Presentation/Movies.WebService
 
 # Apply migrations to the database
 dotnet ef database update \
   --project src/Adapters/Movies.Persistence.Postgres \
-  --startup-project src/Applications/Movies.WebService
+  --startup-project src/Presentation/Movies.WebService
 ```
 
 > **Domain models** live in `Movies.Domain`. EF entity configurations use **Fluent API** in `Movies.Persistence.Postgres`, keeping the domain layer free of any EF dependencies.
@@ -76,7 +76,7 @@ dotnet build
 dotnet test
 
 # Run the web service
-dotnet run --project src/Applications/Movies.WebService
+dotnet run --project src/Presentation/Movies.WebService
 
 # Generate coverage report
 .\coverage.ps1 -Open
@@ -151,6 +151,24 @@ The solution is organized into layers that enforce separation of concerns and de
            └────────────────────┘
 ```
 
+### Solution Layout
+
+Projects are grouped on disk by Hexagonal layer. Layers that can have multiple
+projects (Presentation, Adapters) keep a grouping folder; the single Application
+and Domain projects sit directly under `src/`.
+
+```
+backend/src/
+├── Presentation/
+│   └── Movies.WebService/            # driving adapter (HTTP entry point)
+├── Adapters/
+│   └── Movies.Persistence.Postgres/  # driven adapter (implements ports)
+├── Movies.Application/               # use cases + ports (Abstractions/)
+├── Movies.Domain/                    # entities, no outward dependencies
+└── Libraries/
+    └── Movies.WebService.Contracts/  # shared API DTOs
+```
+
 ## Project Descriptions
 
 ### 1. **Movies.Domain** (Foundation Layer)
@@ -220,7 +238,7 @@ dotnet build
 ### Run the web service locally:
 ```bash
 # Make sure PostgreSQL is running (locally or via Docker)
-dotnet run --project src/Applications/Movies.WebService
+dotnet run --project src/Presentation/Movies.WebService
 ```
 
 The service will be available at:

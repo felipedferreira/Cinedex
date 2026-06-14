@@ -19,7 +19,7 @@
     </ItemGroup>
 
     <ItemGroup>
-      <ProjectReference Include="..\..\src\Applications\Movies.WebService\Movies.WebService.csproj" />
+      <ProjectReference Include="..\..\src\Presentation\Movies.WebService\Movies.WebService.csproj" />
     </ItemGroup>
 
 </Project>

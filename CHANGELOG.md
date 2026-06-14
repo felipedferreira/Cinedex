@@ -29,6 +29,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - Environment variables for database configuration
 
 ### Changed
+- **Hexagonal layer layout** - Reorganized the backend folders to make the Ports & Adapters layers explicit, dependencies still inward-only (`Domain ← Application ← {Adapters, Presentation}`). All moves used `git mv` to preserve history:
+  - `src/Applications/` → `src/Presentation/` (hosts `Movies.WebService`)
+  - `src/Core/` dissolved; the singleton `Movies.Application` and `Movies.Domain` projects now sit directly under `src/` (Application and Domain layers will never have a second project)
+  - `src/Adapters/` retained as-is (may host additional adapters)
+  - Updated all `ProjectReference` paths, `Movies.slnx` solution folders, the `Dockerfile` COPY paths, and `compose.yaml`'s `dockerfile` path; the Dockerfile now also copies `Movies.Application.csproj` before `dotnet restore` (was missing)
 - **`Program.cs`** - Registers `AddApplication()` + `AddPersistence()` and `AddFastEndpoints()`/`UseFastEndpoints()`; serves the app under the `/api` base path via `UsePathBase`; `MoviesDbContext` registration moved out into `AddPersistence`
 - **`Directory.Packages.props`** - Centralized versions for `FastEndpoints` and `Microsoft.Extensions.DependencyInjection.Abstractions`
 - **`Movies.WebService.csproj`** - Added `FastEndpoints` package reference and a project reference to `Movies.WebService.Contracts`

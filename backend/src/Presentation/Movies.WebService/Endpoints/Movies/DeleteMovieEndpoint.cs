@@ -1,9 +1,9 @@
 using FastEndpoints;
-using Movies.Application.Abstractions;
+using Movies.Application.Movies.DeleteMovie;
 
 namespace Movies.WebService.Endpoints.Movies;
 
-internal sealed class DeleteMovieEndpoint(IMovieService movieService) : EndpointWithoutRequest
+internal sealed class DeleteMovieEndpoint(IDeleteMovieHandler handler) : EndpointWithoutRequest
 {
     public override void Configure()
     {
@@ -15,7 +15,7 @@ internal sealed class DeleteMovieEndpoint(IMovieService movieService) : Endpoint
     {
         var id = Route<Guid>("id");
 
-        var deleted = await movieService.DeleteAsync(id, cancellationToken);
+        var deleted = await handler.Handle(new DeleteMovieCommand(id), cancellationToken);
 
         if (!deleted)
         {

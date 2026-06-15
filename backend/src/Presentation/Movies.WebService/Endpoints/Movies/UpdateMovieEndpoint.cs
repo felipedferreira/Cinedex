@@ -1,11 +1,11 @@
 using FastEndpoints;
-using Movies.Application.Abstractions;
+using Movies.Application.Movies.UpdateMovie;
 using Movies.WebService.Contracts.Requests;
 using Movies.WebService.Contracts.Responses;
 
 namespace Movies.WebService.Endpoints.Movies;
 
-internal sealed class UpdateMovieEndpoint(IMovieService movieService) : Endpoint<UpdateMoviesRequest, MovieResponse>
+internal sealed class UpdateMovieEndpoint(IUpdateMovieHandler handler) : Endpoint<UpdateMoviesRequest, MovieResponse>
 {
     public override void Configure()
     {
@@ -17,15 +17,7 @@ internal sealed class UpdateMovieEndpoint(IMovieService movieService) : Endpoint
     {
         var id = Route<Guid>("id");
 
-        var updated = await movieService.UpdateAsync(request.ToMovie(id), cancellationToken);
-
-        if (!updated)
-        {
-            await Send.NotFoundAsync(cancellationToken);
-            return;
-        }
-
-        var movie = await movieService.GetByIdAsync(id, cancellationToken);
+        var movie = await handler.Handle(request.ToCommand(id), cancellationToken);
 
         if (movie is null)
         {

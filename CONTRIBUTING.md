@@ -10,12 +10,30 @@ Be respectful, inclusive, and professional in all interactions.
 
 ### Prerequisites
 - .NET 10.0 or later
+- Node.js 22 or later (with npm)
+- Docker (for containerized development or running the full stack)
 - Git
 - A code editor (VS Code, Visual Studio, Rider, etc.)
 
 ### Setup Development Environment
 
-1. Clone the repository and move into the backend folder (all `dotnet` commands run from `backend/`):
+#### Option A — Docker Compose (full stack)
+
+Run everything from the repository root:
+
+```bash
+docker compose up --build
+```
+
+- **UI:** http://localhost:9000
+- **API:** http://localhost:8080
+- **PostgreSQL:** localhost:5432
+
+#### Option B — Local development
+
+**Backend** (all `dotnet` commands run from `backend/`):
+
+1. Clone the repository and move into the backend folder:
    ```bash
    git clone https://github.com/felipedferreira/Movies.git
    cd Movies/backend
@@ -34,6 +52,23 @@ Be respectful, inclusive, and professional in all interactions.
 4. Run tests:
    ```bash
    dotnet test
+   ```
+
+**Frontend** (commands run from `frontend/cinadex-ui/`):
+
+1. Install dependencies:
+   ```bash
+   npm ci
+   ```
+
+2. Start the dev server (http://localhost:9000):
+   ```bash
+   npm run dev
+   ```
+
+3. Run tests:
+   ```bash
+   npm test
    ```
 
 ## Development Workflow
@@ -59,17 +94,24 @@ Branch naming convention:
 
 ### 3. Run Tests and Lint
 
-Before pushing, ensure all tests pass and code quality checks pass:
+Before pushing, ensure all tests pass and code quality checks pass.
+
+**Backend** (from `backend/`):
 
 ```bash
-# Run all tests
 dotnet test
-
-# Build the solution (includes code analysis)
 dotnet build
 ```
 
-Your IDE should automatically enforce EditorConfig rules. If you see formatting errors, most can be fixed automatically.
+**Frontend** (from `frontend/cinadex-ui/`):
+
+```bash
+npm run lint
+npm run format:check
+npm run test:run
+```
+
+Your IDE should automatically enforce EditorConfig rules (backend) and Prettier/ESLint rules (frontend). Most formatting issues can be fixed automatically with `npm run lint:fix` and `npm run format`.
 
 ### 4. Commit and Push
 
@@ -230,8 +272,8 @@ dotnet clean
 Before submitting a PR, ensure:
 
 - [ ] Code builds without errors
-- [ ] All tests pass
-- [ ] Code follows style guidelines (EditorConfig, StyleCop)
+- [ ] All tests pass (`dotnet test` and/or `npm run test:run`)
+- [ ] Code follows style guidelines (EditorConfig + StyleCop for backend; ESLint + Prettier for frontend)
 - [ ] New features have tests
 - [ ] Documentation is updated
 - [ ] Commit messages are clear and descriptive

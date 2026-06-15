@@ -10,7 +10,7 @@ A full-stack portfolio application for managing movies, crew members, and their 
 Movies/
 ├── backend/      # .NET solution (Web API, application core, persistence, tests)
 ├── frontend/     # Standalone SPA consuming the backend's OpenAPI spec
-└── compose.yaml  # Orchestrates PostgreSQL and the web service
+└── compose.yaml  # Orchestrates PostgreSQL, the web service, and the frontend
 ```
 
 - **[Backend](backend/README.md)** — clean architecture .NET solution: architecture guide, build/test/migration instructions
@@ -26,6 +26,7 @@ docker compose up
 ```
 
 Access the application:
+- **UI:** http://localhost:9000
 - **API:** http://localhost:8080
 - **API Documentation:** http://localhost:8080/api-docs/v1 (Scalar UI)
 - **OpenAPI Spec:** http://localhost:8080/openapi/v1.json

@@ -14,15 +14,7 @@ internal sealed class DeleteMovieEndpoint(IDeleteMovieHandler handler) : Endpoin
     public override async Task HandleAsync(CancellationToken cancellationToken)
     {
         var id = Route<Guid>("id");
-
-        var deleted = await handler.Handle(new DeleteMovieCommand(id), cancellationToken);
-
-        if (!deleted)
-        {
-            await Send.NotFoundAsync(cancellationToken);
-            return;
-        }
-
+        await handler.Handle(new DeleteMovieCommand(id), cancellationToken);
         await Send.NoContentAsync(cancellationToken);
     }
 }

@@ -15,15 +15,7 @@ internal sealed class GetMovieByIdEndpoint(IGetMovieByIdHandler handler) : Endpo
     public override async Task HandleAsync(CancellationToken cancellationToken)
     {
         var id = Route<Guid>("id");
-
         var movie = await handler.Handle(new GetMovieByIdQuery(id), cancellationToken);
-
-        if (movie is null)
-        {
-            await Send.NotFoundAsync(cancellationToken);
-            return;
-        }
-
         await Send.OkAsync(movie.ToResponse(), cancellationToken);
     }
 }

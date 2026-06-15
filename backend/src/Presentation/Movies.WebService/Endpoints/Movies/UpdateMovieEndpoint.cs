@@ -16,15 +16,7 @@ internal sealed class UpdateMovieEndpoint(IUpdateMovieHandler handler) : Endpoin
     public override async Task HandleAsync(UpdateMoviesRequest request, CancellationToken cancellationToken)
     {
         var id = Route<Guid>("id");
-
         var movie = await handler.Handle(request.ToCommand(id), cancellationToken);
-
-        if (movie is null)
-        {
-            await Send.NotFoundAsync(cancellationToken);
-            return;
-        }
-
         await Send.OkAsync(movie.ToResponse(), cancellationToken);
     }
 }

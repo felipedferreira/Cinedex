@@ -1,6 +1,7 @@
 using System.Diagnostics;
 using System.Text.Json;
 using FluentValidation;
+using Movies.Application.Exceptions;
 
 namespace Movies.WebService;
 
@@ -15,6 +16,10 @@ public class ExceptionHandlingMiddleware(RequestDelegate next, ILogger<Exception
         catch (ValidationException ex)
         {
             await HandleValidationExceptionAsync(context, ex);
+        }
+        catch (EntityNotFoundException ex)
+        {
+            await HandleNotFoundExceptionAsync(context, ex);
         }
         catch (Exception ex)
         {
@@ -43,6 +48,27 @@ public class ExceptionHandlingMiddleware(RequestDelegate next, ILogger<Exception
             detail = "One or more validation errors occurred.",
             instance = context.Request.Path.Value,
             errors,
+            extensions = new { traceId },
+        };
+
+        var json = JsonSerializer.Serialize(response);
+        await context.Response.WriteAsync(json);
+    }
+
+    private static async Task HandleNotFoundExceptionAsync(HttpContext context, EntityNotFoundException exception)
+    {
+        var traceId = Activity.Current?.Id ?? context.TraceIdentifier;
+
+        context.Response.ContentType = "application/problem+json";
+        context.Response.StatusCode = StatusCodes.Status404NotFound;
+
+        var response = new
+        {
+            type = "https://httpwg.org/specs/rfc7231.html#status.404",
+            title = "Not Found",
+            status = StatusCodes.Status404NotFound,
+            detail = exception.Message,
+            instance = context.Request.Path.Value,
             extensions = new { traceId },
         };
 

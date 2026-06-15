@@ -1,6 +1,7 @@
 using FastEndpoints;
 using Movies.Application;
 using Movies.Persistence.Postgres;
+using Movies.WebService.ExceptionHandlers;
 using Scalar.AspNetCore;
 using Serilog;
 
@@ -49,6 +50,11 @@ public class Program
         builder.Services.AddOpenApi();
         builder.Services.AddProblemDetails();
 
+        // Register exception handlers in chain order — DefaultExceptionHandler must be last (catch-all)
+        builder.Services.AddExceptionHandler<ValidationExceptionHandler>();
+        builder.Services.AddExceptionHandler<EntityNotFoundExceptionHandler>();
+        builder.Services.AddExceptionHandler<DefaultExceptionHandler>();
+
         var app = builder.Build();
 
         // Verify the database is reachable before the application starts serving requests.
@@ -72,7 +78,7 @@ public class Program
         app.UsePathBase("/api");
 
         // Handle unhandled exceptions and convert them to Problem Details (RFC 7807)
-        app.UseMiddleware<ExceptionHandlingMiddleware>();
+        app.UseExceptionHandler();
 
         // Capture or generate correlation ID for request tracking
         app.UseMiddleware<CorrelationIdMiddleware>();

@@ -8,6 +8,28 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 ### Added
+- **`EntityNotFoundException`** - Domain exception in `Movies.Application/Exceptions/` thrown by handlers when a requested entity does not exist; carries `entityName` and `id` for a self-describing message
+- **Chain of Responsibility exception handling** - Replaced the monolithic `ExceptionHandlingMiddleware` with three focused `IExceptionHandler` implementations under `Movies.WebService/ExceptionHandlers/`:
+  - `ValidationExceptionHandler` — `ValidationException` → HTTP 400 with per-field error map
+  - `EntityNotFoundExceptionHandler` — `EntityNotFoundException` → HTTP 404 with the exception message as `detail`
+  - `DefaultExceptionHandler` — catch-all → HTTP 500; also logs the exception (was missing before)
+- **Per-use-case handlers with FluentValidation** - Decomposed `IMovieService` / `MovieService` into discrete CQRS-style handler classes in `Movies.Application/Movies/`:
+  - `CreateMovieHandler` + `CreateMovieValidator` (title max 256 chars, year range 1888–current)
+  - `UpdateMovieHandler` + `UpdateMovieValidator`
+  - `DeleteMovieHandler`, `GetMovieByIdHandler`, `ListMoviesHandler`
+  - Each feature folder contains command/query record, handler, interface, and optional validator
+- **React + TypeScript + Vite frontend** - Scaffolded `frontend/cinadex-ui` with React 19, TypeScript, Vite, Vitest, ESLint, and Prettier; includes a working `App.tsx` shell and an `App.test.tsx` smoke test
+- **`SmokeTests`** - Backend integration test asserting the API returns HTTP 200 on `GET /api/movies`
+- **`CreateMovieEndpointTests`** - Integration tests for `POST /api/movies` covering happy path and FluentValidation error scenarios (missing title, out-of-range year, etc.)
+
+### Changed
+- **`GetMovieByIdHandler`, `UpdateMovieHandler`, `DeleteMovieHandler`** - Now throw `EntityNotFoundException` when the entity is not found instead of returning `null` / `false`; handler interfaces updated to non-nullable return types (`Task<MovieDto>` / `Task`)
+- **`GetMovieByIdEndpoint`, `UpdateMovieEndpoint`, `DeleteMovieEndpoint`** - Null / bool guards removed; not-found signal is now the handler's responsibility via exception
+- **`Program.cs`** - `UseMiddleware<ExceptionHandlingMiddleware>()` replaced by `UseExceptionHandler()`; three `AddExceptionHandler<T>()` registrations (order matters — `DefaultExceptionHandler` last)
+- **`DependencyInjection.cs`** (Application) - Handlers registered individually; validators auto-discovered via `AddValidatorsFromAssembly`; `FluentValidation` and `MediatR`-style dependencies added to `Movies.Application.csproj`
+- **CI workflow** - Updated to build and test the frontend alongside the backend
+
+### Added (continued)
 - **Mono-repo layout** - Restructured the repository for a future standalone frontend:
   - All .NET solution files (`src/`, `tests/`, `Movies.slnx`, build props, `global.json`, coverage scripts) moved under `backend/` with `git mv` to preserve history
   - `frontend/` placeholder added for the upcoming SPA (Angular or React), which will consume the backend's OpenAPI spec
@@ -16,11 +38,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **Movies CRUD API** - First real resource, implemented with [FastEndpoints](https://fast-endpoints.com/) using the REPR (Request-Endpoint-Response) pattern — one class per endpoint under `Endpoints/Movies/`:
   - `GET /api/movies`, `GET /api/movies/{id}`, `POST /api/movies`, `PUT /api/movies/{id}`, `DELETE /api/movies/{id}`
   - `MovieMappings` - single translation point between `Contracts` DTOs and the `Domain.Movie` model
-- **Application use-case layer** - Fills the previously empty `Movies.Application` project:
-  - `IMovieService` - application use-case port consumed by the web layer
-  - `IMovieRepository` - persistence port
-  - `MovieService` - implements `IMovieService`, orchestrating via `IMovieRepository`
-  - `AddApplication()` DI registration extension
 - **`MovieRepository`** - EF Core implementation of `IMovieRepository` in `Movies.Persistence.Postgres` (uses `ExecuteUpdateAsync`/`ExecuteDeleteAsync`)
 - **`AddPersistence(connectionString)`** - DI extension that now owns the `MoviesDbContext` and repository registrations
 - **Docker Compose configuration** - Complete multi-container setup with PostgreSQL:
@@ -29,12 +46,17 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - Environment variables for database configuration
 
 ### Changed
+- **`GetMovieByIdHandler`, `UpdateMovieHandler`, `DeleteMovieHandler`** - Now throw `EntityNotFoundException` when the entity is not found instead of returning `null` / `false`; handler interfaces updated to non-nullable return types (`Task<MovieDto>` / `Task`)
+- **`GetMovieByIdEndpoint`, `UpdateMovieEndpoint`, `DeleteMovieEndpoint`** - Null / bool guards removed; not-found signal is now the handler's responsibility via exception
+- **`Program.cs`** - `UseMiddleware<ExceptionHandlingMiddleware>()` replaced by `UseExceptionHandler()`; three `AddExceptionHandler<T>()` registrations (order matters — `DefaultExceptionHandler` last)
+- **`DependencyInjection.cs`** (Application) - Handlers registered individually; validators auto-discovered via `AddValidatorsFromAssembly`; `FluentValidation` and `MediatR`-style dependencies added to `Movies.Application.csproj`
+- **CI workflow** - Updated to build and test the frontend alongside the backend
 - **Hexagonal layer layout** - Reorganized the backend folders to make the Ports & Adapters layers explicit, dependencies still inward-only (`Domain ← Application ← {Adapters, Presentation}`). All moves used `git mv` to preserve history:
   - `src/Applications/` → `src/Presentation/` (hosts `Movies.WebService`)
   - `src/Core/` dissolved; the singleton `Movies.Application` and `Movies.Domain` projects now sit directly under `src/` (Application and Domain layers will never have a second project)
   - `src/Adapters/` retained as-is (may host additional adapters)
   - Updated all `ProjectReference` paths, `Movies.slnx` solution folders, the `Dockerfile` COPY paths, and `compose.yaml`'s `dockerfile` path; the Dockerfile now also copies `Movies.Application.csproj` before `dotnet restore` (was missing)
-- **`Program.cs`** - Registers `AddApplication()` + `AddPersistence()` and `AddFastEndpoints()`/`UseFastEndpoints()`; serves the app under the `/api` base path via `UsePathBase`; `MoviesDbContext` registration moved out into `AddPersistence`
+- **`Program.cs`** (earlier) - Registers `AddApplication()` + `AddPersistence()` and `AddFastEndpoints()`/`UseFastEndpoints()`; serves the app under the `/api` base path via `UsePathBase`; `MoviesDbContext` registration moved out into `AddPersistence`
 - **`Directory.Packages.props`** - Centralized versions for `FastEndpoints` and `Microsoft.Extensions.DependencyInjection.Abstractions`
 - **`Movies.WebService.csproj`** - Added `FastEndpoints` package reference and a project reference to `Movies.WebService.Contracts`
 - **`Movies.Application.csproj`** - Added `Microsoft.Extensions.DependencyInjection.Abstractions` (for the `AddApplication` extension)
@@ -48,6 +70,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - Rewired references accordingly: `Movies.Persistence.Postgres` now references `Movies.Application` for the ports, and `Movies.Application` references `Movies.Domain` directly. Dependency direction is unchanged (still inward-only)
 
 ### Removed
+- **`IMovieService` / `MovieService`** - Replaced by per-use-case handlers; the single-service pattern did not scale as use cases multiplied
+- **`ExceptionHandlingMiddleware`** - Replaced by the `IExceptionHandler` chain; the class violated SRP by owning both exception routing and response formatting for every exception type
 - **Template sample endpoints** - Deleted the project-template placeholders now that Movies is the first real resource:
   - `GET /weatherforecast` endpoint and the `WeatherForecast` record, plus `WeatherForecastEndpointTests`
   - `GET /test-exception` endpoint and `ExceptionHandlingMiddlewareTests` (the endpoint existed only to exercise the exception middleware)

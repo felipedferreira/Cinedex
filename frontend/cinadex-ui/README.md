@@ -39,19 +39,19 @@ The dev server runs on http://localhost:9000 (configured in [`vite.config.ts`](v
 
 ## 📜 Scripts
 
-| Script                 | Description                                     |
-| ---------------------- | ----------------------------------------------- |
-| `npm run dev`          | Start the Vite dev server with HMR              |
-| `npm run build`        | Type-check and build for production to `dist/`  |
-| `npm run preview`      | Preview the production build locally            |
-| `npm run lint`         | Lint the project with ESLint                    |
-| `npm run lint:fix`     | Lint and auto-fix fixable problems              |
-| `npm run format`       | Format all files with Prettier                  |
-| `npm run format:check` | Check formatting without writing (CI-friendly)  |
-| `npm run test`         | Run the test suite in watch mode (Vitest)       |
-| `npm run test:run`     | Run the test suite once (CI-friendly)           |
-| `npm run test:ui`      | Run tests in the interactive Vitest UI          |
-| `npm run coverage`     | Run tests once and generate a coverage report   |
+| Script                 | Description                                    |
+| ---------------------- | ---------------------------------------------- |
+| `npm run dev`          | Start the Vite dev server with HMR             |
+| `npm run build`        | Type-check and build for production to `dist/` |
+| `npm run preview`      | Preview the production build locally           |
+| `npm run lint`         | Lint the project with ESLint                   |
+| `npm run lint:fix`     | Lint and auto-fix fixable problems             |
+| `npm run format`       | Format all files with Prettier                 |
+| `npm run format:check` | Check formatting without writing (CI-friendly) |
+| `npm run test`         | Run the test suite in watch mode (Vitest)      |
+| `npm run test:run`     | Run the test suite once (CI-friendly)          |
+| `npm run test:ui`      | Run tests in the interactive Vitest UI         |
+| `npm run coverage`     | Run tests once and generate a coverage report  |
 
 ## 🎨 Linting & Formatting
 
@@ -100,11 +100,11 @@ npm run coverage
 
 The following reporters are configured in [`vite.config.ts`](vite.config.ts) so the output works both locally and in CI pipelines:
 
-| Reporter    | Output                          | Use                                              |
-| ----------- | ------------------------------- | ------------------------------------------------ |
-| `text`      | terminal                        | quick summary while developing                   |
-| `html`      | `coverage/index.html`           | browsable local report                           |
-| `lcov`      | `coverage/lcov.info`            | Codecov, Coveralls, SonarQube, etc.              |
+| Reporter    | Output                            | Use                                             |
+| ----------- | --------------------------------- | ----------------------------------------------- |
+| `text`      | terminal                          | quick summary while developing                  |
+| `html`      | `coverage/index.html`             | browsable local report                          |
+| `lcov`      | `coverage/lcov.info`              | Codecov, Coveralls, SonarQube, etc.             |
 | `cobertura` | `coverage/cobertura-coverage.xml` | GitLab CI, Azure DevOps, Jenkins coverage gates |
 
 ## 🔌 Backend

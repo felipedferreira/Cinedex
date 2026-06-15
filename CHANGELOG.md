@@ -21,15 +21,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **React + TypeScript + Vite frontend** - Scaffolded `frontend/cinadex-ui` with React 19, TypeScript, Vite, Vitest, ESLint, and Prettier; includes a working `App.tsx` shell and an `App.test.tsx` smoke test
 - **`SmokeTests`** - Backend integration test asserting the API returns HTTP 200 on `GET /api/movies`
 - **`CreateMovieEndpointTests`** - Integration tests for `POST /api/movies` covering happy path and FluentValidation error scenarios (missing title, out-of-range year, etc.)
-
-### Changed
-- **`GetMovieByIdHandler`, `UpdateMovieHandler`, `DeleteMovieHandler`** - Now throw `EntityNotFoundException` when the entity is not found instead of returning `null` / `false`; handler interfaces updated to non-nullable return types (`Task<MovieDto>` / `Task`)
-- **`GetMovieByIdEndpoint`, `UpdateMovieEndpoint`, `DeleteMovieEndpoint`** - Null / bool guards removed; not-found signal is now the handler's responsibility via exception
-- **`Program.cs`** - `UseMiddleware<ExceptionHandlingMiddleware>()` replaced by `UseExceptionHandler()`; three `AddExceptionHandler<T>()` registrations (order matters — `DefaultExceptionHandler` last)
-- **`DependencyInjection.cs`** (Application) - Handlers registered individually; validators auto-discovered via `AddValidatorsFromAssembly`; `FluentValidation` and `MediatR`-style dependencies added to `Movies.Application.csproj`
-- **CI workflow** - Updated to build and test the frontend alongside the backend
-
-### Added (continued)
 - **Mono-repo layout** - Restructured the repository for a future standalone frontend:
   - All .NET solution files (`src/`, `tests/`, `Movies.slnx`, build props, `global.json`, coverage scripts) moved under `backend/` with `git mv` to preserve history
   - `frontend/` placeholder added for the upcoming SPA (Angular or React), which will consume the backend's OpenAPI spec
@@ -48,26 +39,18 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Changed
 - **`GetMovieByIdHandler`, `UpdateMovieHandler`, `DeleteMovieHandler`** - Now throw `EntityNotFoundException` when the entity is not found instead of returning `null` / `false`; handler interfaces updated to non-nullable return types (`Task<MovieDto>` / `Task`)
 - **`GetMovieByIdEndpoint`, `UpdateMovieEndpoint`, `DeleteMovieEndpoint`** - Null / bool guards removed; not-found signal is now the handler's responsibility via exception
-- **`Program.cs`** - `UseMiddleware<ExceptionHandlingMiddleware>()` replaced by `UseExceptionHandler()`; three `AddExceptionHandler<T>()` registrations (order matters — `DefaultExceptionHandler` last)
-- **`DependencyInjection.cs`** (Application) - Handlers registered individually; validators auto-discovered via `AddValidatorsFromAssembly`; `FluentValidation` and `MediatR`-style dependencies added to `Movies.Application.csproj`
+- **`Program.cs`** - `UseMiddleware<ExceptionHandlingMiddleware>()` replaced by `UseExceptionHandler()`; three `AddExceptionHandler<T>()` registrations (order matters — `DefaultExceptionHandler` last); also registers `AddApplication()` + `AddPersistence()`, `AddFastEndpoints()`/`UseFastEndpoints()`, and serves the app under `/api` via `UsePathBase`
+- **`DependencyInjection.cs`** (Application) - Handlers registered individually; validators auto-discovered via `AddValidatorsFromAssembly`; `FluentValidation` dependencies added to `Movies.Application.csproj`
 - **CI workflow** - Updated to build and test the frontend alongside the backend
 - **Hexagonal layer layout** - Reorganized the backend folders to make the Ports & Adapters layers explicit, dependencies still inward-only (`Domain ← Application ← {Adapters, Presentation}`). All moves used `git mv` to preserve history:
   - `src/Applications/` → `src/Presentation/` (hosts `Movies.WebService`)
-  - `src/Core/` dissolved; the singleton `Movies.Application` and `Movies.Domain` projects now sit directly under `src/` (Application and Domain layers will never have a second project)
-  - `src/Adapters/` retained as-is (may host additional adapters)
-  - Updated all `ProjectReference` paths, `Movies.slnx` solution folders, the `Dockerfile` COPY paths, and `compose.yaml`'s `dockerfile` path; the Dockerfile now also copies `Movies.Application.csproj` before `dotnet restore` (was missing)
-- **`Program.cs`** (earlier) - Registers `AddApplication()` + `AddPersistence()` and `AddFastEndpoints()`/`UseFastEndpoints()`; serves the app under the `/api` base path via `UsePathBase`; `MoviesDbContext` registration moved out into `AddPersistence`
-- **`Directory.Packages.props`** - Centralized versions for `FastEndpoints` and `Microsoft.Extensions.DependencyInjection.Abstractions`
+  - `src/Core/` dissolved; `Movies.Application` and `Movies.Domain` now sit directly under `src/`
+  - Updated all `ProjectReference` paths, `Movies.slnx` solution folders, `Dockerfile` COPY paths, and `compose.yaml`
+- **`Directory.Packages.props`** - Centralized versions for `FastEndpoints`, `FluentValidation`, and `Microsoft.Extensions.DependencyInjection.Abstractions`
 - **`Movies.WebService.csproj`** - Added `FastEndpoints` package reference and a project reference to `Movies.WebService.Contracts`
-- **`Movies.Application.csproj`** - Added `Microsoft.Extensions.DependencyInjection.Abstractions` (for the `AddApplication` extension)
-- **Dockerfile** - Fixed build paths to match actual project structure:
-  - Updated COPY paths from `src/Movies.WebService/` to `src/Applications/Movies.WebService/`
-  - Added copying of `Directory.Build.props` and `Directory.Packages.props` before restore
-  - Added explicit COPY steps for domain and persistence layer dependencies
-- **Clean-architecture cleanup** - Tidied the Core and adapter layout:
-  - Renamed `Movies.Persistance.Postgres` → `Movies.Persistence.Postgres` (project, folder, and namespace) to fix the long-standing typo
-  - Merged `Movies.Application.Abstractions` into `Movies.Application`; the `IMovieRepository`/`IMovieService` ports now live under `Movies.Application/Abstractions/` with their namespace unchanged
-  - Rewired references accordingly: `Movies.Persistence.Postgres` now references `Movies.Application` for the ports, and `Movies.Application` references `Movies.Domain` directly. Dependency direction is unchanged (still inward-only)
+- **`Movies.Application.csproj`** - Added `Microsoft.Extensions.DependencyInjection.Abstractions` and `FluentValidation`
+- **Dockerfile** - Fixed build paths; added copying of `Directory.Build.props`, `Directory.Packages.props`, and explicit COPY steps for all layer dependencies before restore
+- **Clean-architecture cleanup** - Renamed `Movies.Persistance.Postgres` → `Movies.Persistence.Postgres` (typo fix); merged `Movies.Application.Abstractions` into `Movies.Application`
 
 ### Removed
 - **`IMovieService` / `MovieService`** - Replaced by per-use-case handlers; the single-service pattern did not scale as use cases multiplied

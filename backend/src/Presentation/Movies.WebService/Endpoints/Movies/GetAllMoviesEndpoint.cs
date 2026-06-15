@@ -1,10 +1,10 @@
 using FastEndpoints;
-using Movies.Application.Abstractions;
+using Movies.Application.Movies.ListMovies;
 using Movies.WebService.Contracts.Responses;
 
 namespace Movies.WebService.Endpoints.Movies;
 
-internal sealed class GetAllMoviesEndpoint(IMovieService movieService) : EndpointWithoutRequest<MoviesResponse>
+internal sealed class GetAllMoviesEndpoint(IListMoviesHandler handler) : EndpointWithoutRequest<MoviesResponse>
 {
     public override void Configure()
     {
@@ -14,7 +14,7 @@ internal sealed class GetAllMoviesEndpoint(IMovieService movieService) : Endpoin
 
     public override async Task HandleAsync(CancellationToken cancellationToken)
     {
-        var movies = await movieService.GetAllAsync(cancellationToken);
+        var movies = await handler.Handle(new ListMoviesQuery(), cancellationToken);
 
         await Send.OkAsync(movies.ToResponse(), cancellationToken);
     }

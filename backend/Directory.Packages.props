@@ -15,9 +15,16 @@
     <!-- Dependency Injection -->
     <PackageVersion Include="Microsoft.Extensions.DependencyInjection.Abstractions" Version="10.0.2" />
 
+    <!-- Validation -->
+    <PackageVersion Include="FluentValidation" Version="11.11.0" />
+    <PackageVersion Include="FluentValidation.DependencyInjectionExtensions" Version="11.11.0" />
+
     <!-- Entity Framework Core -->
     <PackageVersion Include="Microsoft.EntityFrameworkCore.Design" Version="10.0.2" />
     <PackageVersion Include="Npgsql.EntityFrameworkCore.PostgreSQL" Version="10.0.2" />
+
+    <!-- Testing -->
+    <PackageVersion Include="Testcontainers.PostgreSql" Version="4.4.0" />
 
     <!-- Code Analysis -->
     <PackageVersion Include="StyleCop.Analyzers" Version="1.2.0-beta.556" />

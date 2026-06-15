@@ -1,4 +1,6 @@
-using Movies.Domain;
+using Movies.Application.Movies;
+using Movies.Application.Movies.CreateMovie;
+using Movies.Application.Movies.UpdateMovie;
 using Movies.WebService.Contracts.Requests;
 using Movies.WebService.Contracts.Responses;
 
@@ -6,7 +8,13 @@ namespace Movies.WebService.Endpoints.Movies;
 
 internal static class MovieMappings
 {
-    public static MovieResponse ToResponse(this Movie movie) => new()
+    public static CreateMovieCommand ToCommand(this CreateMoviesRequest request) =>
+        new(request.Title, request.YearOfRelease, null);
+
+    public static UpdateMovieCommand ToCommand(this UpdateMoviesRequest request, Guid id) =>
+        new(id, request.Title, request.YearOfRelease, null);
+
+    public static MovieResponse ToResponse(this MovieDto movie) => new()
     {
         Id = movie.Id,
         Title = movie.Title,
@@ -17,21 +25,8 @@ internal static class MovieMappings
         Genres = [],
     };
 
-    public static MoviesResponse ToResponse(this IEnumerable<Movie> movies) => new()
+    public static MoviesResponse ToResponse(this IEnumerable<MovieDto> movies) => new()
     {
         Movies = movies.Select(movie => movie.ToResponse()),
-    };
-
-    public static Movie ToMovie(this CreateMoviesRequest request) => new()
-    {
-        Title = request.Title,
-        YearOfRelease = request.YearOfRelease,
-    };
-
-    public static Movie ToMovie(this UpdateMoviesRequest request, Guid id) => new()
-    {
-        Id = id,
-        Title = request.Title,
-        YearOfRelease = request.YearOfRelease,
     };
 }

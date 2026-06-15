@@ -1,10 +1,10 @@
 using FastEndpoints;
-using Movies.Application.Abstractions;
+using Movies.Application.Movies.GetMovieById;
 using Movies.WebService.Contracts.Responses;
 
 namespace Movies.WebService.Endpoints.Movies;
 
-internal sealed class GetMovieByIdEndpoint(IMovieService movieService) : EndpointWithoutRequest<MovieResponse>
+internal sealed class GetMovieByIdEndpoint(IGetMovieByIdHandler handler) : EndpointWithoutRequest<MovieResponse>
 {
     public override void Configure()
     {
@@ -16,7 +16,7 @@ internal sealed class GetMovieByIdEndpoint(IMovieService movieService) : Endpoin
     {
         var id = Route<Guid>("id");
 
-        var movie = await movieService.GetByIdAsync(id, cancellationToken);
+        var movie = await handler.Handle(new GetMovieByIdQuery(id), cancellationToken);
 
         if (movie is null)
         {

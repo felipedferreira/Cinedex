@@ -1,4 +1,6 @@
 using FastEndpoints;
+using HealthChecks.UI.Client;
+using Microsoft.AspNetCore.Diagnostics.HealthChecks;
 using Movies.Application;
 using Movies.Persistence.Postgres;
 using Movies.WebService.ExceptionHandlers;
@@ -47,6 +49,13 @@ public class Program
         builder.Services.AddOpenApi();
         builder.Services.AddProblemDetails();
 
+        builder.Services
+            .AddHealthChecks()
+            .AddNpgSql(
+                connectionString: builder.Configuration.GetConnectionString("DefaultConnection")!,
+                name: "postgres",
+                tags: ["ready"]);
+
         // Register exception handlers in chain order — DefaultExceptionHandler must be last (catch-all)
         builder.Services.AddExceptionHandler<ValidationExceptionHandler>();
         builder.Services.AddExceptionHandler<EntityNotFoundExceptionHandler>();
@@ -56,6 +65,18 @@ public class Program
 
         // Serve the application under the "/movies-svc" base path
         app.UsePathBase("/movies-svc");
+
+        app.MapHealthChecks("/health/live", new HealthCheckOptions
+        {
+            Predicate = _ => false,
+            ResponseWriter = UIResponseWriter.WriteHealthCheckUIResponse,
+        });
+
+        app.MapHealthChecks("/health/ready", new HealthCheckOptions
+        {
+            Predicate = check => check.Tags.Contains("ready"),
+            ResponseWriter = UIResponseWriter.WriteHealthCheckUIResponse,
+        });
 
         // Handle unhandled exceptions and convert them to Problem Details (RFC 7807)
         app.UseExceptionHandler();

@@ -33,6 +33,12 @@
       Features__ApiDocumentationEnabled: "true"
       ConnectionStrings__DefaultConnection: "Host=postgres;Database=movies;Username=movies_rw;Password=P@ssw0rd!Secure#2024"
       Kestrel__Endpoints__Http__Url: "http://0:0:0:0:8080"
+    healthcheck:
+      test: ["CMD-SHELL", "curl -sf http://localhost:8080/movies-svc/health/live || exit 1"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+      start_period: 15s
 
   cinadex-ui:
     image: cinadex-ui

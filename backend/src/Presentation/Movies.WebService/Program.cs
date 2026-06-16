@@ -35,12 +35,9 @@ public class Program
             options.Limits.KeepAliveTimeout = TimeSpan.FromMinutes(1);
         });
 
-        // Register application use cases and the PostgreSQL persistence adapter
-        var connectionString = builder.Configuration.GetConnectionString("DefaultConnection") ?? string.Empty;
-
         builder.Services
             .AddApplication()
-            .AddPersistence(connectionString);
+            .AddPersistence();
 
         // Register FastEndpoints (discovers endpoint classes in this assembly)
         builder.Services.AddFastEndpoints();
@@ -57,25 +54,8 @@ public class Program
 
         var app = builder.Build();
 
-        // Verify the database is reachable before the application starts serving requests.
-        // MoviesDbContext is registered as a scoped service, so resolve it from a temporary
-        // DI scope rather than the root provider, and call CanConnectAsync to test the connection.
-        using (var scope = app.Services.CreateScope())
-        {
-            var dbContext = scope.ServiceProvider.GetRequiredService<MoviesDbContext>();
-
-            if (await dbContext.Database.CanConnectAsync())
-            {
-                app.Logger.LogInformation("Successfully connected to the database.");
-            }
-            else
-            {
-                app.Logger.LogError("Unable to connect to the database.");
-            }
-        }
-
-        // Serve the application under the "/api" base path
-        app.UsePathBase("/api");
+        // Serve the application under the "/movies-svc" base path
+        app.UsePathBase("/movies-svc");
 
         // Handle unhandled exceptions and convert them to Problem Details (RFC 7807)
         app.UseExceptionHandler();

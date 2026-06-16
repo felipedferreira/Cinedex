@@ -8,7 +8,7 @@ namespace Movies.WebService.IntegrationTests.Movies;
 
 public sealed class CreateMovieEndpointTests(WebApplicationFixture fixture) : IClassFixture<WebApplicationFixture>
 {
-    private const string MoviesEndpoint = "/api/movies";
+    private const string MoviesEndpoint = "/movies-svc/movies";
 
     [Fact]
     public async Task CreateMovie_WithValidRequest_Returns201Created()

@@ -28,8 +28,8 @@ docker compose up
 Access the application:
 - **UI:** http://localhost:9000
 - **API:** http://localhost:8080
-- **API Documentation:** http://localhost:8080/api-docs/v1 (Scalar UI)
-- **OpenAPI Spec:** http://localhost:8080/openapi/v1.json
+- **API Documentation:** http://127.0.0.1:8080/movies-svc/api-docs/v1 (Scalar UI)
+- **OpenAPI Spec:** http://127.0.0.1:8080/movies-svc/openapi/v1.json
 - **PostgreSQL:** localhost:5432
 
 For local development without Docker, see the [backend README](backend/README.md).

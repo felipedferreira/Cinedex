@@ -19,14 +19,18 @@ Be respectful, inclusive, and professional in all interactions.
 
 #### Option A — Docker Compose (full stack)
 
-Run everything from the repository root:
+Create the root `.env` file (one-time; required for the Seq observability stack — see
+[backend README](backend/README.md#environment-configuration)), then run everything from the
+repository root:
 
 ```bash
+cp .env.example .env       # fill in the Seq values
 docker compose up --build
 ```
 
 - **UI:** http://localhost:9000
 - **API:** http://localhost:8080
+- **Seq (logs & traces):** http://localhost:5341
 - **PostgreSQL:** localhost:5432
 
 #### Option B — Local development

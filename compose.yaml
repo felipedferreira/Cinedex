@@ -16,6 +16,35 @@
       timeout: 5s
       retries: 5
 
+  # Structured logs + traces are ingested by Seq over OTLP.
+  # First-run setup: sign in to the UI at http://localhost:5341 as `admin` with the
+  # SEQ_ADMIN_PASSWORD from your .env, create an API key under Settings -> API Keys,
+  # set its token to the SEQ_API_KEY value, then restart movies.webservice.
+  # CI alternative: `seqcli apikey create --token=$SEQ_API_KEY`.
+  seq:
+    image: datalust/seq:latest
+    container_name: movies-seq
+    environment:
+      ACCEPT_EULA: "Y"
+      # Seq refuses to start on first run without an admin password. We seed a permanent
+      # password *hash* (not the plaintext SEQ_FIRSTRUN_ADMINPASSWORD, which forces an
+      # interactive change on first login and blocks automation). Sign in as `admin` with
+      # the plaintext SEQ_ADMIN_PASSWORD. Regenerate the hash with:
+      #   echo "<password>" | docker run --rm -i datalust/seq config hash
+      SEQ_FIRSTRUN_ADMINPASSWORDHASH: "${SEQ_ADMIN_PASSWORD_HASH}"
+    ports:
+      # Pinned to IPv4 loopback on purpose: a bare "5341:80" also binds [::]:5341, and on
+      # Docker Desktop / Windows the IPv6 path for `localhost` (::1) accepts the connection
+      # but fails to relay data. Binding IPv4 only makes `localhost` fall back to 127.0.0.1.
+      - "127.0.0.1:5341:80"   # Seq UI + OTLP/native ingestion -> http://localhost:5341
+    volumes:
+      - seq_data:/data
+    healthcheck:
+      test: ["CMD-SHELL", "curl -sf http://localhost/health || exit 1"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
   movies.webservice:
     image: movies.webservice
     build:
@@ -28,11 +57,18 @@
     depends_on:
       postgres:
         condition: service_healthy
+      seq:
+        condition: service_healthy
     environment:
       ASPNETCORE_ENVIRONMENT: Production
       Features__ApiDocumentationEnabled: "true"
       ConnectionStrings__DefaultConnection: "Host=postgres;Database=movies;Username=movies_rw;Password=P@ssw0rd!Secure#2024"
       Kestrel__Endpoints__Http__Url: "http://0:0:0:0:8080"
+      # OpenTelemetry -> Seq OTLP ingestion (Seq listens on container port 80)
+      OTEL_EXPORTER_OTLP_ENDPOINT: "http://seq/ingest/otlp"
+      OTEL_EXPORTER_OTLP_PROTOCOL: "http/protobuf"
+      OTEL_EXPORTER_OTLP_HEADERS: "X-Seq-ApiKey=${SEQ_API_KEY}"
+      OTEL_SERVICE_NAME: "Movies.WebService"
     healthcheck:
       test: ["CMD-SHELL", "curl -sf http://localhost:8080/movies-svc/health/live || exit 1"]
       interval: 30s
@@ -53,4 +89,5 @@
 
 volumes:
   postgres_data:
+  seq_data:
 

@@ -35,7 +35,22 @@ Ensure PostgreSQL is installed and running locally. The connection string is con
 
 ### Environment Configuration
 
-Environment variables are configured in `compose.yaml` and automatically applied to the containers. All sensitive data and environment-specific settings are managed there.
+Most environment variables are baked into `compose.yaml` and applied to the containers
+automatically. **Secrets for the Seq observability stack are the exception** — they are read
+from a git-ignored `.env` file at the repository root, which `compose.yaml` interpolates via
+`${...}`. A `docker compose up` without this file will fail.
+
+Create it once by copying the template and filling in values:
+
+```bash
+cp .env.example .env          # from the repository root
+```
+
+| Variable | Purpose |
+|----------|---------|
+| `SEQ_ADMIN_PASSWORD` | Password for the Seq UI `admin` user (used to sign in and manage API keys). |
+| `SEQ_ADMIN_PASSWORD_HASH` | Permanent hash of `SEQ_ADMIN_PASSWORD`, seeded into Seq on first run (see [Observability](#-observability-seq)). |
+| `SEQ_API_KEY` | Ingestion API-key token the web service sends to Seq over OTLP (`X-Seq-ApiKey`). |
 
 For local development outside of Docker, you can use environment variables or configuration files as needed.
 
@@ -84,19 +99,25 @@ dotnet run --project src/Presentation/Movies.WebService
 
 ## 🐳 Docker Compose
 
-The project includes a complete `compose.yaml` with PostgreSQL and the web service. All configuration is pre-set in the compose file.
+The project includes a complete `compose.yaml` with PostgreSQL, the web service, the frontend,
+and a [Seq](https://datalust.co/seq) instance for logs and traces.
 
 ### Getting Started
 
-Start the services:
-```bash
-docker-compose up
-```
+1. Create the root `.env` file (one-time — see [Environment Configuration](#environment-configuration)):
+   ```bash
+   cp .env.example .env       # then fill in the Seq values
+   ```
+2. Start the services from the repository root:
+   ```bash
+   docker compose up --build
+   ```
 
 Access the application:
 - **API:** http://localhost:8080
-- **API Documentation:** http://localhost:8080/api-docs/v1 (Scalar UI)
-- **OpenAPI Spec:** http://localhost:8080/openapi/v1.json
+- **API Documentation:** http://127.0.0.1:8080/movies-svc/api-docs/v1 (Scalar UI)
+- **OpenAPI Spec:** http://127.0.0.1:8080/movies-svc/openapi/v1.json
+- **Seq (logs & traces):** http://localhost:5341 — sign in as `admin` with `SEQ_ADMIN_PASSWORD`
 - **PostgreSQL:** localhost:5432
 
 ### Services
@@ -105,26 +126,72 @@ Access the application:
 |---------|-------|------|---------|
 | `postgres` | postgres:17-alpine | 5432 | PostgreSQL database with persistent storage |
 | `movies.webservice` | movies.webservice | 8080/8081 | ASP.NET Core web API |
+| `cinadex-ui` | cinadex-ui | 9000 | React SPA frontend (Nginx) |
+| `seq` | datalust/seq | 5341 | Structured logs + distributed traces (OpenTelemetry/OTLP) |
 
 ### Features
 
-- ✅ **Health Checks:** Database readiness verified before starting web service
-- ✅ **Data Persistence:** PostgreSQL data persists via named volume (`postgres_data`)
-- ✅ **Environment Variables:** Pre-configured in `compose.yaml`
-- ✅ **Service Dependencies:** Web service automatically waits for database
-- ✅ **API Documentation:** Scalar UI available at `/api-docs/v1`
+- ✅ **Health Checks:** Database and Seq readiness verified before starting the web service
+- ✅ **Data Persistence:** PostgreSQL and Seq data persist via named volumes (`postgres_data`, `seq_data`)
+- ✅ **Observability:** Logs and traces shipped to Seq via OpenTelemetry (see [below](#-observability-seq))
+- ✅ **Service Dependencies:** Web service automatically waits for its dependencies
+- ✅ **API Documentation:** Scalar UI available at `/movies-svc/api-docs/v1`
 - ✅ **Feature Flags:** Configurable via environment variables
 
 ### Stopping Services
 
 ```bash
-docker-compose down
+docker compose down
 ```
 
-To also remove persistent data:
+To also remove persistent data (PostgreSQL **and** Seq volumes):
 ```bash
-docker-compose down -v
+docker compose down -v
 ```
+
+## 📈 Observability (Seq)
+
+The web service emits **structured logs** and **distributed traces** through OpenTelemetry,
+exporting both over OTLP to the `seq` container. Inside the Compose network the app targets
+`http://seq/ingest/otlp` (configured via the `OTEL_EXPORTER_OTLP_*` environment variables on
+`movies.webservice`); from your machine the Seq UI is at **http://localhost:5341**.
+
+Traces cover incoming HTTP requests (ASP.NET Core), outbound `HttpClient` calls, and PostgreSQL
+queries (the `Npgsql` activity source). Every request's `CorrelationId` is attached to its log
+events and to the trace as a `correlation_id` tag, so you can pivot between logs and traces for
+the same request.
+
+### First-run setup
+
+Seq refuses to start without an admin credential and won't auto-provision an ingestion key, so
+two `.env` values need preparing once.
+
+1. **Generate the admin password hash.** Seq's plaintext first-run password forces an
+   interactive change (which blocks automation), so seed a permanent hash instead. Pipe the
+   password to `seq config hash` **inside the container** — generating it through PowerShell's
+   stdin can corrupt the input:
+   ```bash
+   docker run --rm --entrypoint sh datalust/seq \
+     -c 'printf "%s" "<your-password>" | /bin/seqentry config hash'
+   ```
+   Put `<your-password>` in `SEQ_ADMIN_PASSWORD` and the printed hash in
+   `SEQ_ADMIN_PASSWORD_HASH`.
+
+2. **Choose an ingestion token** and set it as `SEQ_API_KEY` (any sufficiently random string).
+
+3. **Start the stack** (`docker compose up --build`), then register the API key in Seq so its
+   token matches `SEQ_API_KEY`:
+   ```bash
+   docker run --rm --network movies_default datalust/seqcli apikey create \
+     -t "Movies WebService" --token "<your-SEQ_API_KEY>" --permissions "Ingest" \
+     -s http://seq --connect-username admin --connect-password "<your-password>"
+   ```
+   (Or create it in the UI: **Settings → API Keys**, setting the key's token to `SEQ_API_KEY`.)
+   Restart the web service afterwards so it picks up the key: `docker compose up -d movies.webservice`.
+
+> **Note:** On Docker Desktop / Windows the Seq port is published on IPv4 loopback
+> (`127.0.0.1:5341`) on purpose — a dual-stack bind makes `localhost` resolve to IPv6 first,
+> which Docker Desktop fails to relay. Use `http://localhost:5341` or `http://127.0.0.1:5341`.
 
 ## Architecture Overview
 
@@ -247,18 +314,22 @@ The service will be available at:
 - API Docs: http://localhost:5000/api-docs
 
 ### Run with Docker Compose:
+
+Run from the repository root. Requires the root `.env` file — see the
+[🐳 Docker Compose](#-docker-compose) section above for full details.
+
 ```bash
-# Start both PostgreSQL and web service
-docker-compose up
+# Start the full stack (PostgreSQL, web service, frontend, Seq)
+docker compose up --build
 
 # Run in background
-docker-compose up -d
+docker compose up -d
 
 # View logs
-docker-compose logs -f
+docker compose logs -f
 
 # Stop services
-docker-compose down
+docker compose down
 ```
 
 ## Testing & Code Coverage

@@ -4,8 +4,10 @@ using Microsoft.AspNetCore.Diagnostics.HealthChecks;
 using Movies.Application;
 using Movies.Persistence.Postgres;
 using Movies.WebService.ExceptionHandlers;
+using OpenTelemetry.Logs;
+using OpenTelemetry.Resources;
+using OpenTelemetry.Trace;
 using Scalar.AspNetCore;
-using Serilog;
 
 namespace Movies.WebService;
 
@@ -15,12 +17,42 @@ public class Program
     {
         var builder = WebApplication.CreateBuilder(args);
 
-        // Configure Serilog
-        builder.Host.UseSerilog((_, configuration) =>
+        // Configure OpenTelemetry logs + traces, exported to Seq over OTLP.
+        // The OTLP endpoint, protocol and the Seq API-key header are supplied via the
+        // standard OTEL_EXPORTER_OTLP_* environment variables (see compose.yaml). When no
+        // endpoint is configured (local `dotnet run`, integration tests) the exporters are
+        // omitted so nothing tries to reach a Seq that isn't there.
+        var otlpEndpointConfigured =
+            !string.IsNullOrWhiteSpace(builder.Configuration["OTEL_EXPORTER_OTLP_ENDPOINT"]);
+
+        var serviceName = builder.Configuration["OTEL_SERVICE_NAME"] ?? "Movies.WebService";
+
+        builder.Services
+            .AddOpenTelemetry()
+            .ConfigureResource(resource => resource.AddService(serviceName))
+            .WithTracing(tracing =>
+            {
+                tracing
+                    .AddAspNetCoreInstrumentation()
+                    .AddHttpClientInstrumentation()
+                    .AddSource("Npgsql"); // EF Core/Npgsql emit DB spans on this ActivitySource
+
+                if (otlpEndpointConfigured)
+                {
+                    tracing.AddOtlpExporter();
+                }
+            });
+
+        builder.Logging.AddOpenTelemetry(logging =>
         {
-            configuration
-                .MinimumLevel.Information()
-                .WriteTo.Console();
+            logging.IncludeScopes = true;
+            logging.IncludeFormattedMessage = true;
+            logging.SetResourceBuilder(ResourceBuilder.CreateDefault().AddService(serviceName));
+
+            if (otlpEndpointConfigured)
+            {
+                logging.AddOtlpExporter();
+            }
         });
 
         // Configure Kestrel server timeouts
@@ -86,9 +118,6 @@ public class Program
 
         // Convert HTTP status codes to Problem Details responses
         app.UseStatusCodePages();
-
-        // Wire up Serilog request logging middleware
-        app.UseSerilogRequestLogging();
 
         // Configure the HTTP request pipeline
         // API documentation is enabled via Features:ApiDocumentationEnabled configuration

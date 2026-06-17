@@ -1,4 +1,4 @@
-using Serilog.Context;
+using System.Diagnostics;
 
 namespace Movies.WebService;
 
@@ -10,7 +10,13 @@ public class CorrelationIdMiddleware(RequestDelegate next, ILogger<CorrelationId
     {
         var correlationId = GetOrCreateCorrelationId(context);
 
-        using (LogContext.PushProperty("CorrelationId", correlationId))
+        // Attach the correlation id to every log record emitted during the request
+        // (OpenTelemetry logging is configured with IncludeScopes = true) and stamp it on
+        // the active trace so logs and the request's trace are searchable by it in Seq.
+        var scopeState = new Dictionary<string, object> { ["CorrelationId"] = correlationId };
+        Activity.Current?.SetTag("correlation_id", correlationId);
+
+        using (logger.BeginScope(scopeState))
         {
             context.Items["CorrelationId"] = correlationId;
             context.Response.Headers.Append(CorrelationIdHeaderName, correlationId);

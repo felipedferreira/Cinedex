@@ -62,7 +62,7 @@
     environment:
       ASPNETCORE_ENVIRONMENT: Production
       Features__ApiDocumentationEnabled: "true"
-      ConnectionStrings__DefaultConnection: "Host=postgres;Database=movies;Username=movies_rw;Password=P@ssw0rd!Secure#2024"
+      ConnectionStrings__DefaultConnection: "${DB_CONNECTION_STRING}"
       Kestrel__Endpoints__Http__Url: "http://0:0:0:0:8080"
       # OpenTelemetry -> Seq OTLP ingestion (Seq listens on container port 80)
       OTEL_EXPORTER_OTLP_ENDPOINT: "http://seq/ingest/otlp"

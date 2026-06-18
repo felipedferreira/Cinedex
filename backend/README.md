@@ -16,7 +16,7 @@ You have two options to run PostgreSQL:
 
 #### Option 1: Docker Compose (Recommended for development)
 ```bash
-docker-compose up
+docker compose up            # from the repository root, where compose.yaml lives
 ```
 
 This starts:
@@ -26,19 +26,28 @@ This starts:
 - Data persistence via Docker volume
 
 #### Option 2: Local PostgreSQL
-Ensure PostgreSQL is installed and running locally. The connection string is configured in `appsettings.json`:
-```json
-"ConnectionStrings": {
-  "DefaultConnection": "Host=localhost;Database=movies;Username=movies_rw;Password=P@ssw0rd!Secure#2024"
-}
+Ensure PostgreSQL is installed and running locally. The connection string is **not**
+committed — for local runs (`Development` environment) it is supplied via
+[.NET User Secrets](https://learn.microsoft.com/aspnet/core/security/app-secrets) so the
+password stays out of git. Set it once from the web service project directory:
+```bash
+# from backend/src/Presentation/Movies.WebService
+dotnet user-secrets set "ConnectionStrings:DefaultConnection" \
+  "<YOUR_LOCAL_CONNECTION_STRING>"
+```
+
+Verify the secret was stored correctly (same directory):
+```bash
+# from backend/src/Presentation/Movies.WebService
+dotnet user-secrets list
 ```
 
 ### Environment Configuration
 
 Most environment variables are baked into `compose.yaml` and applied to the containers
-automatically. **Secrets for the Seq observability stack are the exception** — they are read
-from a git-ignored `.env` file at the repository root, which `compose.yaml` interpolates via
-`${...}`. A `docker compose up` without this file will fail.
+automatically. **Secrets are the exception** — the database connection string and the Seq
+observability secrets are read from a git-ignored `.env` file at the repository root, which
+`compose.yaml` interpolates via `${...}`. A `docker compose up` without this file will fail.
 
 Create it once by copying the template and filling in values:
 
@@ -48,11 +57,14 @@ cp .env.example .env          # from the repository root
 
 | Variable | Purpose |
 |----------|---------|
+| `DB_CONNECTION_STRING` | Full Postgres connection string for the web service container (host is the `postgres` service name). |
 | `SEQ_ADMIN_PASSWORD` | Password for the Seq UI `admin` user (used to sign in and manage API keys). |
 | `SEQ_ADMIN_PASSWORD_HASH` | Permanent hash of `SEQ_ADMIN_PASSWORD`, seeded into Seq on first run (see [Observability](#-observability-seq)). |
 | `SEQ_API_KEY` | Ingestion API-key token the web service sends to Seq over OTLP (`X-Seq-ApiKey`). |
 
-For local development outside of Docker, you can use environment variables or configuration files as needed.
+For local development outside of Docker, the connection string is supplied via .NET User
+Secrets (see [Option 2](#option-2-local-postgresql) above); other settings can use
+environment variables or configuration files as needed.
 
 ### Migrations
 
@@ -68,6 +80,19 @@ dotnet ef migrations add <MigrationName> \
 dotnet ef database update \
   --project src/Adapters/Movies.Persistence.Postgres \
   --startup-project src/Presentation/Movies.WebService
+```
+
+By default these commands resolve `ConnectionStrings:DefaultConnection` from the startup
+project's configuration (User Secrets in `Development`; see [Option 2](#option-2-local-postgresql)).
+If that isn't set — or you want to target a specific database such as the Docker Postgres
+container exposed on `localhost:5432` — pass the connection string explicitly with `--connection`:
+
+```bash
+dotnet ef database update \
+  --project src/Adapters/Movies.Persistence.Postgres \
+  --startup-project src/Presentation/Movies.WebService \
+  --connection "<YOUR_CONNECTION_STRING>"
+# e.g. "Host=127.0.0.1;Port=5432;Database=movies;Username=movies_rw;Password=<DB_PASSWORD>"
 ```
 
 > **Domain models** live in `Movies.Domain`. EF entity configurations use **Fluent API** in `Movies.Persistence.Postgres`, keeping the domain layer free of any EF dependencies.
@@ -168,25 +193,42 @@ two `.env` values need preparing once.
 
 1. **Generate the admin password hash.** Seq's plaintext first-run password forces an
    interactive change (which blocks automation), so seed a permanent hash instead. Pipe the
-   password to `seq config hash` **inside the container** — generating it through PowerShell's
-   stdin can corrupt the input:
+   password to the image's default entrypoint with the `config hash` arguments (the `-i` flag
+   keeps stdin open so the password reaches the tool):
    ```bash
-   docker run --rm --entrypoint sh datalust/seq \
-     -c 'printf "%s" "<your-password>" | /bin/seqentry config hash'
+   echo "<your-password>" | docker run --rm -i datalust/seq config hash
    ```
    Put `<your-password>` in `SEQ_ADMIN_PASSWORD` and the printed hash in
-   `SEQ_ADMIN_PASSWORD_HASH`.
+   `SEQ_ADMIN_PASSWORD_HASH`. The hash is salted, so each run prints a different string — any
+   hash generated from the same password will validate.
 
 2. **Choose an ingestion token** and set it as `SEQ_API_KEY` (any sufficiently random string).
 
 3. **Start the stack** (`docker compose up --build`), then register the API key in Seq so its
-   token matches `SEQ_API_KEY`:
+   token matches `SEQ_API_KEY`. The web service sends this token on every OTLP request via the
+   `X-Seq-ApiKey` header, so the token stored in Seq **must equal** the `SEQ_API_KEY` in your
+   `.env` — don't let Seq auto-generate one. Use either the CLI or the UI:
+
+   **Option A — CLI (`seqcli`):**
    ```bash
    docker run --rm --network movies_default datalust/seqcli apikey create \
      -t "Movies WebService" --token "<your-SEQ_API_KEY>" --permissions "Ingest" \
      -s http://seq --connect-username admin --connect-password "<your-password>"
    ```
-   (Or create it in the UI: **Settings → API Keys**, setting the key's token to `SEQ_API_KEY`.)
+
+   **Option B — Seq UI** (http://localhost:5341 → **Settings → API Keys**):
+   1. Click **ADD API KEY**.
+   2. **Title:** anything descriptive, e.g. `Movies WebService`.
+   3. **Token:** type your `SEQ_API_KEY` value here instead of generating a random one, so it
+      matches `.env`.
+   4. **Permissions:** ensure **Ingest** is selected (all the web service needs to write events).
+   5. Save.
+
+   > Requiring authentication for ingestion is optional — by default Seq accepts all events, so
+   > logs flow even without a key. Registering the key with the matching token still ensures
+   > ingestion is attributed to it and keeps working if you later enable
+   > *Require authentication for HTTP/S ingestion*.
+
    Restart the web service afterwards so it picks up the key: `docker compose up -d movies.webservice`.
 
 > **Note:** On Docker Desktop / Windows the Seq port is published on IPv4 loopback

@@ -1,5 +1,10 @@
 using FluentValidation;
 using Microsoft.Extensions.DependencyInjection;
+using Movies.Application.Genres.CreateGenre;
+using Movies.Application.Genres.DeleteGenre;
+using Movies.Application.Genres.GetGenreById;
+using Movies.Application.Genres.ListGenres;
+using Movies.Application.Genres.UpdateGenre;
 using Movies.Application.Movies.CreateMovie;
 using Movies.Application.Movies.DeleteMovie;
 using Movies.Application.Movies.GetMovieById;
@@ -17,6 +22,12 @@ public static class DependencyInjection
         services.AddScoped<IDeleteMovieHandler, DeleteMovieHandler>();
         services.AddScoped<IGetMovieByIdHandler, GetMovieByIdHandler>();
         services.AddScoped<IListMoviesHandler, ListMoviesHandler>();
+
+        services.AddScoped<ICreateGenreHandler, CreateGenreHandler>();
+        services.AddScoped<IUpdateGenreHandler, UpdateGenreHandler>();
+        services.AddScoped<IDeleteGenreHandler, DeleteGenreHandler>();
+        services.AddScoped<IGetGenreByIdHandler, GetGenreByIdHandler>();
+        services.AddScoped<IListGenresHandler, ListGenresHandler>();
 
         services.AddValidatorsFromAssembly(
             typeof(DependencyInjection).Assembly,

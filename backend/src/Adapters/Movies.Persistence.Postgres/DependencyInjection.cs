@@ -17,6 +17,7 @@ public static class DependencyInjection
             options.UseNpgsql(connectionString);
         });
         services.AddScoped<IMovieRepository, MovieRepository>();
+        services.AddScoped<IGenreRepository, GenreRepository>();
 
         return services;
     }

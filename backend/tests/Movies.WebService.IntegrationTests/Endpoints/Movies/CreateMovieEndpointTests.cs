@@ -1,6 +1,5 @@
 using System.Net;
 using System.Net.Http.Json;
-using Movies.WebService.Contracts.Enums;
 using Movies.WebService.Contracts.Requests;
 using Movies.WebService.Contracts.Responses;
 
@@ -17,7 +16,6 @@ public sealed class CreateMovieEndpointTests(WebApplicationFixture fixture) : IC
         {
             Title = "Inception",
             YearOfRelease = 2010,
-            Genres = [Genre.SciFi, Genre.Thriller],
         };
 
         var response = await fixture.Client.PostAsJsonAsync(MoviesEndpoint, request);
@@ -32,7 +30,6 @@ public sealed class CreateMovieEndpointTests(WebApplicationFixture fixture) : IC
         {
             Title = "The Dark Knight",
             YearOfRelease = 2008,
-            Genres = [Genre.Action, Genre.Crime],
         };
 
         var response = await fixture.Client.PostAsJsonAsync(MoviesEndpoint, request);
@@ -52,7 +49,6 @@ public sealed class CreateMovieEndpointTests(WebApplicationFixture fixture) : IC
         {
             Title = "Interstellar",
             YearOfRelease = 2014,
-            Genres = [],
         };
 
         var response = await fixture.Client.PostAsJsonAsync(MoviesEndpoint, request);
@@ -70,7 +66,6 @@ public sealed class CreateMovieEndpointTests(WebApplicationFixture fixture) : IC
         {
             Title = string.Empty,
             YearOfRelease = 2010,
-            Genres = [],
         };
 
         var response = await fixture.Client.PostAsJsonAsync(MoviesEndpoint, request);
@@ -85,7 +80,6 @@ public sealed class CreateMovieEndpointTests(WebApplicationFixture fixture) : IC
         {
             Title = new string('A', 257),
             YearOfRelease = 2010,
-            Genres = [],
         };
 
         var response = await fixture.Client.PostAsJsonAsync(MoviesEndpoint, request);
@@ -100,7 +94,6 @@ public sealed class CreateMovieEndpointTests(WebApplicationFixture fixture) : IC
         {
             Title = "Too Old",
             YearOfRelease = 1887,
-            Genres = [],
         };
 
         var response = await fixture.Client.PostAsJsonAsync(MoviesEndpoint, request);
@@ -115,7 +108,6 @@ public sealed class CreateMovieEndpointTests(WebApplicationFixture fixture) : IC
         {
             Title = "Too Far Ahead",
             YearOfRelease = DateTime.UtcNow.Year + 6,
-            Genres = [],
         };
 
         var response = await fixture.Client.PostAsJsonAsync(MoviesEndpoint, request);

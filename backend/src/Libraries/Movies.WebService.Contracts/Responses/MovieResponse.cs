@@ -1,5 +1,3 @@
-﻿using Movies.WebService.Contracts.Enums;
-
 namespace Movies.WebService.Contracts.Responses;
 
 public class MovieResponse
@@ -10,5 +8,7 @@ public class MovieResponse
 
     public required int YearOfRelease { get; init; }
 
-    public required IEnumerable<Genre> Genres { get; init; } = Enumerable.Empty<Genre>();
+    public string? Description { get; init; }
+
+    public IEnumerable<GenreResponse> Genres { get; init; } = Enumerable.Empty<GenreResponse>();
 }

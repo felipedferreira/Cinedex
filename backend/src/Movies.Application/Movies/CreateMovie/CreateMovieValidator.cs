@@ -15,5 +15,8 @@ internal sealed class CreateMovieValidator : AbstractValidator<CreateMovieComman
 
         RuleFor(command => command.Description)
             .MaximumLength(2000);
+
+        RuleForEach(command => command.GenreIds)
+            .NotEmpty();
     }
 }

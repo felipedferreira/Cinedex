@@ -9,4 +9,6 @@ public class Movie
     public required int YearOfRelease { get; set; }
 
     public string? Description { get; set; }
+
+    public ICollection<Genre> Genres { get; } = new List<Genre>();
 }

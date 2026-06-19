@@ -1,5 +1,3 @@
-﻿using Movies.WebService.Contracts.Enums;
-
 namespace Movies.WebService.Contracts.Requests;
 
 public class CreateMoviesRequest
@@ -8,5 +6,7 @@ public class CreateMoviesRequest
 
     public required int YearOfRelease { get; init; }
 
-    public required IEnumerable<Genre> Genres { get; init; } = Enumerable.Empty<Genre>();
+    public string? Description { get; init; }
+
+    public IEnumerable<Guid> GenreIds { get; init; } = Enumerable.Empty<Guid>();
 }

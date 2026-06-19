@@ -8,6 +8,7 @@ namespace Movies.Application.Movies.UpdateMovie;
 
 internal sealed class UpdateMovieHandler(
     IMovieRepository repository,
+    IGenreRepository genreRepository,
     IValidator<UpdateMovieCommand> validator,
     ILogger<UpdateMovieHandler> logger) : IUpdateMovieHandler
 {
@@ -17,6 +18,9 @@ internal sealed class UpdateMovieHandler(
 
         await validator.ValidateAndThrowAsync(command, cancellationToken);
 
+        var genres = await genreRepository.GetByIdsAsync(command.GenreIds, cancellationToken);
+        GenreLinking.EnsureAllExist(command.GenreIds, genres);
+
         var movie = new Movie
         {
             Id = command.Id,
@@ -24,6 +28,11 @@ internal sealed class UpdateMovieHandler(
             YearOfRelease = command.YearOfRelease,
             Description = command.Description,
         };
+
+        foreach (var genre in genres)
+        {
+            movie.Genres.Add(genre);
+        }
 
         var updated = await repository.UpdateAsync(movie, cancellationToken);
 

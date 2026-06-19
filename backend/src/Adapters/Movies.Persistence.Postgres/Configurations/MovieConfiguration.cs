@@ -28,5 +28,12 @@ internal sealed class MovieConfiguration : IEntityTypeConfiguration<Movie>
         builder.Property(m => m.Description)
             .HasColumnName("description")
             .HasMaxLength(2000);
+
+        builder.HasMany(m => m.Genres)
+            .WithMany(g => g.Movies)
+            .UsingEntity(
+                "movie_genres",
+                right => right.HasOne(typeof(Genre)).WithMany().HasForeignKey("genre_id"),
+                left => left.HasOne(typeof(Movie)).WithMany().HasForeignKey("movie_id"));
     }
 }

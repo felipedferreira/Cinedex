@@ -7,6 +7,7 @@ namespace Movies.Application.Movies.CreateMovie;
 
 internal sealed class CreateMovieHandler(
     IMovieRepository repository,
+    IGenreRepository genreRepository,
     IValidator<CreateMovieCommand> validator,
     ILogger<CreateMovieHandler> logger) : ICreateMovieHandler
 {
@@ -16,12 +17,20 @@ internal sealed class CreateMovieHandler(
 
         await validator.ValidateAndThrowAsync(command, cancellationToken);
 
+        var genres = await genreRepository.GetByIdsAsync(command.GenreIds, cancellationToken);
+        GenreLinking.EnsureAllExist(command.GenreIds, genres);
+
         var movie = new Movie
         {
             Title = command.Title,
             YearOfRelease = command.YearOfRelease,
             Description = command.Description,
         };
+
+        foreach (var genre in genres)
+        {
+            movie.Genres.Add(genre);
+        }
 
         var created = await repository.CreateAsync(movie, cancellationToken);
 

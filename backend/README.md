@@ -156,7 +156,7 @@ Access the application:
 
 ### Features
 
-- ✅ **Health Checks:** Database and Seq readiness verified before starting the web service
+- ✅ **Health Checks:** Postgres and Seq must report healthy before the web service starts, which in turn must be healthy before the UI starts; the web service also exposes its own liveness/readiness endpoints (see [Health Checks](#-health-checks))
 - ✅ **Data Persistence:** PostgreSQL and Seq data persist via named volumes (`postgres_data`, `seq_data`)
 - ✅ **Observability:** Logs and traces shipped to Seq via OpenTelemetry (see [below](#-observability-seq))
 - ✅ **Service Dependencies:** Web service automatically waits for its dependencies
@@ -173,6 +173,31 @@ To also remove persistent data (PostgreSQL **and** Seq volumes):
 ```bash
 docker compose down -v
 ```
+
+## 🩺 Health Checks
+
+The web service exposes two health endpoints, following the standard liveness/readiness split.
+Both live under the `/movies-svc` base path and return a minimal JSON body (`{ "status": ..., "checks": [...] }`)
+along with an HTTP status code (`200` healthy, `503` unhealthy). The payload intentionally omits
+exception detail so the endpoints don't leak internal information.
+
+| Endpoint | Purpose | Dependencies checked |
+|----------|---------|----------------------|
+| `GET /movies-svc/health/live` | **Liveness** — confirms the process is up and serving requests. | None |
+| `GET /movies-svc/health/ready` | **Readiness** — confirms the service can handle traffic. | PostgreSQL (checks tagged `ready`) |
+
+```bash
+# Liveness
+curl -s http://localhost:8080/movies-svc/health/live
+# {"status":"Healthy","checks":[]}
+
+# Readiness (includes the Postgres connectivity check)
+curl -s http://localhost:8080/movies-svc/health/ready
+# {"status":"Healthy","checks":[{"name":"postgres","status":"Healthy"}]}
+```
+
+The Compose container healthcheck polls `/health/live` (see `compose.yaml`); `cinadex-ui` waits for
+the web service to report healthy before starting.
 
 ## 📈 Observability (Seq)
 

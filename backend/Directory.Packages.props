@@ -36,7 +36,6 @@
 
     <!-- Health Checks -->
     <PackageVersion Include="AspNetCore.HealthChecks.NpgSql" Version="9.0.0" />
-    <PackageVersion Include="AspNetCore.HealthChecks.UI.Client" Version="9.0.0" />
 
     <!-- Code Analysis -->
     <PackageVersion Include="StyleCop.Analyzers" Version="1.2.0-beta.556" />

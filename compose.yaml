@@ -85,7 +85,7 @@
       - "127.0.0.1:9000:80"
     depends_on:
       movies.webservice:
-        condition: service_started
+        condition: service_healthy
 
 volumes:
   postgres_data:

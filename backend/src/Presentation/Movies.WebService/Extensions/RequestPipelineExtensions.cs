@@ -1,6 +1,6 @@
 using FastEndpoints;
-using HealthChecks.UI.Client;
 using Microsoft.AspNetCore.Diagnostics.HealthChecks;
+using Microsoft.Extensions.Diagnostics.HealthChecks;
 using Scalar.AspNetCore;
 
 namespace Movies.WebService.Extensions;
@@ -54,16 +54,41 @@ public static class RequestPipelineExtensions
         app.MapHealthChecks("/health/live", new HealthCheckOptions
         {
             Predicate = _ => false,
-            ResponseWriter = UIResponseWriter.WriteHealthCheckUIResponse,
+            ResponseWriter = WriteHealthResponse,
         });
 
         app.MapHealthChecks("/health/ready", new HealthCheckOptions
         {
             Predicate = check => check.Tags.Contains("ready"),
-            ResponseWriter = UIResponseWriter.WriteHealthCheckUIResponse,
+            ResponseWriter = WriteHealthResponse,
         });
 
         return app;
+    }
+
+    /// <summary>
+    /// Writes a minimal JSON health response: the overall status plus each check's name and status.
+    /// Deliberately omits exception and description detail so these unauthenticated endpoints don't
+    /// leak internal information (such as database connection errors).
+    /// </summary>
+    /// <param name="context">The HTTP context to write the response to.</param>
+    /// <param name="report">The aggregated health report to serialize.</param>
+    /// <returns>A task that completes when the response has been written.</returns>
+    private static Task WriteHealthResponse(HttpContext context, HealthReport report)
+    {
+        context.Response.ContentType = "application/json";
+
+        var payload = new
+        {
+            Status = report.Status.ToString(),
+            Checks = report.Entries.Select(entry => new
+            {
+                Name = entry.Key,
+                Status = entry.Value.Status.ToString(),
+            }),
+        };
+
+        return context.Response.WriteAsJsonAsync(payload);
     }
 
     /// <summary>

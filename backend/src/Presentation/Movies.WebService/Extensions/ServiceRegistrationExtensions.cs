@@ -30,10 +30,14 @@ public static class ServiceRegistrationExtensions
         builder.Services.AddOpenApi();
         builder.Services.AddProblemDetails();
 
+        var connectionString = builder.Configuration.GetConnectionString("DefaultConnection")
+            ?? throw new InvalidOperationException(
+                "Connection string 'DefaultConnection' is not configured.");
+
         builder.Services
             .AddHealthChecks()
             .AddNpgSql(
-                connectionString: builder.Configuration.GetConnectionString("DefaultConnection")!,
+                connectionString: connectionString,
                 name: "postgres",
                 tags: ["ready"]);
 

@@ -1,7 +1,7 @@
 using Microsoft.Extensions.Logging;
 using Movies.Application.Abstractions;
 using Movies.Application.Exceptions;
-using Movies.Domain.Movies;
+using Movies.Domain.MovieAggregate;
 
 namespace Movies.Application.Movies.DeleteMovie;
 

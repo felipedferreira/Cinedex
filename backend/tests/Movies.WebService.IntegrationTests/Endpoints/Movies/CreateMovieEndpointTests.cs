@@ -1,7 +1,6 @@
 using System.Net;
 using System.Net.Http.Json;
 using Movies.WebService.Contracts.Requests;
-using Movies.WebService.Contracts.Responses;
 
 namespace Movies.WebService.IntegrationTests.Movies;
 
@@ -10,7 +9,7 @@ public sealed class CreateMovieEndpointTests(WebApplicationFixture fixture) : IC
     private const string MoviesEndpoint = "/movies-svc/movies";
 
     [Fact]
-    public async Task CreateMovie_WithValidRequest_Returns201Created()
+    public async Task CreateMovie_WithValidRequest_Returns204NoContent()
     {
         var request = new CreateMoviesRequest
         {
@@ -20,26 +19,7 @@ public sealed class CreateMovieEndpointTests(WebApplicationFixture fixture) : IC
 
         var response = await fixture.Client.PostAsJsonAsync(MoviesEndpoint, request);
 
-        Assert.Equal(HttpStatusCode.Created, response.StatusCode);
-    }
-
-    [Fact]
-    public async Task CreateMovie_WithValidRequest_ReturnsMovieInBody()
-    {
-        var request = new CreateMoviesRequest
-        {
-            Title = "The Dark Knight",
-            YearOfRelease = 2008,
-        };
-
-        var response = await fixture.Client.PostAsJsonAsync(MoviesEndpoint, request);
-
-        var body = await response.Content.ReadFromJsonAsync<MovieDetailsResponse>();
-        Assert.NotNull(body);
-        Assert.NotEqual(Guid.Empty, body.Id);
-        Assert.Equal(request.Title, body.Title);
-        Assert.Equal(request.YearOfRelease, body.YearOfRelease);
-        Assert.Empty(body.Genres);
+        Assert.Equal(HttpStatusCode.NoContent, response.StatusCode);
     }
 
     [Fact]
@@ -53,10 +33,8 @@ public sealed class CreateMovieEndpointTests(WebApplicationFixture fixture) : IC
 
         var response = await fixture.Client.PostAsJsonAsync(MoviesEndpoint, request);
 
-        var body = await response.Content.ReadFromJsonAsync<MovieResponse>();
-        Assert.NotNull(body);
         Assert.NotNull(response.Headers.Location);
-        Assert.EndsWith($"/movies/{body.Id}", response.Headers.Location.ToString());
+        Assert.StartsWith("/movies/", response.Headers.Location.ToString());
     }
 
     [Fact]

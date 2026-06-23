@@ -12,8 +12,5 @@ internal sealed class UpdateGenreValidator : AbstractValidator<UpdateGenreComman
         RuleFor(command => command.Name)
             .NotEmpty()
             .MaximumLength(100);
-
-        RuleFor(command => command.Description)
-            .MaximumLength(2000);
     }
 }

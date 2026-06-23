@@ -1,4 +1,4 @@
-using Movies.Domain.Genres;
+using Movies.Domain.GenreAggregate;
 
 namespace Movies.Application.Abstractions;
 

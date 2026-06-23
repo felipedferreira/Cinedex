@@ -1,6 +1,6 @@
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
-using Movies.Domain.Movies;
+using Movies.Domain.MovieAggregate;
 
 namespace Movies.Persistence.Postgres.Configurations;
 

@@ -1,7 +1,7 @@
 using FluentValidation;
 using Microsoft.Extensions.Logging;
 using Movies.Application.Abstractions;
-using Movies.Domain.Genres;
+using Movies.Domain.GenreAggregate;
 
 namespace Movies.Application.Genres.CreateGenre;
 
@@ -19,7 +19,6 @@ internal sealed class CreateGenreHandler(
         var genre = new Genre
         {
             Name = command.Name,
-            Description = command.Description,
         };
 
         var created = await repository.CreateAsync(genre, cancellationToken);

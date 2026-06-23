@@ -1,11 +1,10 @@
 using FastEndpoints;
 using Movies.Application.Genres.CreateGenre;
 using Movies.WebService.Contracts.Requests;
-using Movies.WebService.Contracts.Responses;
 
 namespace Movies.WebService.Endpoints.Genres;
 
-internal sealed class CreateGenreEndpoint(ICreateGenreHandler handler) : Endpoint<CreateGenreRequest, GenreResponse>
+internal sealed class CreateGenreEndpoint(ICreateGenreHandler handler) : Endpoint<CreateGenreRequest>
 {
     public override void Configure()
     {
@@ -17,6 +16,8 @@ internal sealed class CreateGenreEndpoint(ICreateGenreHandler handler) : Endpoin
     {
         var genre = await handler.Handle(request.ToCommand(), cancellationToken);
 
-        await Send.CreatedAtAsync<GetGenreByIdEndpoint>(new { id = genre.Id }, genre.ToResponse(), cancellation: cancellationToken);
+        HttpContext.Response.StatusCode = 204;
+        HttpContext.Response.Headers.Location = $"/genres/{genre.Id}";
+        await HttpContext.Response.CompleteAsync();
     }
 }

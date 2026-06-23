@@ -2,7 +2,7 @@ using FluentValidation;
 using Microsoft.Extensions.Logging;
 using Movies.Application.Abstractions;
 using Movies.Application.Exceptions;
-using Movies.Domain.Genres;
+using Movies.Domain.GenreAggregate;
 
 namespace Movies.Application.Genres.UpdateGenre;
 
@@ -21,7 +21,6 @@ internal sealed class UpdateGenreHandler(
         {
             Id = command.Id,
             Name = command.Name,
-            Description = command.Description,
         };
 
         var updated = await repository.UpdateAsync(genre, cancellationToken);

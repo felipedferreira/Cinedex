@@ -1,6 +1,6 @@
 using Microsoft.EntityFrameworkCore;
 using Movies.Application.Abstractions;
-using Movies.Domain.Genres;
+using Movies.Domain.GenreAggregate;
 
 namespace Movies.Persistence.Postgres.Repositories;
 
@@ -38,8 +38,7 @@ internal sealed class GenreRepository(FilmDbContext dbContext) : IGenreRepositor
             .Where(g => g.Id == genre.Id)
             .ExecuteUpdateAsync(
                 setters => setters
-                    .SetProperty(g => g.Name, genre.Name)
-                    .SetProperty(g => g.Description, genre.Description),
+                    .SetProperty(g => g.Name, genre.Name),
                 cancellationToken);
 
         return rowsAffected > 0;

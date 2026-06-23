@@ -1,10 +1,8 @@
-namespace Movies.Domain.Genres;
+namespace Movies.Domain.GenreAggregate;
 
 public class Genre
 {
     public Guid Id { get; init; }
 
     public required string Name { get; set; }
-
-    public string? Description { get; set; }
 }

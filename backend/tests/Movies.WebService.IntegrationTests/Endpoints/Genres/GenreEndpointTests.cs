@@ -22,29 +22,26 @@ public sealed class GenreEndpointTests(WebApplicationFixture fixture) : IClassFi
     }
 
     [Fact]
-    public async Task CreateGenre_Returns201AndIsRetrievable()
+    public async Task CreateGenre_Returns204AndIsRetrievable()
     {
         var request = new CreateGenreRequest
         {
             Name = "Noir",
-            Description = "Stylish crime dramas with cynical attitudes.",
         };
 
         var createResponse = await fixture.Client.PostAsJsonAsync(GenresEndpoint, request);
-        Assert.Equal(HttpStatusCode.Created, createResponse.StatusCode);
-
-        var created = await createResponse.Content.ReadFromJsonAsync<GenreResponse>();
-        Assert.NotNull(created);
-        Assert.NotEqual(Guid.Empty, created.Id);
-        Assert.Equal(request.Name, created.Name);
+        Assert.Equal(HttpStatusCode.NoContent, createResponse.StatusCode);
 
         Assert.NotNull(createResponse.Headers.Location);
-        Assert.EndsWith($"/genres/{created.Id}", createResponse.Headers.Location.ToString());
+        var locationUri = createResponse.Headers.Location.ToString();
+        Assert.StartsWith("/genres/", locationUri);
 
-        var fetched = await fixture.Client.GetFromJsonAsync<GenreResponse>($"{GenresEndpoint}/{created.Id}");
+        var idString = locationUri.Substring("/genres/".Length);
+        Assert.True(Guid.TryParse(idString, out var id));
+
+        var fetched = await fixture.Client.GetFromJsonAsync<GenreResponse>($"{GenresEndpoint}/{id}");
         Assert.NotNull(fetched);
         Assert.Equal(request.Name, fetched.Name);
-        Assert.Equal(request.Description, fetched.Description);
     }
 
     [Fact]
@@ -58,24 +55,23 @@ public sealed class GenreEndpointTests(WebApplicationFixture fixture) : IClassFi
     }
 
     [Fact]
-    public async Task UpdateGenre_ChangesNameAndDescription()
+    public async Task UpdateGenre_ChangesName()
     {
-        var created = await CreateGenreAsync("Heist", "Caper films.");
+        var created = await CreateGenreAsync("Heist");
 
-        var update = new UpdateGenreRequest { Name = "Heist Thriller", Description = "Caper films with suspense." };
+        var update = new UpdateGenreRequest { Name = "Heist Thriller" };
         var updateResponse = await fixture.Client.PutAsJsonAsync($"{GenresEndpoint}/{created.Id}", update);
         Assert.Equal(HttpStatusCode.OK, updateResponse.StatusCode);
 
         var fetched = await fixture.Client.GetFromJsonAsync<GenreResponse>($"{GenresEndpoint}/{created.Id}");
         Assert.NotNull(fetched);
         Assert.Equal("Heist Thriller", fetched.Name);
-        Assert.Equal("Caper films with suspense.", fetched.Description);
     }
 
     [Fact]
     public async Task DeleteGenre_RemovesGenre()
     {
-        var created = await CreateGenreAsync("Disaster", "Catastrophe films.");
+        var created = await CreateGenreAsync("Disaster");
 
         var deleteResponse = await fixture.Client.DeleteAsync($"{GenresEndpoint}/{created.Id}");
         Assert.Equal(HttpStatusCode.NoContent, deleteResponse.StatusCode);
@@ -92,14 +88,19 @@ public sealed class GenreEndpointTests(WebApplicationFixture fixture) : IClassFi
         Assert.Equal(HttpStatusCode.NotFound, response.StatusCode);
     }
 
-    private async Task<GenreResponse> CreateGenreAsync(string name, string description)
+    private async Task<GenreResponse> CreateGenreAsync(string name)
     {
-        var response = await fixture.Client.PostAsJsonAsync(GenresEndpoint, new CreateGenreRequest
+        var createResponse = await fixture.Client.PostAsJsonAsync(GenresEndpoint, new CreateGenreRequest
         {
             Name = name,
-            Description = description,
         });
-        var created = await response.Content.ReadFromJsonAsync<GenreResponse>();
+        Assert.NotNull(createResponse.Headers.Location);
+
+        var locationUri = createResponse.Headers.Location.ToString();
+        var idString = locationUri.Substring("/genres/".Length);
+        var id = Guid.Parse(idString);
+
+        var created = await fixture.Client.GetFromJsonAsync<GenreResponse>($"{GenresEndpoint}/{id}");
         Assert.NotNull(created);
         return created;
     }

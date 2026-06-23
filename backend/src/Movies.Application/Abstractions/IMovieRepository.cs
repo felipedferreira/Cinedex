@@ -1,4 +1,4 @@
-using Movies.Domain.Movies;
+using Movies.Domain.MovieAggregate;
 
 namespace Movies.Application.Abstractions;
 

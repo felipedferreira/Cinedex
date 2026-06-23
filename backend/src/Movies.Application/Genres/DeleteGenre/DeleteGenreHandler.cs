@@ -1,7 +1,7 @@
 using Microsoft.Extensions.Logging;
 using Movies.Application.Abstractions;
 using Movies.Application.Exceptions;
-using Movies.Domain.Genres;
+using Movies.Domain.GenreAggregate;
 
 namespace Movies.Application.Genres.DeleteGenre;
 

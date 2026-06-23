@@ -1,4 +1,4 @@
-namespace Movies.Domain.Movies;
+namespace Movies.Domain.MovieAggregate;
 
 public class Movie
 {

@@ -1,6 +1,6 @@
 using Microsoft.EntityFrameworkCore;
 using Movies.Application.Abstractions;
-using Movies.Domain.Movies;
+using Movies.Domain.MovieAggregate;
 
 namespace Movies.Persistence.Postgres.Repositories;
 

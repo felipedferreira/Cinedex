@@ -21,10 +21,13 @@ public sealed class MovieGenreEndpointTests(WebApplicationFixture fixture) : ICl
         };
 
         var createResponse = await fixture.Client.PostAsJsonAsync(MoviesEndpoint, request);
-        var created = await createResponse.Content.ReadFromJsonAsync<MovieResponse>();
-        Assert.NotNull(created);
+        Assert.NotNull(createResponse.Headers.Location);
 
-        var fetched = await fixture.Client.GetFromJsonAsync<MovieResponse>($"{MoviesEndpoint}/{created.Id}");
+        var locationUri = createResponse.Headers.Location.ToString();
+        var idString = locationUri.Substring("/movies/".Length);
+        var id = Guid.Parse(idString);
+
+        var fetched = await fixture.Client.GetFromJsonAsync<MovieResponse>($"{MoviesEndpoint}/{id}");
 
         Assert.NotNull(fetched);
         Assert.Equal(request.Description, fetched.Description);
@@ -45,10 +48,13 @@ public sealed class MovieGenreEndpointTests(WebApplicationFixture fixture) : ICl
         };
 
         var createResponse = await fixture.Client.PostAsJsonAsync(MoviesEndpoint, request);
-        var created = await createResponse.Content.ReadFromJsonAsync<MovieResponse>();
-        Assert.NotNull(created);
+        Assert.NotNull(createResponse.Headers.Location);
 
-        var fetched = await fixture.Client.GetFromJsonAsync<MovieDetailsResponse>($"{MoviesEndpoint}/{created.Id}");
+        var locationUri = createResponse.Headers.Location.ToString();
+        var idString = locationUri.Substring("/movies/".Length);
+        var id = Guid.Parse(idString);
+
+        var fetched = await fixture.Client.GetFromJsonAsync<MovieDetailsResponse>($"{MoviesEndpoint}/{id}");
 
         Assert.NotNull(fetched);
         Assert.Equal(2, fetched.Genres.Count());
@@ -70,10 +76,13 @@ public sealed class MovieGenreEndpointTests(WebApplicationFixture fixture) : ICl
             YearOfRelease = 1995,
             GenreIds = [action.Id, drama.Id],
         });
-        var created = await createResponse.Content.ReadFromJsonAsync<MovieResponse>();
-        Assert.NotNull(created);
+        Assert.NotNull(createResponse.Headers.Location);
 
-        var updateResponse = await fixture.Client.PutAsJsonAsync($"{MoviesEndpoint}/{created.Id}", new UpdateMoviesRequest
+        var locationUri = createResponse.Headers.Location.ToString();
+        var idString = locationUri.Substring("/movies/".Length);
+        var id = Guid.Parse(idString);
+
+        var updateResponse = await fixture.Client.PutAsJsonAsync($"{MoviesEndpoint}/{id}", new UpdateMoviesRequest
         {
             Title = "Heat",
             YearOfRelease = 1995,
@@ -81,7 +90,7 @@ public sealed class MovieGenreEndpointTests(WebApplicationFixture fixture) : ICl
         });
         Assert.Equal(HttpStatusCode.OK, updateResponse.StatusCode);
 
-        var fetched = await fixture.Client.GetFromJsonAsync<MovieDetailsResponse>($"{MoviesEndpoint}/{created.Id}");
+        var fetched = await fixture.Client.GetFromJsonAsync<MovieDetailsResponse>($"{MoviesEndpoint}/{id}");
 
         Assert.NotNull(fetched);
         var genre = Assert.Single(fetched.Genres);

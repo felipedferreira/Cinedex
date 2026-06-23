@@ -1,11 +1,10 @@
 using FastEndpoints;
 using Movies.Application.Movies.CreateMovie;
 using Movies.WebService.Contracts.Requests;
-using Movies.WebService.Contracts.Responses;
 
 namespace Movies.WebService.Endpoints.Movies;
 
-internal sealed class CreateMovieEndpoint(ICreateMovieHandler handler) : Endpoint<CreateMoviesRequest, MovieDetailsResponse>
+internal sealed class CreateMovieEndpoint(ICreateMovieHandler handler) : Endpoint<CreateMoviesRequest>
 {
     public override void Configure()
     {
@@ -17,6 +16,8 @@ internal sealed class CreateMovieEndpoint(ICreateMovieHandler handler) : Endpoin
     {
         var movie = await handler.Handle(request.ToCommand(), cancellationToken);
 
-        await Send.CreatedAtAsync<GetMovieByIdEndpoint>(new { id = movie.Id }, movie.ToResponse(), cancellation: cancellationToken);
+        HttpContext.Response.StatusCode = 204;
+        HttpContext.Response.Headers.Location = $"/movies/{movie.Id}";
+        await HttpContext.Response.CompleteAsync();
     }
 }

@@ -1,6 +1,6 @@
 using Microsoft.EntityFrameworkCore;
-using Movies.Domain.Genres;
-using Movies.Domain.Movies;
+using Movies.Domain.GenreAggregate;
+using Movies.Domain.MovieAggregate;
 
 namespace Movies.Persistence.Postgres;
 

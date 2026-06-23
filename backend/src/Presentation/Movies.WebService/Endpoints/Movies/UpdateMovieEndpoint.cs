@@ -16,8 +16,6 @@ internal sealed class UpdateMovieEndpoint(IUpdateMovieHandler handler) : Endpoin
     {
         var id = Route<Guid>("id");
         await handler.Handle(request.ToCommand(id), cancellationToken);
-
-        Response = new EmptyResponse();
-        HttpContext.Response.StatusCode = 202;
+        await Send.AcceptedAtAsync("GetMovieById", new { id }, cancellation: cancellationToken);
     }
 }

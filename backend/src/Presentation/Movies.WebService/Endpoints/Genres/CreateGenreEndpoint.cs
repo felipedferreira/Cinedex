@@ -16,6 +16,6 @@ internal sealed class CreateGenreEndpoint(ICreateGenreHandler handler) : Endpoin
     {
         var genre = await handler.Handle(request.ToCommand(), cancellationToken);
 
-        await Send.CreatedAtAsync<GetGenreByIdEndpoint>(new { id = genre.Id }, new EmptyResponse(), cancellation: cancellationToken);
+        await Send.CreatedAtAsync<GetGenreByIdEndpoint>(new { id = genre.Id }, cancellation: cancellationToken);
     }
 }

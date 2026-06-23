@@ -19,7 +19,8 @@ namespace Movies.Persistence.Postgres.Migrations
                 name: "genre_ids",
                 table: "movies",
                 type: "uuid[]",
-                nullable: false);
+                nullable: false,
+                defaultValueSql: "ARRAY[]::uuid[]");
         }
 
         /// <inheritdoc />

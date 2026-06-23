@@ -10,6 +10,7 @@ internal sealed class GetMovieByIdEndpoint(IGetMovieByIdHandler handler) : Endpo
     {
         Get("movies/{id:guid}");
         AllowAnonymous();
+        Description(b => b.WithName("GetMovieById"));
     }
 
     public override async Task HandleAsync(CancellationToken cancellationToken)

@@ -10,6 +10,7 @@ internal sealed class GetGenreByIdEndpoint(IGetGenreByIdHandler handler) : Endpo
     {
         Get("genres/{id:guid}");
         AllowAnonymous();
+        Description(b => b.WithName("GetGenreById"));
     }
 
     public override async Task HandleAsync(CancellationToken cancellationToken)

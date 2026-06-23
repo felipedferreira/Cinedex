@@ -16,6 +16,6 @@ internal sealed class CreateMovieEndpoint(ICreateMovieHandler handler) : Endpoin
     {
         var movie = await handler.Handle(request.ToCommand(), cancellationToken);
 
-        await Send.CreatedAtAsync<GetMovieByIdEndpoint>(new { id = movie.Id }, new EmptyResponse(), cancellation: cancellationToken);
+        await Send.CreatedAtAsync<GetMovieByIdEndpoint>(new { id = movie.Id }, cancellation: cancellationToken);
     }
 }

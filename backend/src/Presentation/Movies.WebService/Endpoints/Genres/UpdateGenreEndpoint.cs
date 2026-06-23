@@ -16,8 +16,6 @@ internal sealed class UpdateGenreEndpoint(IUpdateGenreHandler handler) : Endpoin
     {
         var id = Route<Guid>("id");
         await handler.Handle(request.ToCommand(id), cancellationToken);
-
-        Response = new EmptyResponse();
-        HttpContext.Response.StatusCode = 202;
+        await Send.AcceptedAtAsync("GetGenreById", new { id }, cancellation: cancellationToken);
     }
 }

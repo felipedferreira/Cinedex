@@ -5,7 +5,7 @@ using Movies.WebService.Contracts.Responses;
 
 namespace Movies.WebService.Endpoints.Movies;
 
-internal sealed class UpdateMovieEndpoint(IUpdateMovieHandler handler) : Endpoint<UpdateMoviesRequest, MovieResponse>
+internal sealed class UpdateMovieEndpoint(IUpdateMovieHandler handler) : Endpoint<UpdateMoviesRequest, MovieDetailsResponse>
 {
     public override void Configure()
     {

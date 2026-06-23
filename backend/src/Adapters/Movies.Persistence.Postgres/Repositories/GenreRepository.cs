@@ -1,10 +1,10 @@
 using Microsoft.EntityFrameworkCore;
 using Movies.Application.Abstractions;
-using Movies.Domain;
+using Movies.Domain.Genres;
 
 namespace Movies.Persistence.Postgres.Repositories;
 
-internal sealed class GenreRepository(MoviesDbContext dbContext) : IGenreRepository
+internal sealed class GenreRepository(FilmDbContext dbContext) : IGenreRepository
 {
     public async Task<IReadOnlyList<Genre>> GetAllAsync(CancellationToken cancellationToken) =>
         await dbContext.Genres.AsNoTracking().ToListAsync(cancellationToken);
@@ -19,9 +19,9 @@ internal sealed class GenreRepository(MoviesDbContext dbContext) : IGenreReposit
             return [];
         }
 
-        // Tracked (no AsNoTracking) so the returned genres can be attached to a movie's
-        // junction collection without EF attempting to insert them as new rows.
-        return await dbContext.Genres.Where(g => ids.Contains(g.Id)).ToListAsync(cancellationToken);
+        // Read-only: genres are only used to validate referenced ids and enrich responses,
+        // never attached to a movie aggregate.
+        return await dbContext.Genres.AsNoTracking().Where(g => ids.Contains(g.Id)).ToListAsync(cancellationToken);
     }
 
     public async Task<Genre> CreateAsync(Genre genre, CancellationToken cancellationToken)

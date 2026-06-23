@@ -1,7 +1,7 @@
 using FluentValidation;
 using Microsoft.Extensions.Logging;
 using Movies.Application.Abstractions;
-using Movies.Domain;
+using Movies.Domain.Genres;
 
 namespace Movies.Application.Genres.CreateGenre;
 

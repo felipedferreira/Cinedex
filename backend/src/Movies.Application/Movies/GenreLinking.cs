@@ -1,5 +1,5 @@
 using Movies.Application.Exceptions;
-using Movies.Domain;
+using Movies.Domain.Genres;
 
 namespace Movies.Application.Movies;
 

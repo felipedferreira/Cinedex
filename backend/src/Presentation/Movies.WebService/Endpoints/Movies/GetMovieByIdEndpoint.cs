@@ -4,7 +4,7 @@ using Movies.WebService.Contracts.Responses;
 
 namespace Movies.WebService.Endpoints.Movies;
 
-internal sealed class GetMovieByIdEndpoint(IGetMovieByIdHandler handler) : EndpointWithoutRequest<MovieResponse>
+internal sealed class GetMovieByIdEndpoint(IGetMovieByIdHandler handler) : EndpointWithoutRequest<MovieDetailsResponse>
 {
     public override void Configure()
     {

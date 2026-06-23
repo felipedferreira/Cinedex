@@ -1,21 +1,19 @@
 using Microsoft.EntityFrameworkCore;
 using Movies.Application.Abstractions;
-using Movies.Domain;
+using Movies.Domain.Movies;
 
 namespace Movies.Persistence.Postgres.Repositories;
 
-internal sealed class MovieRepository(MoviesDbContext dbContext) : IMovieRepository
+internal sealed class MovieRepository(FilmDbContext dbContext) : IMovieRepository
 {
     public async Task<IReadOnlyList<Movie>> GetAllAsync(CancellationToken cancellationToken) =>
-        await dbContext.Movies.AsNoTracking().Include(m => m.Genres).ToListAsync(cancellationToken);
+        await dbContext.Movies.AsNoTracking().ToListAsync(cancellationToken);
 
     public async Task<Movie?> GetByIdAsync(Guid id, CancellationToken cancellationToken) =>
-        await dbContext.Movies.AsNoTracking().Include(m => m.Genres).FirstOrDefaultAsync(m => m.Id == id, cancellationToken);
+        await dbContext.Movies.AsNoTracking().FirstOrDefaultAsync(m => m.Id == id, cancellationToken);
 
     public async Task<Movie> CreateAsync(Movie movie, CancellationToken cancellationToken)
     {
-        // Any genres already present on movie.Genres are tracked (loaded via the genre
-        // repository in the same scope), so EF only writes the movie_genres join rows.
         dbContext.Movies.Add(movie);
         await dbContext.SaveChangesAsync(cancellationToken);
 
@@ -24,9 +22,7 @@ internal sealed class MovieRepository(MoviesDbContext dbContext) : IMovieReposit
 
     public async Task<bool> UpdateAsync(Movie movie, CancellationToken cancellationToken)
     {
-        // Load the tracked aggregate so the many-to-many junction can be reconciled.
         var existing = await dbContext.Movies
-            .Include(m => m.Genres)
             .FirstOrDefaultAsync(m => m.Id == movie.Id, cancellationToken);
 
         if (existing is null)
@@ -37,12 +33,7 @@ internal sealed class MovieRepository(MoviesDbContext dbContext) : IMovieReposit
         existing.Title = movie.Title;
         existing.YearOfRelease = movie.YearOfRelease;
         existing.Description = movie.Description;
-
-        existing.Genres.Clear();
-        foreach (var genre in movie.Genres)
-        {
-            existing.Genres.Add(genre);
-        }
+        existing.GenreIds = movie.GenreIds;
 
         await dbContext.SaveChangesAsync(cancellationToken);
 

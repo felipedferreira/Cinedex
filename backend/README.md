@@ -8,9 +8,10 @@ All `dotnet` commands below are run from this folder (`backend/`). Docker Compos
 
 ## 🏷️ Genres
 
-Genres are a first-class resource, not just a label on a movie. Each genre is its own
-record (`Id`, `Name`, `Description`) stored in the `genres` table, and movies link to
-genres through a many-to-many relationship backed by a `movie_genres` junction table.
+Genres are their own entity (`Id`, `Name`, `Description`) stored in the `genres` table, and
+movies link to genres through a many-to-many relationship backed by a `movie_genres`
+junction table. A genre's navigation is one-directional — a movie knows its genres, but a
+genre does not hold a back-reference to movies.
 
 - **CRUD endpoints** under `/movies-svc/genres` (`GET`, `GET /{id}`, `POST`, `PUT /{id}`, `DELETE /{id}`).
 - **Movies reference genres by id** — `CreateMoviesRequest`/`UpdateMoviesRequest` carry a `GenreIds` collection, and movie responses include the linked genres.
@@ -338,7 +339,7 @@ backend/src/
 **Purpose:** Implements data persistence using PostgreSQL  
 **Dependencies:** `Movies.Application`, `Movies.Domain`  
 **Responsibilities:**
-- `MoviesDbContext` — EF Core DbContext with Fluent API entity configurations
+- `FilmDbContext` — EF Core DbContext with Fluent API entity configurations
 - Concrete repository implementations
 - Database migrations and schema management
 - Adapts PostgreSQL to the repository ports defined in `Movies.Application`

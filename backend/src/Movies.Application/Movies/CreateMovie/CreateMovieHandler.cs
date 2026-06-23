@@ -1,7 +1,7 @@
 using FluentValidation;
 using Microsoft.Extensions.Logging;
 using Movies.Application.Abstractions;
-using Movies.Domain;
+using Movies.Domain.Movies;
 
 namespace Movies.Application.Movies.CreateMovie;
 
@@ -11,7 +11,7 @@ internal sealed class CreateMovieHandler(
     IValidator<CreateMovieCommand> validator,
     ILogger<CreateMovieHandler> logger) : ICreateMovieHandler
 {
-    public async Task<MovieDto> Handle(CreateMovieCommand command, CancellationToken cancellationToken)
+    public async Task<MovieDetailsDto> Handle(CreateMovieCommand command, CancellationToken cancellationToken)
     {
         logger.LogInformation("Creating movie {Title} ({YearOfRelease}).", command.Title, command.YearOfRelease);
 
@@ -25,17 +25,13 @@ internal sealed class CreateMovieHandler(
             Title = command.Title,
             YearOfRelease = command.YearOfRelease,
             Description = command.Description,
+            GenreIds = command.GenreIds.Distinct().ToList(),
         };
-
-        foreach (var genre in genres)
-        {
-            movie.Genres.Add(genre);
-        }
 
         var created = await repository.CreateAsync(movie, cancellationToken);
 
         logger.LogInformation("Created movie {MovieId} ({Title}).", created.Id, created.Title);
 
-        return created.ToDto();
+        return created.ToDetailsDto(genres);
     }
 }

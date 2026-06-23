@@ -1,6 +1,6 @@
 namespace Movies.WebService.Contracts.Responses;
 
-public class MovieResponse
+public class MovieDetailsResponse
 {
     public required Guid Id { get; init; }
 
@@ -9,4 +9,6 @@ public class MovieResponse
     public required int YearOfRelease { get; init; }
 
     public string? Description { get; init; }
+
+    public IEnumerable<GenreResponse> Genres { get; init; } = Enumerable.Empty<GenreResponse>();
 }

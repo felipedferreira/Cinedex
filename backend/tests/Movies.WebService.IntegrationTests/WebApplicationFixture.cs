@@ -23,7 +23,7 @@ public class WebApplicationFixture : WebApplicationFactory<Program>, IAsyncLifet
         this.Client = this.CreateClient();
 
         using var scope = this.Services.CreateScope();
-        var db = scope.ServiceProvider.GetRequiredService<MoviesDbContext>();
+        var db = scope.ServiceProvider.GetRequiredService<FilmDbContext>();
         await db.Database.MigrateAsync();
     }
 

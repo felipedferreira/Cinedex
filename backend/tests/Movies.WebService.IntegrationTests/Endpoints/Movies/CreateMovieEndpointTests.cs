@@ -34,7 +34,7 @@ public sealed class CreateMovieEndpointTests(WebApplicationFixture fixture) : IC
 
         var response = await fixture.Client.PostAsJsonAsync(MoviesEndpoint, request);
 
-        var body = await response.Content.ReadFromJsonAsync<MovieResponse>();
+        var body = await response.Content.ReadFromJsonAsync<MovieDetailsResponse>();
         Assert.NotNull(body);
         Assert.NotEqual(Guid.Empty, body.Id);
         Assert.Equal(request.Title, body.Title);

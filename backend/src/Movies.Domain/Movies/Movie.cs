@@ -1,4 +1,4 @@
-namespace Movies.Domain;
+namespace Movies.Domain.Movies;
 
 public class Movie
 {
@@ -10,5 +10,6 @@ public class Movie
 
     public string? Description { get; set; }
 
-    public ICollection<Genre> Genres { get; } = new List<Genre>();
+    // Reference to the Genre aggregate by identity only (no navigation, no cross-aggregate FK).
+    public List<Guid> GenreIds { get; set; } = [];
 }

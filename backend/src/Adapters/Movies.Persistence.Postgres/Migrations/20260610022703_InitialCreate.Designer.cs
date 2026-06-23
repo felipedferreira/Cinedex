@@ -11,7 +11,7 @@ using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 
 namespace Movies.Persistence.Postgres.Migrations
 {
-    [DbContext(typeof(MoviesDbContext))]
+    [DbContext(typeof(FilmDbContext))]
     [Migration("20260610022703_InitialCreate")]
     partial class InitialCreate
     {

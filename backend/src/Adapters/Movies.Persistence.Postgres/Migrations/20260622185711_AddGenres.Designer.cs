@@ -11,8 +11,8 @@ using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 
 namespace Movies.Persistence.Postgres.Migrations
 {
-    [DbContext(typeof(MoviesDbContext))]
-    [Migration("20260619191144_AddGenres")]
+    [DbContext(typeof(FilmDbContext))]
+    [Migration("20260622185711_AddGenres")]
     partial class AddGenres
     {
         /// <inheritdoc />

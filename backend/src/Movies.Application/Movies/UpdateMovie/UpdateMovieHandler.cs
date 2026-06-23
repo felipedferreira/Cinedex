@@ -2,7 +2,7 @@ using FluentValidation;
 using Microsoft.Extensions.Logging;
 using Movies.Application.Abstractions;
 using Movies.Application.Exceptions;
-using Movies.Domain;
+using Movies.Domain.Movies;
 
 namespace Movies.Application.Movies.UpdateMovie;
 
@@ -12,7 +12,7 @@ internal sealed class UpdateMovieHandler(
     IValidator<UpdateMovieCommand> validator,
     ILogger<UpdateMovieHandler> logger) : IUpdateMovieHandler
 {
-    public async Task<MovieDto> Handle(UpdateMovieCommand command, CancellationToken cancellationToken)
+    public async Task<MovieDetailsDto> Handle(UpdateMovieCommand command, CancellationToken cancellationToken)
     {
         logger.LogInformation("Updating movie {MovieId}.", command.Id);
 
@@ -27,12 +27,8 @@ internal sealed class UpdateMovieHandler(
             Title = command.Title,
             YearOfRelease = command.YearOfRelease,
             Description = command.Description,
+            GenreIds = command.GenreIds.Distinct().ToList(),
         };
-
-        foreach (var genre in genres)
-        {
-            movie.Genres.Add(genre);
-        }
 
         var updated = await repository.UpdateAsync(movie, cancellationToken);
 
@@ -44,6 +40,6 @@ internal sealed class UpdateMovieHandler(
 
         logger.LogInformation("Updated movie {MovieId}.", movie.Id);
 
-        return movie.ToDto();
+        return movie.ToDetailsDto(genres);
     }
 }

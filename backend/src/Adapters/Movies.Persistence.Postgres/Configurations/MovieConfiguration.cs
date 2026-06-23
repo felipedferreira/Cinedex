@@ -1,6 +1,6 @@
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
-using Movies.Domain;
+using Movies.Domain.Movies;
 
 namespace Movies.Persistence.Postgres.Configurations;
 
@@ -29,11 +29,10 @@ internal sealed class MovieConfiguration : IEntityTypeConfiguration<Movie>
             .HasColumnName("description")
             .HasMaxLength(2000);
 
-        builder.HasMany(m => m.Genres)
-            .WithMany(g => g.Movies)
-            .UsingEntity(
-                "movie_genres",
-                right => right.HasOne(typeof(Genre)).WithMany().HasForeignKey("genre_id"),
-                left => left.HasOne(typeof(Movie)).WithMany().HasForeignKey("movie_id"));
+        // Genre is a separate aggregate, referenced by identity only. The ids are stored as a
+        // Postgres uuid[] column on the movies table — no join table, no cross-aggregate FK.
+        builder.Property(m => m.GenreIds)
+            .HasColumnName("genre_ids")
+            .HasColumnType("uuid[]");
     }
 }

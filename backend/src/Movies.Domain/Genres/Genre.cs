@@ -1,4 +1,4 @@
-namespace Movies.Domain;
+namespace Movies.Domain.Genres;
 
 public class Genre
 {
@@ -7,6 +7,4 @@ public class Genre
     public required string Name { get; set; }
 
     public string? Description { get; set; }
-
-    public ICollection<Movie> Movies { get; } = new List<Movie>();
 }

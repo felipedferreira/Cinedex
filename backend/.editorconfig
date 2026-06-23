@@ -436,7 +436,7 @@ dotnet_diagnostic.SA1516.severity = none
 dotnet_diagnostic.SA1413.severity = none
 resharper_blank_lines_between_using_groups = 0
 
-[src/Adapters/Movies.Persistence.Postgres/MoviesDbContext.cs]
+[src/Adapters/Movies.Persistence.Postgres/FilmDbContext.cs]
 dotnet_diagnostic.IDE0055.severity = none
 
 [src/Adapters/Movies.Persistence.Postgres/Configurations/MovieConfiguration.cs]

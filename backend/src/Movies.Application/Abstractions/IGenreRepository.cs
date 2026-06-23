@@ -1,4 +1,4 @@
-using Movies.Domain;
+using Movies.Domain.Genres;
 
 namespace Movies.Application.Abstractions;
 
@@ -8,8 +8,8 @@ public interface IGenreRepository
 
     Task<Genre?> GetByIdAsync(Guid id, CancellationToken cancellationToken);
 
-    // Returns the genres matching the supplied ids as tracked entities so they can be
-    // linked to a movie via the junction table without being re-inserted.
+    // Returns the genres matching the supplied ids. Used to validate that referenced genre
+    // ids exist and to enrich a movie's response with genre details.
     Task<IReadOnlyList<Genre>> GetByIdsAsync(IReadOnlyCollection<Guid> ids, CancellationToken cancellationToken);
 
     Task<Genre> CreateAsync(Genre genre, CancellationToken cancellationToken);

@@ -21,6 +21,14 @@ internal static class MovieMappings
         Title = movie.Title,
         YearOfRelease = movie.YearOfRelease,
         Description = movie.Description,
+    };
+
+    public static MovieDetailsResponse ToResponse(this MovieDetailsDto movie) => new()
+    {
+        Id = movie.Id,
+        Title = movie.Title,
+        YearOfRelease = movie.YearOfRelease,
+        Description = movie.Description,
         Genres = movie.Genres.Select(genre => genre.ToResponse()).ToList(),
     };
 

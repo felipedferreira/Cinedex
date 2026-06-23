@@ -48,7 +48,7 @@ public sealed class MovieGenreEndpointTests(WebApplicationFixture fixture) : ICl
         var created = await createResponse.Content.ReadFromJsonAsync<MovieResponse>();
         Assert.NotNull(created);
 
-        var fetched = await fixture.Client.GetFromJsonAsync<MovieResponse>($"{MoviesEndpoint}/{created.Id}");
+        var fetched = await fixture.Client.GetFromJsonAsync<MovieDetailsResponse>($"{MoviesEndpoint}/{created.Id}");
 
         Assert.NotNull(fetched);
         Assert.Equal(2, fetched.Genres.Count());
@@ -81,7 +81,7 @@ public sealed class MovieGenreEndpointTests(WebApplicationFixture fixture) : ICl
         });
         Assert.Equal(HttpStatusCode.OK, updateResponse.StatusCode);
 
-        var fetched = await fixture.Client.GetFromJsonAsync<MovieResponse>($"{MoviesEndpoint}/{created.Id}");
+        var fetched = await fixture.Client.GetFromJsonAsync<MovieDetailsResponse>($"{MoviesEndpoint}/{created.Id}");
 
         Assert.NotNull(fetched);
         var genre = Assert.Single(fetched.Genres);

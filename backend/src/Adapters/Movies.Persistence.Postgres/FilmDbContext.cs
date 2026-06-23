@@ -1,9 +1,10 @@
 using Microsoft.EntityFrameworkCore;
-using Movies.Domain;
+using Movies.Domain.Genres;
+using Movies.Domain.Movies;
 
 namespace Movies.Persistence.Postgres;
 
-public class MoviesDbContext(DbContextOptions<MoviesDbContext> options) : DbContext(options)
+public class FilmDbContext(DbContextOptions<FilmDbContext> options) : DbContext(options)
 {
     public DbSet<Movie> Movies => Set<Movie>();
 
@@ -11,6 +12,6 @@ public class MoviesDbContext(DbContextOptions<MoviesDbContext> options) : DbCont
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
-        modelBuilder.ApplyConfigurationsFromAssembly(typeof(MoviesDbContext).Assembly);
+        modelBuilder.ApplyConfigurationsFromAssembly(typeof(FilmDbContext).Assembly);
     }
 }

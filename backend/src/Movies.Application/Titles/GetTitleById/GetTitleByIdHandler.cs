@@ -1,5 +1,6 @@
 using Microsoft.Extensions.Logging;
 using Movies.Application.Abstractions;
+using Movies.Application.Constants;
 using Movies.Application.Exceptions;
 using Movies.Domain.TitleAggregate;
 
@@ -16,14 +17,14 @@ internal sealed class GetTitleByIdHandler(
 
         if (title is null)
         {
-            logger.LogWarning("Title {TitleId} was not found.", query.Id);
+            logger.LogWarning(LogMessageConstants.Title.NotFound, query.Id);
             throw new EntityNotFoundException(nameof(Title), query.Id);
         }
 
         // Genres live in a separate aggregate; resolve their details by id for the response.
         var genres = await genreRepository.GetByIdsAsync(title.GenreIds, cancellationToken);
 
-        logger.LogInformation("Retrieved title {TitleId}.", title.Id);
+        logger.LogInformation(LogMessageConstants.Title.Retrieved, title.Id);
 
         return title.ToDetailsDto(genres);
     }

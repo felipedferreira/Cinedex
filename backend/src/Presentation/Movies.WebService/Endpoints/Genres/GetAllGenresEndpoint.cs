@@ -1,5 +1,6 @@
 using FastEndpoints;
 using Movies.Application.Genres.ListGenres;
+using Movies.WebService.Constants;
 using Movies.WebService.Contracts.Responses;
 
 namespace Movies.WebService.Endpoints.Genres;
@@ -8,7 +9,8 @@ internal sealed class GetAllGenresEndpoint(IListGenresHandler handler) : Endpoin
 {
     public override void Configure()
     {
-        Get("genres");
+        Get(ApiConstants.Genre.Route);
+        Tags(ApiConstants.Genre.Tag);
         AllowAnonymous();
     }
 

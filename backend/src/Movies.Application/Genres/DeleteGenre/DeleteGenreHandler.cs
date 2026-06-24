@@ -1,5 +1,6 @@
 using Microsoft.Extensions.Logging;
 using Movies.Application.Abstractions;
+using Movies.Application.Constants;
 using Movies.Application.Exceptions;
 using Movies.Domain.GenreAggregate;
 
@@ -11,16 +12,16 @@ internal sealed class DeleteGenreHandler(
 {
     public async Task Handle(DeleteGenreCommand command, CancellationToken cancellationToken)
     {
-        logger.LogInformation("Deleting genre {GenreId}.", command.Id);
+        logger.LogInformation(LogMessageConstants.Genre.Deleting, command.Id);
 
         var deleted = await repository.DeleteAsync(command.Id, cancellationToken);
 
         if (!deleted)
         {
-            logger.LogWarning("Genre {GenreId} was not found for deletion.", command.Id);
+            logger.LogWarning(LogMessageConstants.Genre.NotFoundForDeletion, command.Id);
             throw new EntityNotFoundException(nameof(Genre), command.Id);
         }
 
-        logger.LogInformation("Deleted genre {GenreId}.", command.Id);
+        logger.LogInformation(LogMessageConstants.Genre.Deleted, command.Id);
     }
 }

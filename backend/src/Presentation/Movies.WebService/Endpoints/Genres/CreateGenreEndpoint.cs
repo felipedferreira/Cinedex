@@ -1,5 +1,6 @@
 using FastEndpoints;
 using Movies.Application.Genres.CreateGenre;
+using Movies.WebService.Constants;
 using Movies.WebService.Contracts.Requests;
 
 namespace Movies.WebService.Endpoints.Genres;
@@ -8,7 +9,8 @@ internal sealed class CreateGenreEndpoint(ICreateGenreHandler handler) : Endpoin
 {
     public override void Configure()
     {
-        Post("genres");
+        Post(ApiConstants.Genre.Route);
+        Tags(ApiConstants.Genre.Tag);
         AllowAnonymous();
     }
 
@@ -16,6 +18,6 @@ internal sealed class CreateGenreEndpoint(ICreateGenreHandler handler) : Endpoin
     {
         var genre = await handler.Handle(request.ToCommand(), cancellationToken);
 
-        await Send.CreatedAtAsync("GetGenreById", new { id = genre.Id }, default!, cancellation: cancellationToken);
+        await Send.CreatedAtAsync(ApiConstants.Genre.GetByIdEndpointName, new { id = genre.Id }, default!, cancellation: cancellationToken);
     }
 }

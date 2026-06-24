@@ -2,6 +2,7 @@ using System.Diagnostics;
 using System.Text.Json;
 using FluentValidation;
 using Microsoft.AspNetCore.Diagnostics;
+using Movies.WebService.Constants;
 
 namespace Movies.WebService.ExceptionHandlers;
 
@@ -16,7 +17,7 @@ internal sealed class ValidationExceptionHandler : IExceptionHandler
 
         var traceId = Activity.Current?.Id ?? httpContext.TraceIdentifier;
 
-        httpContext.Response.ContentType = "application/problem+json";
+        httpContext.Response.ContentType = HttpConstants.ProblemJson;
         httpContext.Response.StatusCode = StatusCodes.Status400BadRequest;
 
         var errors = validationException.Errors
@@ -27,10 +28,10 @@ internal sealed class ValidationExceptionHandler : IExceptionHandler
 
         var response = new
         {
-            type = "https://httpwg.org/specs/rfc7231.html#status.400",
-            title = "Bad Request",
+            type = ProblemDetailsConstants.BadRequestType,
+            title = ProblemDetailsConstants.BadRequestTitle,
             status = StatusCodes.Status400BadRequest,
-            detail = "One or more validation errors occurred.",
+            detail = ProblemDetailsConstants.ValidationErrorDetail,
             instance = httpContext.Request.Path.Value,
             errors,
             extensions = new { traceId },

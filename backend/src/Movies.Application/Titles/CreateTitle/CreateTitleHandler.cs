@@ -1,6 +1,7 @@
 using FluentValidation;
 using Microsoft.Extensions.Logging;
 using Movies.Application.Abstractions;
+using Movies.Application.Constants;
 using Movies.Domain.TitleAggregate;
 
 namespace Movies.Application.Titles.CreateTitle;
@@ -13,7 +14,7 @@ internal sealed class CreateTitleHandler(
 {
     public async Task<TitleDetailsDto> Handle(CreateTitleCommand command, CancellationToken cancellationToken)
     {
-        logger.LogInformation("Creating title {Title} ({YearOfRelease}).", command.Title, command.YearOfRelease);
+        logger.LogInformation(LogMessageConstants.Title.Creating, command.Title, command.YearOfRelease);
 
         await validator.ValidateAndThrowAsync(command, cancellationToken);
 
@@ -31,7 +32,7 @@ internal sealed class CreateTitleHandler(
 
         var created = await repository.CreateAsync(title, cancellationToken);
 
-        logger.LogInformation("Created title {TitleId} ({Title}).", created.Id, created.Name);
+        logger.LogInformation(LogMessageConstants.Title.Created, created.Id, created.Name);
 
         return created.ToDetailsDto(genres);
     }

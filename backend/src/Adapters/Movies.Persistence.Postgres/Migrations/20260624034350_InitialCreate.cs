@@ -9,29 +9,13 @@ using Microsoft.EntityFrameworkCore.Migrations;
 namespace Movies.Persistence.Postgres.Migrations
 {
     /// <inheritdoc />
-    public partial class AddGenresAndTitleGenreIds : Migration
+    public partial class InitialCreate : Migration
     {
         /// <inheritdoc />
         protected override void Up(MigrationBuilder migrationBuilder)
         {
-            migrationBuilder.AddColumn<List<Guid>>(
-                name: "genre_ids",
-                schema: "catalog",
-                table: "titles",
-                type: "uuid[]",
-                nullable: true);
-
-            migrationBuilder.Sql("UPDATE catalog.titles SET genre_ids = ARRAY[]::uuid[] WHERE genre_ids IS NULL;");
-
-            migrationBuilder.AlterColumn<List<Guid>>(
-                name: "genre_ids",
-                schema: "catalog",
-                table: "titles",
-                type: "uuid[]",
-                nullable: false,
-                oldClrType: typeof(List<Guid>),
-                oldType: "uuid[]",
-                oldNullable: true);
+            migrationBuilder.EnsureSchema(
+                name: "catalog");
 
             migrationBuilder.CreateTable(
                 name: "genres",
@@ -44,6 +28,23 @@ namespace Movies.Persistence.Postgres.Migrations
                 constraints: table =>
                 {
                     table.PrimaryKey("PK_genres", x => x.id);
+                });
+
+            migrationBuilder.CreateTable(
+                name: "titles",
+                schema: "catalog",
+                columns: table => new
+                {
+                    id = table.Column<Guid>(type: "uuid", nullable: false),
+                    title = table.Column<string>(type: "character varying(500)", maxLength: 500, nullable: false),
+                    titleType = table.Column<string>(type: "character varying(50)", maxLength: 50, nullable: false),
+                    yearOfRelease = table.Column<int>(type: "integer", nullable: false),
+                    description = table.Column<string>(type: "character varying(2000)", maxLength: 2000, nullable: true),
+                    genreIds = table.Column<List<Guid>>(type: "uuid[]", nullable: false)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_titles", x => x.id);
                 });
 
             migrationBuilder.InsertData(
@@ -86,10 +87,9 @@ namespace Movies.Persistence.Postgres.Migrations
                 name: "genres",
                 schema: "catalog");
 
-            migrationBuilder.DropColumn(
-                name: "genre_ids",
-                schema: "catalog",
-                table: "titles");
+            migrationBuilder.DropTable(
+                name: "titles",
+                schema: "catalog");
         }
     }
 }

@@ -37,10 +37,12 @@ namespace Movies.Persistence.Postgres.Migrations
                         .HasColumnType("character varying(100)")
                         .HasColumnName("name");
 
-                    b.HasKey("Id");
+                    b.HasKey("Id")
+                        .HasName("PK_genres");
 
                     b.HasIndex("Name")
-                        .IsUnique();
+                        .IsUnique()
+                        .HasDatabaseName("IX_genres_name");
 
                     b.ToTable("genres", "catalog");
 
@@ -147,7 +149,7 @@ namespace Movies.Persistence.Postgres.Migrations
                     b.PrimitiveCollection<List<Guid>>("GenreIds")
                         .IsRequired()
                         .HasColumnType("uuid[]")
-                        .HasColumnName("genre_ids");
+                        .HasColumnName("genreIds");
 
                     b.Property<string>("Name")
                         .IsRequired()
@@ -159,13 +161,14 @@ namespace Movies.Persistence.Postgres.Migrations
                         .IsRequired()
                         .HasMaxLength(50)
                         .HasColumnType("character varying(50)")
-                        .HasColumnName("title_type");
+                        .HasColumnName("titleType");
 
                     b.Property<int>("YearOfRelease")
                         .HasColumnType("integer")
-                        .HasColumnName("year_of_release");
+                        .HasColumnName("yearOfRelease");
 
-                    b.HasKey("Id");
+                    b.HasKey("Id")
+                        .HasName("PK_titles");
 
                     b.ToTable("titles", "catalog");
                 });

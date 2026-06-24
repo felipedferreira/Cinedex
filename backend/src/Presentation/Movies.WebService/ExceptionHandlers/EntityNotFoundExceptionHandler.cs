@@ -2,6 +2,7 @@ using System.Diagnostics;
 using System.Text.Json;
 using Microsoft.AspNetCore.Diagnostics;
 using Movies.Application.Exceptions;
+using Movies.WebService.Constants;
 
 namespace Movies.WebService.ExceptionHandlers;
 
@@ -16,13 +17,13 @@ internal sealed class EntityNotFoundExceptionHandler : IExceptionHandler
 
         var traceId = Activity.Current?.Id ?? httpContext.TraceIdentifier;
 
-        httpContext.Response.ContentType = "application/problem+json";
+        httpContext.Response.ContentType = HttpConstants.ProblemJson;
         httpContext.Response.StatusCode = StatusCodes.Status404NotFound;
 
         var response = new
         {
-            type = "https://httpwg.org/specs/rfc7231.html#status.404",
-            title = "Not Found",
+            type = ProblemDetailsConstants.NotFoundType,
+            title = ProblemDetailsConstants.NotFoundTitle,
             status = StatusCodes.Status404NotFound,
             detail = entityNotFoundException.Message,
             instance = httpContext.Request.Path.Value,

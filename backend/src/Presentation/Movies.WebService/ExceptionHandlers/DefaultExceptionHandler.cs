@@ -1,6 +1,7 @@
 using System.Diagnostics;
 using System.Text.Json;
 using Microsoft.AspNetCore.Diagnostics;
+using Movies.WebService.Constants;
 
 namespace Movies.WebService.ExceptionHandlers;
 
@@ -8,19 +9,19 @@ internal sealed class DefaultExceptionHandler(ILogger<DefaultExceptionHandler> l
 {
     public async ValueTask<bool> TryHandleAsync(HttpContext httpContext, Exception exception, CancellationToken cancellationToken)
     {
-        logger.LogError(exception, "Unhandled exception occurred.");
+        logger.LogError(exception, LogMessageConstants.UnhandledExceptionOccurred);
 
         var traceId = Activity.Current?.Id ?? httpContext.TraceIdentifier;
 
-        httpContext.Response.ContentType = "application/problem+json";
+        httpContext.Response.ContentType = HttpConstants.ProblemJson;
         httpContext.Response.StatusCode = StatusCodes.Status500InternalServerError;
 
         var response = new
         {
-            type = "https://httpwg.org/specs/rfc7231.html#status.500",
-            title = "Internal Server Error",
+            type = ProblemDetailsConstants.InternalServerErrorType,
+            title = ProblemDetailsConstants.InternalServerErrorTitle,
             status = StatusCodes.Status500InternalServerError,
-            detail = "An unhandled exception occurred.",
+            detail = ProblemDetailsConstants.InternalServerErrorDetail,
             instance = httpContext.Request.Path.Value,
             extensions = new { traceId },
         };

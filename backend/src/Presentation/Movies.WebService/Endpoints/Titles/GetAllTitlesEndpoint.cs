@@ -1,5 +1,6 @@
 using FastEndpoints;
 using Movies.Application.Titles.ListTitles;
+using Movies.WebService.Constants;
 using Movies.WebService.Contracts.Responses;
 
 namespace Movies.WebService.Endpoints.Titles;
@@ -8,7 +9,8 @@ internal sealed class GetAllTitlesEndpoint(IListTitlesHandler handler) : Endpoin
 {
     public override void Configure()
     {
-        Get("titles");
+        Get(ApiConstants.Title.Route);
+        Tags(ApiConstants.Title.Tag);
         AllowAnonymous();
     }
 

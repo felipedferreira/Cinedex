@@ -1,5 +1,6 @@
 using FastEndpoints;
 using Movies.Application.Titles.UpdateTitle;
+using Movies.WebService.Constants;
 using Movies.WebService.Contracts.Requests;
 
 namespace Movies.WebService.Endpoints.Titles;
@@ -8,14 +9,15 @@ internal sealed class UpdateTitleEndpoint(IUpdateTitleHandler handler) : Endpoin
 {
     public override void Configure()
     {
-        Put("titles/{id:guid}");
+        Put(ApiConstants.Title.RouteById);
+        Tags(ApiConstants.Title.Tag);
         AllowAnonymous();
     }
 
     public override async Task HandleAsync(UpdateTitlesRequest request, CancellationToken cancellationToken)
     {
-        var id = Route<Guid>("id");
+        var id = Route<Guid>(ApiConstants.RouteParameters.Id);
         await handler.Handle(request.ToCommand(id), cancellationToken);
-        await Send.AcceptedAtAsync("GetTitleById", new { id }, cancellation: cancellationToken);
+        await Send.AcceptedAtAsync(ApiConstants.Title.GetByIdEndpointName, new { id }, cancellation: cancellationToken);
     }
 }

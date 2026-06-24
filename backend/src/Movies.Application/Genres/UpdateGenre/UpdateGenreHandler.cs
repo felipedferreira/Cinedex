@@ -1,6 +1,7 @@
 using FluentValidation;
 using Microsoft.Extensions.Logging;
 using Movies.Application.Abstractions;
+using Movies.Application.Constants;
 using Movies.Application.Exceptions;
 using Movies.Domain.GenreAggregate;
 
@@ -13,7 +14,7 @@ internal sealed class UpdateGenreHandler(
 {
     public async Task<GenreDto> Handle(UpdateGenreCommand command, CancellationToken cancellationToken)
     {
-        logger.LogInformation("Updating genre {GenreId}.", command.Id);
+        logger.LogInformation(LogMessageConstants.Genre.Updating, command.Id);
 
         await validator.ValidateAndThrowAsync(command, cancellationToken);
 
@@ -27,11 +28,11 @@ internal sealed class UpdateGenreHandler(
 
         if (!updated)
         {
-            logger.LogWarning("Genre {GenreId} was not found for update.", command.Id);
+            logger.LogWarning(LogMessageConstants.Genre.NotFoundForUpdate, command.Id);
             throw new EntityNotFoundException(nameof(Genre), command.Id);
         }
 
-        logger.LogInformation("Updated genre {GenreId}.", genre.Id);
+        logger.LogInformation(LogMessageConstants.Genre.Updated, genre.Id);
 
         return genre.ToDto();
     }

@@ -1,3 +1,5 @@
+using Movies.WebService.Constants;
+
 namespace Movies.WebService.Extensions;
 
 /// <summary>
@@ -14,7 +16,7 @@ public static class WebServerExtensions
     {
         builder.WebHost.ConfigureKestrel((context, options) =>
         {
-            var timeoutSeconds = context.Configuration.GetValue("WebServer:RequestTimeoutSeconds", 30);
+            var timeoutSeconds = context.Configuration.GetValue(ConfigurationConstants.RequestTimeoutSeconds, 30);
 
             // RequestHeadersTimeout: Maximum time to receive complete HTTP request headers per request
             // Protects against slowloris attacks where clients slowly send header data

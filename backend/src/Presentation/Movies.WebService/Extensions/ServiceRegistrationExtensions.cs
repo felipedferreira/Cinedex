@@ -1,6 +1,8 @@
+using System.Globalization;
 using FastEndpoints;
 using Movies.Application;
 using Movies.Persistence.Postgres;
+using Movies.WebService.Constants;
 using Movies.WebService.ExceptionHandlers;
 
 namespace Movies.WebService.Extensions;
@@ -30,16 +32,19 @@ public static class ServiceRegistrationExtensions
         builder.Services.AddOpenApi();
         builder.Services.AddProblemDetails();
 
-        var connectionString = builder.Configuration.GetConnectionString("DefaultConnection")
+        var connectionString = builder.Configuration.GetConnectionString(ConfigurationConstants.DefaultConnection)
             ?? throw new InvalidOperationException(
-                "Connection string 'DefaultConnection' is not configured.");
+                string.Format(
+                    CultureInfo.InvariantCulture,
+                    ExceptionMessageConstants.ConnectionStringNotConfigured,
+                    ConfigurationConstants.DefaultConnection));
 
         builder.Services
             .AddHealthChecks()
             .AddNpgSql(
                 connectionString: connectionString,
-                name: "postgres",
-                tags: ["ready"]);
+                name: HealthCheckConstants.PostgresName,
+                tags: [HealthCheckConstants.ReadyTag]);
 
         // Register exception handlers in chain order — DefaultExceptionHandler must be last (catch-all)
         builder.Services.AddExceptionHandler<ValidationExceptionHandler>();

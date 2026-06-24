@@ -1,5 +1,6 @@
 using FastEndpoints;
 using Movies.Application.Titles.CreateTitle;
+using Movies.WebService.Constants;
 using Movies.WebService.Contracts.Requests;
 
 namespace Movies.WebService.Endpoints.Titles;
@@ -8,7 +9,8 @@ internal sealed class CreateTitleEndpoint(ICreateTitleHandler handler) : Endpoin
 {
     public override void Configure()
     {
-        Post("titles");
+        Post(ApiConstants.Title.Route);
+        Tags(ApiConstants.Title.Tag);
         AllowAnonymous();
     }
 
@@ -16,6 +18,6 @@ internal sealed class CreateTitleEndpoint(ICreateTitleHandler handler) : Endpoin
     {
         var title = await handler.Handle(request.ToCommand(), cancellationToken);
 
-        await Send.CreatedAtAsync("GetTitleById", new { id = title.Id }, default!, cancellation: cancellationToken);
+        await Send.CreatedAtAsync(ApiConstants.Title.GetByIdEndpointName, new { id = title.Id }, default!, cancellation: cancellationToken);
     }
 }

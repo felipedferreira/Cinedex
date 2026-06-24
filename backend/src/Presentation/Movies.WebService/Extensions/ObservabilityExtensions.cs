@@ -1,3 +1,4 @@
+using Movies.WebService.Constants;
 using OpenTelemetry.Logs;
 using OpenTelemetry.Resources;
 using OpenTelemetry.Trace;
@@ -21,9 +22,9 @@ public static class ObservabilityExtensions
     public static WebApplicationBuilder AddObservability(this WebApplicationBuilder builder)
     {
         var otlpEndpointConfigured =
-            !string.IsNullOrWhiteSpace(builder.Configuration["OTEL_EXPORTER_OTLP_ENDPOINT"]);
+            !string.IsNullOrWhiteSpace(builder.Configuration[ConfigurationConstants.OtlpEndpoint]);
 
-        var serviceName = builder.Configuration["OTEL_SERVICE_NAME"] ?? "Movies.WebService";
+        var serviceName = builder.Configuration[ConfigurationConstants.OtelServiceName] ?? ObservabilityConstants.ServiceName;
 
         builder.Services
             .AddOpenTelemetry()
@@ -33,7 +34,7 @@ public static class ObservabilityExtensions
                 tracing
                     .AddAspNetCoreInstrumentation()
                     .AddHttpClientInstrumentation()
-                    .AddSource("Npgsql"); // EF Core/Npgsql emit DB spans on this ActivitySource
+                    .AddSource(ObservabilityConstants.NpgsqlActivitySource); // EF Core/Npgsql emit DB spans on this ActivitySource
 
                 if (otlpEndpointConfigured)
                 {

@@ -31,5 +31,6 @@
   </Folder>
   <Folder Name="/tests/">
     <Project Path="tests\Movies.WebService.IntegrationTests\Movies.WebService.IntegrationTests.csproj" Type="Classic C#" />
+    <Project Path="tests\Movies.WebService.UnitTests\Movies.WebService.UnitTests.csproj" Type="Classic C#" />
   </Folder>
 </Solution>

@@ -1,5 +1,6 @@
 using Microsoft.Extensions.Logging;
 using Movies.Application.Abstractions;
+using Movies.Application.Constants;
 
 namespace Movies.Application.Genres.ListGenres;
 
@@ -11,7 +12,7 @@ internal sealed class ListGenresHandler(
     {
         var genres = await repository.GetAllAsync(cancellationToken);
 
-        logger.LogInformation("Retrieved {GenreCount} genres.", genres.Count);
+        logger.LogInformation(LogMessageConstants.Genre.RetrievedAll, genres.Count);
 
         return genres.Select(genre => genre.ToDto()).ToList();
     }

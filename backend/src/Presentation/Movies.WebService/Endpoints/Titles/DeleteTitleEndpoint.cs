@@ -1,5 +1,6 @@
 using FastEndpoints;
 using Movies.Application.Titles.DeleteTitle;
+using Movies.WebService.Constants;
 
 namespace Movies.WebService.Endpoints.Titles;
 
@@ -7,13 +8,14 @@ internal sealed class DeleteTitleEndpoint(IDeleteTitleHandler handler) : Endpoin
 {
     public override void Configure()
     {
-        Delete("titles/{id:guid}");
+        Delete(ApiConstants.Title.RouteById);
+        Tags(ApiConstants.Title.Tag);
         AllowAnonymous();
     }
 
     public override async Task HandleAsync(CancellationToken cancellationToken)
     {
-        var id = Route<Guid>("id");
+        var id = Route<Guid>(ApiConstants.RouteParameters.Id);
         await handler.Handle(new DeleteTitleCommand(id), cancellationToken);
         await Send.NoContentAsync(cancellationToken);
     }

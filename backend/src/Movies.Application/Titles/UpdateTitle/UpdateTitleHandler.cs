@@ -21,15 +21,13 @@ internal sealed class UpdateTitleHandler(
         var genres = await genreRepository.GetByIdsAsync(command.GenreIds, cancellationToken);
         GenreLinking.EnsureAllExist(command.GenreIds, genres);
 
-        var title = new Title
-        {
-            Id = command.Id,
-            Name = command.Title,
-            Type = command.Type,
-            YearOfRelease = command.YearOfRelease,
-            Description = command.Description,
-        };
-        title.ReplaceGenres(command.GenreIds);
+        var title = Title.Create(
+            command.Id,
+            command.Title,
+            command.Type,
+            command.YearOfRelease,
+            command.Description,
+            command.GenreIds);
 
         var updated = await repository.UpdateAsync(title, cancellationToken);
 

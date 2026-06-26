@@ -17,11 +17,7 @@ internal sealed class UpdateGenreHandler(
 
         await validator.ValidateAndThrowAsync(command, cancellationToken);
 
-        var genre = new Genre
-        {
-            Id = command.Id,
-            Name = command.Name,
-        };
+        var genre = Genre.Create(command.Id, command.Name);
 
         var updated = await repository.UpdateAsync(genre, cancellationToken);
 

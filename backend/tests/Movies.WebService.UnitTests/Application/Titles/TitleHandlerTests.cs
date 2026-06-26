@@ -12,21 +12,18 @@ namespace Movies.WebService.UnitTests.Application.Titles;
 public sealed class TitleHandlerTests
 {
     [Fact]
-    public async Task CreateTitle_WithDuplicateGenreIds_DeduplicatesStoredLinksAndReturnsGenreDetails()
+    public async Task CreateTitle_WithDuplicateGenreIds_DeduplicatesStoredLinks()
     {
         var action = new Genre { Id = Guid.NewGuid(), Name = "Action" };
         var drama = new Genre { Id = Guid.NewGuid(), Name = "Drama" };
-        var titleRepository = new InMemoryTitleRepository
-        {
-            CreatedId = Guid.NewGuid(),
-        };
+        var titleRepository = new InMemoryTitleRepository();
         var genreRepository = new InMemoryGenreRepository(action, drama);
 
         using ServiceProvider provider = TestServiceProvider.Create(titleRepository, genreRepository);
         using IServiceScope scope = provider.CreateScope();
         var handler = scope.ServiceProvider.GetRequiredService<ICreateTitleHandler>();
 
-        var result = await handler.Handle(
+        var result = await handler.HandleAsync(
             new CreateTitleCommand(
                 "Heat",
                 TitleType.Movie,
@@ -35,14 +32,10 @@ public sealed class TitleHandlerTests
                 [action.Id, drama.Id, action.Id]),
             CancellationToken.None);
 
-        Assert.Equal(titleRepository.CreatedId, result.Id);
-        Assert.Equal("Heat", result.Title);
-        Assert.Collection(
-            result.Genres,
-            genre => Assert.Equal(action.Id, genre.Id),
-            genre => Assert.Equal(drama.Id, genre.Id));
-
+        Assert.NotEqual(Guid.Empty, result);
         Assert.NotNull(titleRepository.LastCreated);
+        Assert.Equal(result, titleRepository.LastCreated.Id);
+        Assert.Equal("Heat", titleRepository.LastCreated.Name);
         Assert.Equal([action.Id, drama.Id], titleRepository.LastCreated.GenreIds);
     }
 
@@ -59,7 +52,7 @@ public sealed class TitleHandlerTests
         var handler = scope.ServiceProvider.GetRequiredService<ICreateTitleHandler>();
 
         await Assert.ThrowsAsync<EntityNotFoundException>(() =>
-            handler.Handle(
+            handler.HandleAsync(
                 new CreateTitleCommand(
                     "Heat",
                     TitleType.Movie,
@@ -82,7 +75,7 @@ public sealed class TitleHandlerTests
         var handler = scope.ServiceProvider.GetRequiredService<ICreateTitleHandler>();
 
         var exception = await Assert.ThrowsAsync<ValidationException>(() =>
-            handler.Handle(
+            handler.HandleAsync(
                 new CreateTitleCommand(
                     string.Empty,
                     (TitleType)999,
@@ -115,7 +108,7 @@ public sealed class TitleHandlerTests
         var handler = scope.ServiceProvider.GetRequiredService<IUpdateTitleHandler>();
 
         await Assert.ThrowsAsync<EntityNotFoundException>(() =>
-            handler.Handle(
+            handler.HandleAsync(
                 new UpdateTitleCommand(
                     Guid.NewGuid(),
                     "Updated",

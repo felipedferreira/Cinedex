@@ -9,7 +9,7 @@ internal sealed class GetGenreByIdHandler(
     IGenreRepository repository,
     ILogger<GetGenreByIdHandler> logger) : IGetGenreByIdHandler
 {
-    public async Task<GenreDto> Handle(GetGenreByIdQuery query, CancellationToken cancellationToken)
+    public async Task<GenreDto> HandleAsync(GetGenreByIdQuery query, CancellationToken cancellationToken)
     {
         var genre = await repository.GetByIdAsync(query.Id, cancellationToken);
 

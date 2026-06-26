@@ -13,21 +13,18 @@ public sealed class GenreHandlerTests
     [Fact]
     public async Task CreateGenre_WithValidCommand_CreatesGenre()
     {
-        var repository = new InMemoryGenreRepository
-        {
-            CreatedId = Guid.NewGuid(),
-        };
+        var repository = new InMemoryGenreRepository();
 
         using ServiceProvider provider = TestServiceProvider.Create(genreRepository: repository);
         using IServiceScope scope = provider.CreateScope();
         var handler = scope.ServiceProvider.GetRequiredService<ICreateGenreHandler>();
 
-        var result = await handler.Handle(new CreateGenreCommand("Noir"), CancellationToken.None);
+        var result = await handler.HandleAsync(new CreateGenreCommand("Noir"), CancellationToken.None);
 
-        Assert.Equal(repository.CreatedId, result.Id);
-        Assert.Equal("Noir", result.Name);
+        Assert.NotEqual(Guid.Empty, result);
         Assert.Equal(1, repository.CreateCallCount);
         Assert.NotNull(repository.LastCreated);
+        Assert.Equal(result, repository.LastCreated.Id);
         Assert.Equal("Noir", repository.LastCreated.Name);
     }
 
@@ -41,7 +38,7 @@ public sealed class GenreHandlerTests
         var handler = scope.ServiceProvider.GetRequiredService<IUpdateGenreHandler>();
 
         var exception = await Assert.ThrowsAsync<ValidationException>(() =>
-            handler.Handle(new UpdateGenreCommand(Guid.Empty, "Noir"), CancellationToken.None));
+            handler.HandleAsync(new UpdateGenreCommand(Guid.Empty, "Noir"), CancellationToken.None));
 
         Assert.Contains(exception.Errors, error => error.PropertyName == nameof(UpdateGenreCommand.Id));
         Assert.Equal(0, repository.UpdateCallCount);
@@ -60,7 +57,7 @@ public sealed class GenreHandlerTests
         var handler = scope.ServiceProvider.GetRequiredService<IDeleteGenreHandler>();
 
         await Assert.ThrowsAsync<EntityNotFoundException>(() =>
-            handler.Handle(new DeleteGenreCommand(Guid.NewGuid()), CancellationToken.None));
+            handler.HandleAsync(new DeleteGenreCommand(Guid.NewGuid()), CancellationToken.None));
 
         Assert.Equal(1, repository.DeleteCallCount);
     }

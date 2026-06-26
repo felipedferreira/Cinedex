@@ -2,5 +2,5 @@ namespace Movies.Application.Genres.GetGenreById;
 
 public interface IGetGenreByIdHandler
 {
-    Task<GenreDto> Handle(GetGenreByIdQuery query, CancellationToken cancellationToken);
+    Task<GenreDto> HandleAsync(GetGenreByIdQuery query, CancellationToken cancellationToken);
 }

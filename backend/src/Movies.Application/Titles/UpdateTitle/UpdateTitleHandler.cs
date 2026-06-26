@@ -12,7 +12,7 @@ internal sealed class UpdateTitleHandler(
     IValidator<UpdateTitleCommand> validator,
     ILogger<UpdateTitleHandler> logger) : IUpdateTitleHandler
 {
-    public async Task<TitleDetailsDto> Handle(UpdateTitleCommand command, CancellationToken cancellationToken)
+    public async Task HandleAsync(UpdateTitleCommand command, CancellationToken cancellationToken)
     {
         logger.LogInformation("Updating title {TitleId}.", command.Id);
 
@@ -40,7 +40,5 @@ internal sealed class UpdateTitleHandler(
         }
 
         logger.LogInformation("Updated title {TitleId}.", title.Id);
-
-        return title.ToDetailsDto(genres);
     }
 }

@@ -16,7 +16,7 @@ internal sealed class GetAllTitlesEndpoint(IListTitlesHandler handler) : Endpoin
 
     public override async Task HandleAsync(CancellationToken cancellationToken)
     {
-        var titles = await handler.Handle(new ListTitlesQuery(), cancellationToken);
+        var titles = await handler.HandleAsync(new ListTitlesQuery(), cancellationToken);
 
         await Send.OkAsync(titles.ToResponse(), cancellationToken);
     }

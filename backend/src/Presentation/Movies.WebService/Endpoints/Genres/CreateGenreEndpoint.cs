@@ -16,8 +16,8 @@ internal sealed class CreateGenreEndpoint(ICreateGenreHandler handler) : Endpoin
 
     public override async Task HandleAsync(CreateGenreRequest request, CancellationToken cancellationToken)
     {
-        var genre = await handler.Handle(request.ToCommand(), cancellationToken);
+        var genreId = await handler.HandleAsync(request.ToCommand(), cancellationToken);
 
-        await Send.CreatedAtAsync(ApiConstants.Genre.GetByIdEndpointName, new { id = genre.Id }, default!, cancellation: cancellationToken);
+        await Send.CreatedAtAsync(ApiConstants.Genre.GetByIdEndpointName, new { id = genreId }, default!, cancellation: cancellationToken);
     }
 }

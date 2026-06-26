@@ -2,5 +2,5 @@ namespace Movies.Application.Titles.ListTitles;
 
 public interface IListTitlesHandler
 {
-    Task<IReadOnlyList<TitleDto>> Handle(ListTitlesQuery query, CancellationToken cancellationToken);
+    Task<IReadOnlyList<TitleDto>> HandleAsync(ListTitlesQuery query, CancellationToken cancellationToken);
 }

@@ -339,6 +339,13 @@ backend/src/
 - Orchestrates domain logic with persistence
 - Coordinates between domain and external systems
 
+**Handler conventions:**
+- Application handlers expose asynchronous use cases through `HandleAsync(...)`.
+- Create handlers assign the new domain id and return that `Guid` so presentation can build the `Location` header.
+- Update and delete handlers return `Task`; clients retrieve current resource state through the relevant query endpoint.
+- Query handlers return application DTOs for presentation mapping.
+- Repository create ports persist supplied domain models and return `Task` rather than echoing the saved entity.
+
 ### 3. **Movies.Persistence.Postgres** (Adapter Layer)
 **Purpose:** Implements data persistence using PostgreSQL  
 **Dependencies:** `Movies.Application`, `Movies.Domain`  

@@ -9,7 +9,7 @@ internal sealed class DeleteTitleHandler(
     ITitleRepository repository,
     ILogger<DeleteTitleHandler> logger) : IDeleteTitleHandler
 {
-    public async Task Handle(DeleteTitleCommand command, CancellationToken cancellationToken)
+    public async Task HandleAsync(DeleteTitleCommand command, CancellationToken cancellationToken)
     {
         logger.LogInformation("Deleting title {TitleId}.", command.Id);
 

@@ -16,8 +16,8 @@ internal sealed class CreateTitleEndpoint(ICreateTitleHandler handler) : Endpoin
 
     public override async Task HandleAsync(CreateTitlesRequest request, CancellationToken cancellationToken)
     {
-        var title = await handler.Handle(request.ToCommand(), cancellationToken);
+        var titleId = await handler.HandleAsync(request.ToCommand(), cancellationToken);
 
-        await Send.CreatedAtAsync(ApiConstants.Title.GetByIdEndpointName, new { id = title.Id }, default!, cancellation: cancellationToken);
+        await Send.CreatedAtAsync(ApiConstants.Title.GetByIdEndpointName, new { id = titleId }, default!, cancellation: cancellationToken);
     }
 }

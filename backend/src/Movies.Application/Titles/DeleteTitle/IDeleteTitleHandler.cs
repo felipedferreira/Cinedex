@@ -2,5 +2,5 @@ namespace Movies.Application.Titles.DeleteTitle;
 
 public interface IDeleteTitleHandler
 {
-    Task Handle(DeleteTitleCommand command, CancellationToken cancellationToken);
+    Task HandleAsync(DeleteTitleCommand command, CancellationToken cancellationToken);
 }

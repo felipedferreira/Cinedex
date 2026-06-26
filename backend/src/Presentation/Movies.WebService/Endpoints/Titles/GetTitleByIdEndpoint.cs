@@ -18,7 +18,7 @@ internal sealed class GetTitleByIdEndpoint(IGetTitleByIdHandler handler) : Endpo
     public override async Task HandleAsync(CancellationToken cancellationToken)
     {
         var id = Route<Guid>(ApiConstants.RouteParameters.Id);
-        var title = await handler.Handle(new GetTitleByIdQuery(id), cancellationToken);
+        var title = await handler.HandleAsync(new GetTitleByIdQuery(id), cancellationToken);
         await Send.OkAsync(title.ToResponse(), cancellationToken);
     }
 }

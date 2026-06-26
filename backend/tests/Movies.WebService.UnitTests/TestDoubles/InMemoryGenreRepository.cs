@@ -12,8 +12,6 @@ internal sealed class InMemoryGenreRepository : IGenreRepository
         this.genres.AddRange(genres);
     }
 
-    public Guid CreatedId { get; set; } = Guid.NewGuid();
-
     public int CreateCallCount { get; private set; }
 
     public int UpdateCallCount { get; private set; }
@@ -47,20 +45,13 @@ internal sealed class InMemoryGenreRepository : IGenreRepository
         return Task.FromResult(matchingGenres);
     }
 
-    public Task<Genre> CreateAsync(Genre genre, CancellationToken cancellationToken)
+    public Task CreateAsync(Genre genre, CancellationToken cancellationToken)
     {
         CreateCallCount++;
         LastCreated = genre;
+        genres.Add(genre);
 
-        var created = new Genre
-        {
-            Id = CreatedId,
-            Name = genre.Name,
-        };
-
-        genres.Add(created);
-
-        return Task.FromResult(created);
+        return Task.CompletedTask;
     }
 
     public Task<bool> UpdateAsync(Genre genre, CancellationToken cancellationToken)

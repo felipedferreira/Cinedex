@@ -10,7 +10,7 @@ internal sealed class CreateGenreHandler(
     IValidator<CreateGenreCommand> validator,
     ILogger<CreateGenreHandler> logger) : ICreateGenreHandler
 {
-    public async Task<GenreDto> Handle(CreateGenreCommand command, CancellationToken cancellationToken)
+    public async Task<Guid> HandleAsync(CreateGenreCommand command, CancellationToken cancellationToken)
     {
         logger.LogInformation("Creating genre {Name}.", command.Name);
 
@@ -18,13 +18,14 @@ internal sealed class CreateGenreHandler(
 
         var genre = new Genre
         {
+            Id = Guid.CreateVersion7(),
             Name = command.Name,
         };
 
-        var created = await repository.CreateAsync(genre, cancellationToken);
+        await repository.CreateAsync(genre, cancellationToken);
 
-        logger.LogInformation("Created genre {GenreId} ({Name}).", created.Id, created.Name);
+        logger.LogInformation("Created genre {GenreId} ({Name}).", genre.Id, genre.Name);
 
-        return created.ToDto();
+        return genre.Id;
     }
 }

@@ -11,7 +11,7 @@ internal sealed class UpdateGenreHandler(
     IValidator<UpdateGenreCommand> validator,
     ILogger<UpdateGenreHandler> logger) : IUpdateGenreHandler
 {
-    public async Task<GenreDto> Handle(UpdateGenreCommand command, CancellationToken cancellationToken)
+    public async Task HandleAsync(UpdateGenreCommand command, CancellationToken cancellationToken)
     {
         logger.LogInformation("Updating genre {GenreId}.", command.Id);
 
@@ -32,7 +32,5 @@ internal sealed class UpdateGenreHandler(
         }
 
         logger.LogInformation("Updated genre {GenreId}.", genre.Id);
-
-        return genre.ToDto();
     }
 }

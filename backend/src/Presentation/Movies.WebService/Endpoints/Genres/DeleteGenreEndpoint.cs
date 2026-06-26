@@ -16,7 +16,7 @@ internal sealed class DeleteGenreEndpoint(IDeleteGenreHandler handler) : Endpoin
     public override async Task HandleAsync(CancellationToken cancellationToken)
     {
         var id = Route<Guid>(ApiConstants.RouteParameters.Id);
-        await handler.Handle(new DeleteGenreCommand(id), cancellationToken);
+        await handler.HandleAsync(new DeleteGenreCommand(id), cancellationToken);
         await Send.NoContentAsync(cancellationToken);
     }
 }

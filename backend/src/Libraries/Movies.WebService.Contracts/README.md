@@ -22,6 +22,20 @@ dotnet add package Movies.WebService.Contracts
 - **GenreResponse**: DTO for genre response data
 - **GenresResponse**: DTO for genres list response
 
+## Endpoint Response Behavior
+
+Write operations do not return resource DTOs in the response body. Clients should use the
+`Location` header to fetch the current representation when they need it.
+
+| Operation | Status | Body | Location |
+|-----------|--------|------|----------|
+| `POST /titles` | `201 Created` | Empty | `/titles/{id}` |
+| `POST /genres` | `201 Created` | Empty | `/genres/{id}` |
+| `PUT /titles/{id}` | `202 Accepted` | Empty | `/titles/{id}` |
+| `PUT /genres/{id}` | `202 Accepted` | Empty | `/genres/{id}` |
+| `DELETE /titles/{id}` | `204 No Content` | Empty | None |
+| `DELETE /genres/{id}` | `204 No Content` | Empty | None |
+
 ## Usage Example
 
 ```csharp

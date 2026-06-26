@@ -12,7 +12,7 @@ public interface IGenreRepository
     // ids exist and to enrich a title's response with genre details.
     Task<IReadOnlyList<Genre>> GetByIdsAsync(IReadOnlyCollection<Guid> ids, CancellationToken cancellationToken);
 
-    Task<Genre> CreateAsync(Genre genre, CancellationToken cancellationToken);
+    Task CreateAsync(Genre genre, CancellationToken cancellationToken);
 
     Task<bool> UpdateAsync(Genre genre, CancellationToken cancellationToken);
 

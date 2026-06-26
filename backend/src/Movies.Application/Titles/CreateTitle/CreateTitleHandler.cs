@@ -11,28 +11,30 @@ internal sealed class CreateTitleHandler(
     IValidator<CreateTitleCommand> validator,
     ILogger<CreateTitleHandler> logger) : ICreateTitleHandler
 {
-    public async Task<TitleDetailsDto> Handle(CreateTitleCommand command, CancellationToken cancellationToken)
+    public async Task<Guid> HandleAsync(CreateTitleCommand command, CancellationToken cancellationToken)
     {
         logger.LogInformation("Creating title {Title} ({YearOfRelease}).", command.Title, command.YearOfRelease);
 
         await validator.ValidateAndThrowAsync(command, cancellationToken);
 
-        var genres = await genreRepository.GetByIdsAsync(command.GenreIds, cancellationToken);
-        GenreLinking.EnsureAllExist(command.GenreIds, genres);
+        var genreIds = command.GenreIds.Distinct().ToList();
+        var genres = await genreRepository.GetByIdsAsync(genreIds, cancellationToken);
+        GenreLinking.EnsureAllExist(genreIds, genres);
 
         var title = new Title
         {
+            Id = Guid.CreateVersion7(),
             Name = command.Title,
             Type = command.Type,
             YearOfRelease = command.YearOfRelease,
             Description = command.Description,
-            GenreIds = command.GenreIds.Distinct().ToList(),
+            GenreIds = genreIds,
         };
 
-        var created = await repository.CreateAsync(title, cancellationToken);
+        await repository.CreateAsync(title, cancellationToken);
 
-        logger.LogInformation("Created title {TitleId} ({Title}).", created.Id, created.Name);
+        logger.LogInformation("Created title {TitleId} ({Title}).", title.Id, title.Name);
 
-        return created.ToDetailsDto(genres);
+        return title.Id;
     }
 }

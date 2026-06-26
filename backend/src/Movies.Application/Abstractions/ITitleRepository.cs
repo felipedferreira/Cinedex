@@ -8,7 +8,7 @@ public interface ITitleRepository
 
     Task<Title?> GetByIdAsync(Guid id, CancellationToken cancellationToken);
 
-    Task<Title> CreateAsync(Title title, CancellationToken cancellationToken);
+    Task CreateAsync(Title title, CancellationToken cancellationToken);
 
     Task<bool> UpdateAsync(Title title, CancellationToken cancellationToken);
 

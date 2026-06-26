@@ -17,7 +17,7 @@ internal sealed class UpdateGenreEndpoint(IUpdateGenreHandler handler) : Endpoin
     public override async Task HandleAsync(UpdateGenreRequest request, CancellationToken cancellationToken)
     {
         var id = Route<Guid>(ApiConstants.RouteParameters.Id);
-        await handler.Handle(request.ToCommand(id), cancellationToken);
+        await handler.HandleAsync(request.ToCommand(id), cancellationToken);
         await Send.AcceptedAtAsync(ApiConstants.Genre.GetByIdEndpointName, new { id }, cancellation: cancellationToken);
     }
 }

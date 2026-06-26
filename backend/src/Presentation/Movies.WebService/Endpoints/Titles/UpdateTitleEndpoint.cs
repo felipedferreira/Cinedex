@@ -17,7 +17,7 @@ internal sealed class UpdateTitleEndpoint(IUpdateTitleHandler handler) : Endpoin
     public override async Task HandleAsync(UpdateTitlesRequest request, CancellationToken cancellationToken)
     {
         var id = Route<Guid>(ApiConstants.RouteParameters.Id);
-        await handler.Handle(request.ToCommand(id), cancellationToken);
+        await handler.HandleAsync(request.ToCommand(id), cancellationToken);
         await Send.AcceptedAtAsync(ApiConstants.Title.GetByIdEndpointName, new { id }, cancellation: cancellationToken);
     }
 }

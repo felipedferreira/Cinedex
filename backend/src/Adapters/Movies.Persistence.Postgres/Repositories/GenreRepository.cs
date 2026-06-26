@@ -7,10 +7,14 @@ namespace Movies.Persistence.Postgres.Repositories;
 internal sealed class GenreRepository(FilmDbContext dbContext) : IGenreRepository
 {
     public async Task<IReadOnlyList<Genre>> GetAllAsync(CancellationToken cancellationToken) =>
-        await dbContext.Genres.AsNoTracking().ToListAsync(cancellationToken);
+        await dbContext.Genres
+            .AsNoTracking()
+            .ToListAsync(cancellationToken);
 
     public async Task<Genre?> GetByIdAsync(Guid id, CancellationToken cancellationToken) =>
-        await dbContext.Genres.AsNoTracking().FirstOrDefaultAsync(g => g.Id == id, cancellationToken);
+        await dbContext.Genres
+            .AsNoTracking()
+            .FirstOrDefaultAsync(g => g.Id == id, cancellationToken);
 
     public async Task<IReadOnlyList<Genre>> GetByIdsAsync(IReadOnlyCollection<Guid> ids, CancellationToken cancellationToken)
     {
@@ -21,15 +25,16 @@ internal sealed class GenreRepository(FilmDbContext dbContext) : IGenreRepositor
 
         // Read-only: genres are only used to validate referenced ids and enrich responses,
         // never attached to a title aggregate.
-        return await dbContext.Genres.AsNoTracking().Where(g => ids.Contains(g.Id)).ToListAsync(cancellationToken);
+        return await dbContext.Genres
+            .AsNoTracking()
+            .Where(g => ids.Contains(g.Id))
+            .ToListAsync(cancellationToken);
     }
 
-    public async Task<Genre> CreateAsync(Genre genre, CancellationToken cancellationToken)
+    public async Task CreateAsync(Genre genre, CancellationToken cancellationToken)
     {
         dbContext.Genres.Add(genre);
         await dbContext.SaveChangesAsync(cancellationToken);
-
-        return genre;
     }
 
     public async Task<bool> UpdateAsync(Genre genre, CancellationToken cancellationToken)

@@ -7,7 +7,7 @@ internal sealed class ListGenresHandler(
     IGenreRepository repository,
     ILogger<ListGenresHandler> logger) : IListGenresHandler
 {
-    public async Task<IReadOnlyList<GenreDto>> Handle(ListGenresQuery query, CancellationToken cancellationToken)
+    public async Task<IReadOnlyList<GenreDto>> HandleAsync(ListGenresQuery query, CancellationToken cancellationToken)
     {
         var genres = await repository.GetAllAsync(cancellationToken);
 

@@ -12,8 +12,6 @@ internal sealed class InMemoryTitleRepository : ITitleRepository
         this.titles.AddRange(titles);
     }
 
-    public Guid CreatedId { get; set; } = Guid.NewGuid();
-
     public int CreateCallCount { get; private set; }
 
     public int UpdateCallCount { get; private set; }
@@ -34,24 +32,13 @@ internal sealed class InMemoryTitleRepository : ITitleRepository
     public Task<Title?> GetByIdAsync(Guid id, CancellationToken cancellationToken) =>
         Task.FromResult(titles.FirstOrDefault(title => title.Id == id));
 
-    public Task<Title> CreateAsync(Title title, CancellationToken cancellationToken)
+    public Task CreateAsync(Title title, CancellationToken cancellationToken)
     {
         CreateCallCount++;
         LastCreated = title;
+        titles.Add(title);
 
-        var created = new Title
-        {
-            Id = CreatedId,
-            Name = title.Name,
-            Type = title.Type,
-            YearOfRelease = title.YearOfRelease,
-            Description = title.Description,
-            GenreIds = title.GenreIds.ToList(),
-        };
-
-        titles.Add(created);
-
-        return Task.FromResult(created);
+        return Task.CompletedTask;
     }
 
     public Task<bool> UpdateAsync(Title title, CancellationToken cancellationToken)

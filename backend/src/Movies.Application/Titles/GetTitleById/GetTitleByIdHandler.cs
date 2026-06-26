@@ -10,7 +10,7 @@ internal sealed class GetTitleByIdHandler(
     IGenreRepository genreRepository,
     ILogger<GetTitleByIdHandler> logger) : IGetTitleByIdHandler
 {
-    public async Task<TitleDetailsDto> Handle(GetTitleByIdQuery query, CancellationToken cancellationToken)
+    public async Task<TitleDetailsDto> HandleAsync(GetTitleByIdQuery query, CancellationToken cancellationToken)
     {
         var title = await repository.GetByIdAsync(query.Id, cancellationToken);
 

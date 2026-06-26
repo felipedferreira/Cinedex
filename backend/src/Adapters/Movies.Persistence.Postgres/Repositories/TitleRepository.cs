@@ -12,12 +12,10 @@ internal sealed class TitleRepository(FilmDbContext dbContext) : ITitleRepositor
     public async Task<Title?> GetByIdAsync(Guid id, CancellationToken cancellationToken) =>
         await dbContext.Titles.AsNoTracking().FirstOrDefaultAsync(m => m.Id == id, cancellationToken);
 
-    public async Task<Title> CreateAsync(Title title, CancellationToken cancellationToken)
+    public async Task CreateAsync(Title title, CancellationToken cancellationToken)
     {
         dbContext.Titles.Add(title);
         await dbContext.SaveChangesAsync(cancellationToken);
-
-        return title;
     }
 
     public async Task<bool> UpdateAsync(Title title, CancellationToken cancellationToken)

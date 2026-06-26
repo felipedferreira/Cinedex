@@ -9,7 +9,7 @@ internal sealed class DeleteGenreHandler(
     IGenreRepository repository,
     ILogger<DeleteGenreHandler> logger) : IDeleteGenreHandler
 {
-    public async Task Handle(DeleteGenreCommand command, CancellationToken cancellationToken)
+    public async Task HandleAsync(DeleteGenreCommand command, CancellationToken cancellationToken)
     {
         logger.LogInformation("Deleting genre {GenreId}.", command.Id);
 

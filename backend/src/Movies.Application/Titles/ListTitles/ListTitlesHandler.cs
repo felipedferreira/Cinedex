@@ -7,7 +7,7 @@ internal sealed class ListTitlesHandler(
     ITitleRepository repository,
     ILogger<ListTitlesHandler> logger) : IListTitlesHandler
 {
-    public async Task<IReadOnlyList<TitleDto>> Handle(ListTitlesQuery query, CancellationToken cancellationToken)
+    public async Task<IReadOnlyList<TitleDto>> HandleAsync(ListTitlesQuery query, CancellationToken cancellationToken)
     {
         var titles = await repository.GetAllAsync(cancellationToken);
 

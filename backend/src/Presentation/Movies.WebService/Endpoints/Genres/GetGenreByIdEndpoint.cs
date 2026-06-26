@@ -18,7 +18,7 @@ internal sealed class GetGenreByIdEndpoint(IGetGenreByIdHandler handler) : Endpo
     public override async Task HandleAsync(CancellationToken cancellationToken)
     {
         var id = Route<Guid>(ApiConstants.RouteParameters.Id);
-        var genre = await handler.Handle(new GetGenreByIdQuery(id), cancellationToken);
+        var genre = await handler.HandleAsync(new GetGenreByIdQuery(id), cancellationToken);
         await Send.OkAsync(genre.ToResponse(), cancellationToken);
     }
 }

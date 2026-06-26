@@ -16,7 +16,7 @@ internal sealed class GetAllGenresEndpoint(IListGenresHandler handler) : Endpoin
 
     public override async Task HandleAsync(CancellationToken cancellationToken)
     {
-        var genres = await handler.Handle(new ListGenresQuery(), cancellationToken);
+        var genres = await handler.HandleAsync(new ListGenresQuery(), cancellationToken);
 
         await Send.OkAsync(genres.ToResponse(), cancellationToken);
     }

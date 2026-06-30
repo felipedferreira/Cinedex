@@ -8,7 +8,7 @@ namespace Movies.Persistence.Postgres;
 
 public static class DependencyInjection
 {
-    public static IServiceCollection AddPersistence(this IServiceCollection services)
+    public static IServiceCollection AddPersistenceAdapter(this IServiceCollection services)
     {
         services.AddDbContext<FilmDbContext>((sp, options) =>
         {

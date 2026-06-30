@@ -22,7 +22,7 @@ public static class ServiceRegistrationExtensions
     {
         builder.Services
             .AddApplication()
-            .AddPersistence();
+            .AddPersistenceAdapter();
 
         // Register FastEndpoints (discovers endpoint classes in this assembly)
         builder.Services.AddFastEndpoints();

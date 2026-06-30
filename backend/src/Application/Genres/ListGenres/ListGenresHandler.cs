@@ -1,7 +1,7 @@
+using Cinedex.Application.Abstractions;
 using Microsoft.Extensions.Logging;
-using Movies.Application.Abstractions;
 
-namespace Movies.Application.Genres.ListGenres;
+namespace Cinedex.Application.Genres.ListGenres;
 
 internal sealed class ListGenresHandler(
     IGenreRepository repository,

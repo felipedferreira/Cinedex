@@ -1,4 +1,4 @@
-namespace Movies.Application.Genres.CreateGenre;
+namespace Cinedex.Application.Genres.CreateGenre;
 
 public interface ICreateGenreHandler
 {

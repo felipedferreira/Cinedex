@@ -1,9 +1,9 @@
+using Cinedex.Application.Abstractions;
+using Cinedex.Domain.TitleAggregate;
 using FluentValidation;
 using Microsoft.Extensions.Logging;
-using Movies.Application.Abstractions;
-using Movies.Domain.TitleAggregate;
 
-namespace Movies.Application.Titles.CreateTitle;
+namespace Cinedex.Application.Titles.CreateTitle;
 
 internal sealed class CreateTitleHandler(
     ITitleRepository repository,

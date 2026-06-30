@@ -1,7 +1,7 @@
+using Cinedex.Application.Abstractions;
 using Microsoft.Extensions.Logging;
-using Movies.Application.Abstractions;
 
-namespace Movies.Application.Titles.ListTitles;
+namespace Cinedex.Application.Titles.ListTitles;
 
 internal sealed class ListTitlesHandler(
     ITitleRepository repository,

@@ -1,9 +1,9 @@
+using Cinedex.Application.Abstractions;
+using Cinedex.Application.Exceptions;
+using Cinedex.Domain.TitleAggregate;
 using Microsoft.Extensions.Logging;
-using Movies.Application.Abstractions;
-using Movies.Application.Exceptions;
-using Movies.Domain.TitleAggregate;
 
-namespace Movies.Application.Titles.GetTitleById;
+namespace Cinedex.Application.Titles.GetTitleById;
 
 internal sealed class GetTitleByIdHandler(
     ITitleRepository repository,

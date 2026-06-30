@@ -1,4 +1,4 @@
-namespace Movies.Application.Genres.DeleteGenre;
+namespace Cinedex.Application.Genres.DeleteGenre;
 
 public interface IDeleteGenreHandler
 {

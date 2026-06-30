@@ -1,4 +1,4 @@
-namespace Movies.Application.Titles.CreateTitle;
+namespace Cinedex.Application.Titles.CreateTitle;
 
 public interface ICreateTitleHandler
 {

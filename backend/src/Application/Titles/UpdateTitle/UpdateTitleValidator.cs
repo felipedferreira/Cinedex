@@ -1,6 +1,6 @@
 using FluentValidation;
 
-namespace Movies.Application.Titles.UpdateTitle;
+namespace Cinedex.Application.Titles.UpdateTitle;
 
 internal sealed class UpdateTitleValidator : AbstractValidator<UpdateTitleCommand>
 {

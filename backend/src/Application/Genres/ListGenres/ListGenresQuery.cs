@@ -1,3 +1,3 @@
-namespace Movies.Application.Genres.ListGenres;
+namespace Cinedex.Application.Genres.ListGenres;
 
 public sealed record ListGenresQuery;

@@ -1,4 +1,4 @@
-namespace Movies.Application.Genres.ListGenres;
+namespace Cinedex.Application.Genres.ListGenres;
 
 public interface IListGenresHandler
 {

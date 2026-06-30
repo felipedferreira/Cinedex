@@ -1,17 +1,17 @@
+using Cinedex.Application.Genres.CreateGenre;
+using Cinedex.Application.Genres.DeleteGenre;
+using Cinedex.Application.Genres.GetGenreById;
+using Cinedex.Application.Genres.ListGenres;
+using Cinedex.Application.Genres.UpdateGenre;
+using Cinedex.Application.Titles.CreateTitle;
+using Cinedex.Application.Titles.DeleteTitle;
+using Cinedex.Application.Titles.GetTitleById;
+using Cinedex.Application.Titles.ListTitles;
+using Cinedex.Application.Titles.UpdateTitle;
 using FluentValidation;
 using Microsoft.Extensions.DependencyInjection;
-using Movies.Application.Genres.CreateGenre;
-using Movies.Application.Genres.DeleteGenre;
-using Movies.Application.Genres.GetGenreById;
-using Movies.Application.Genres.ListGenres;
-using Movies.Application.Genres.UpdateGenre;
-using Movies.Application.Titles.CreateTitle;
-using Movies.Application.Titles.DeleteTitle;
-using Movies.Application.Titles.GetTitleById;
-using Movies.Application.Titles.ListTitles;
-using Movies.Application.Titles.UpdateTitle;
 
-namespace Movies.Application;
+namespace Cinedex.Application;
 
 public static class DependencyInjection
 {

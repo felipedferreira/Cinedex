@@ -1,4 +1,4 @@
-namespace Movies.Application.Titles.UpdateTitle;
+namespace Cinedex.Application.Titles.UpdateTitle;
 
 public interface IUpdateTitleHandler
 {

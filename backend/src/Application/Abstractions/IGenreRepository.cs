@@ -1,6 +1,6 @@
-using Movies.Domain.GenreAggregate;
+using Cinedex.Domain.GenreAggregate;
 
-namespace Movies.Application.Abstractions;
+namespace Cinedex.Application.Abstractions;
 
 public interface IGenreRepository
 {

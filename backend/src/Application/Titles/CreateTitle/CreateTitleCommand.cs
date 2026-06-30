@@ -1,6 +1,6 @@
-using Movies.Domain.Enums;
+using Cinedex.Domain.Enums;
 
-namespace Movies.Application.Titles.CreateTitle;
+namespace Cinedex.Application.Titles.CreateTitle;
 
 public sealed record CreateTitleCommand(
     string Title,

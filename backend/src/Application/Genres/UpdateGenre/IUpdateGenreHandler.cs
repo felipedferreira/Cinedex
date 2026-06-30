@@ -1,4 +1,4 @@
-namespace Movies.Application.Genres.UpdateGenre;
+namespace Cinedex.Application.Genres.UpdateGenre;
 
 public interface IUpdateGenreHandler
 {

@@ -1,7 +1,7 @@
-using Movies.Application.Genres;
-using Movies.Domain.Enums;
+using Cinedex.Application.Genres;
+using Cinedex.Domain.Enums;
 
-namespace Movies.Application.Titles;
+namespace Cinedex.Application.Titles;
 
 public sealed record TitleDetailsDto(
     Guid Id,

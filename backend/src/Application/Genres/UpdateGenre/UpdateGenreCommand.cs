@@ -1,3 +1,3 @@
-namespace Movies.Application.Genres.UpdateGenre;
+namespace Cinedex.Application.Genres.UpdateGenre;
 
 public sealed record UpdateGenreCommand(Guid Id, string Name);

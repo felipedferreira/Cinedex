@@ -1,6 +1,6 @@
-using Movies.Domain.GenreAggregate;
+using Cinedex.Domain.GenreAggregate;
 
-namespace Movies.Application.Genres;
+namespace Cinedex.Application.Genres;
 
 internal static class GenreMappings
 {

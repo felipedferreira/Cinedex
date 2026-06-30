@@ -1,3 +1,3 @@
-namespace Movies.Application.Titles.DeleteTitle;
+namespace Cinedex.Application.Titles.DeleteTitle;
 
 public sealed record DeleteTitleCommand(Guid Id);

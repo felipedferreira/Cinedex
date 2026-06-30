@@ -17,7 +17,7 @@ genre does not hold a back-reference to movies.
 - **Movies reference genres by id** — `CreateMoviesRequest`/`UpdateMoviesRequest` carry a `GenreIds` collection, and movie responses include the linked genres.
 - **Seeded data** — the database ships with 17 common genres (Action, Comedy, Drama, …) so movies can be tagged immediately.
 
-See the [contracts README](NuGetLibraries/Movies.WebService.Contracts/README.md) for the request/response DTOs.
+See the [contracts README](NuGetLibraries/Cinedex.WebService.Contracts/README.md) for the request/response DTOs.
 
 ## 🗄️ Database
 
@@ -44,14 +44,14 @@ committed — for local runs (`Development` environment) it is supplied via
 [.NET User Secrets](https://learn.microsoft.com/aspnet/core/security/app-secrets) so the
 password stays out of git. Set it once from the web service project directory:
 ```bash
-# from backend/src/Presentation/Movies.WebService
+# from backend/src/Presentation/Cinedex.WebService
 dotnet user-secrets set "ConnectionStrings:DefaultConnection" \
   "<YOUR_LOCAL_CONNECTION_STRING>"
 ```
 
 Verify the secret was stored correctly (same directory):
 ```bash
-# from backend/src/Presentation/Movies.WebService
+# from backend/src/Presentation/Cinedex.WebService
 dotnet user-secrets list
 ```
 
@@ -85,13 +85,13 @@ Run from this folder, specifying the persistence project and the WebService as t
 ```bash
 # Add a new migration
 dotnet ef migrations add <MigrationName> \
-  --project src/Adapters/Movies.Persistence.Postgres \
-  --startup-project src/Presentation/Movies.WebService
+  --project src/Adapters/Cinedex.Persistence.Postgres \
+  --startup-project src/Presentation/Cinedex.WebService
 
 # Apply migrations to the database
 dotnet ef database update \
-  --project src/Adapters/Movies.Persistence.Postgres \
-  --startup-project src/Presentation/Movies.WebService
+  --project src/Adapters/Cinedex.Persistence.Postgres \
+  --startup-project src/Presentation/Cinedex.WebService
 ```
 
 By default these commands resolve `ConnectionStrings:DefaultConnection` from the startup
@@ -101,13 +101,13 @@ container exposed on `localhost:5432` — pass the connection string explicitly 
 
 ```bash
 dotnet ef database update \
-  --project src/Adapters/Movies.Persistence.Postgres \
-  --startup-project src/Presentation/Movies.WebService \
+  --project src/Adapters/Cinedex.Persistence.Postgres \
+  --startup-project src/Presentation/Cinedex.WebService \
   --connection "<YOUR_CONNECTION_STRING>"
 # e.g. "Host=127.0.0.1;Port=5432;Database=movies;Username=movies_rw;Password=<DB_PASSWORD>"
 ```
 
-> **Domain models** live in `Movies.Domain`. EF entity configurations use **Fluent API** in `Movies.Persistence.Postgres`, keeping the domain layer free of any EF dependencies.
+> **Domain models** live in `Cinedex.Domain`. EF entity configurations use **Fluent API** in `Cinedex.Persistence.Postgres`, keeping the domain layer free of any EF dependencies.
 
 ---
 
@@ -115,8 +115,8 @@ dotnet ef database update \
 
 - **[Architecture Guide](README.md)** (this file) - Project structure and design patterns
 - **[Changelog](../CHANGELOG.md)** - Version history and release notes
-- **[NuGetLibraries](NuGetLibraries/Movies.WebService.Contracts/README.md)** - NuGet package documentation
-  - Movies.WebService.Contracts - API contracts and DTOs
+- **[NuGetLibraries](NuGetLibraries/Cinedex.WebService.Contracts/README.md)** - NuGet package documentation
+  - Cinedex.WebService.Contracts - API contracts and DTOs
 
 ## 🚀 Quick Start
 
@@ -128,7 +128,7 @@ dotnet build
 dotnet test
 
 # Run the web service
-dotnet run --project src/Presentation/Movies.WebService
+dotnet run --project src/Presentation/Cinedex.WebService
 
 # Generate coverage report
 .\coverage.ps1 -Open
@@ -283,21 +283,21 @@ The solution is organized into layers that enforce separation of concerns and de
 
 ```
 ┌─────────────────────────────────────────────────┐
-│         Movies.WebService (Presentation)        │
+│         Cinedex.WebService (Presentation)       │
 │              (Web API / Entry Point)            │
 └──────────────────┬──────────────────────────────┘
                    │
        ┌───────────┴────────────────┐
        │                            │
 ┌──────▼───────────────┐  ┌─────────▼────────────────────────┐
-│  Movies.Application  │◄─┤  Movies.Persistence.Postgres     │
+│  Cinedex.Application │◄─┤  Cinedex.Persistence.Postgres    │
 │  (Use Cases + Ports) │  │     (Persistence Adapter)        │
 └──────┬───────────────┘  └─────────┬────────────────────────┘
        │                            │
        └─────────────┬──────────────┘
                      │
            ┌─────────▼──────────┐
-           │   Movies.Domain    │
+           │   Cinedex.Domain   │
            │  (Business Logic)  │
            └────────────────────┘
 ```
@@ -309,20 +309,21 @@ projects (Presentation, Adapters) keep a grouping folder; the single Application
 and Domain projects sit directly under `src/`.
 
 ```
-backend/src/
-├── Presentation/
-│   └── Movies.WebService/            # driving adapter (HTTP entry point)
-├── Adapters/
-│   └── Movies.Persistence.Postgres/  # driven adapter (implements ports)
-├── Application/                      # use cases + ports (Abstractions/)
-├── Domain/                           # entities, no outward dependencies
-└── Libraries/
-    └── Movies.WebService.Contracts/  # shared API DTOs
+backend/
+├── src/
+│   ├── Presentation/
+│   │   └── Cinedex.WebService/            # driving adapter (HTTP entry point)
+│   ├── Adapters/
+│   │   └── Cinedex.Persistence.Postgres/  # driven adapter (implements ports)
+│   ├── Application/                      # use cases + ports (Abstractions/)
+│   └── Domain/                           # entities, no outward dependencies
+└── NuGetLibraries/
+    └── Cinedex.WebService.Contracts/      # shared API DTOs
 ```
 
 ## Project Descriptions
 
-### 1. **Movies.Domain** (Foundation Layer)
+### 1. **Cinedex.Domain** (Foundation Layer)
 **Purpose:** Core business logic and domain entities  
 **Dependencies:** None  
 **Responsibilities:**
@@ -330,9 +331,9 @@ backend/src/
 - Business rules and invariants
 - No external dependencies (no EF, no web frameworks)
 
-### 2. **Movies.Application** (Use Cases Layer)
+### 2. **Cinedex.Application** (Use Cases Layer)
 **Purpose:** Implements application use cases and defines the ports they depend on  
-**Dependencies:** `Movies.Domain`  
+**Dependencies:** `Cinedex.Domain`  
 **Responsibilities:**
 - Use case implementations and application services
 - Repository and service interfaces (ports), grouped under `Abstractions/`
@@ -346,19 +347,19 @@ backend/src/
 - Query handlers return application DTOs for presentation mapping.
 - Repository create ports persist supplied domain models and return `Task` rather than echoing the saved entity.
 
-### 3. **Movies.Persistence.Postgres** (Adapter Layer)
+### 3. **Cinedex.Persistence.Postgres** (Adapter Layer)
 **Purpose:** Implements data persistence using PostgreSQL  
-**Dependencies:** `Movies.Application`, `Movies.Domain`  
+**Dependencies:** `Cinedex.Application`, `Cinedex.Domain`  
 **Responsibilities:**
 - `FilmDbContext` — EF Core DbContext with Fluent API entity configurations
 - Concrete repository implementations
 - Database migrations and schema management
-- Adapts PostgreSQL to the repository ports defined in `Movies.Application`
+- Adapts PostgreSQL to the repository ports defined in `Cinedex.Application`
 - *Note: Listed under `Adapters/` to reflect that it's an interchangeable persistence adapter*
 
-### 4. **Movies.WebService** (Presentation/Entry Point Layer)
+### 4. **Cinedex.WebService** (Presentation/Entry Point Layer)
 **Purpose:** Web API and HTTP request handling  
-**Dependencies:** `Movies.Application`, `Movies.Persistence.Postgres`  
+**Dependencies:** `Cinedex.Application`, `Cinedex.Persistence.Postgres`  
 **Responsibilities:**
 - ASP.NET Core web API endpoints
 - HTTP request/response handling
@@ -396,7 +397,7 @@ dotnet build
 ### Run the web service locally:
 ```bash
 # Make sure PostgreSQL is running (locally or via Docker)
-dotnet run --project src/Presentation/Movies.WebService
+dotnet run --project src/Presentation/Cinedex.WebService
 ```
 
 The service will be available at:

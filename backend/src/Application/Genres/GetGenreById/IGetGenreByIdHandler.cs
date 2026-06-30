@@ -1,4 +1,4 @@
-namespace Movies.Application.Genres.GetGenreById;
+namespace Cinedex.Application.Genres.GetGenreById;
 
 public interface IGetGenreByIdHandler
 {

@@ -1,9 +1,9 @@
+using Cinedex.Application.Abstractions;
+using Cinedex.Domain.GenreAggregate;
 using FluentValidation;
 using Microsoft.Extensions.Logging;
-using Movies.Application.Abstractions;
-using Movies.Domain.GenreAggregate;
 
-namespace Movies.Application.Genres.CreateGenre;
+namespace Cinedex.Application.Genres.CreateGenre;
 
 internal sealed class CreateGenreHandler(
     IGenreRepository repository,

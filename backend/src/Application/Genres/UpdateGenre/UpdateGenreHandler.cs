@@ -1,10 +1,10 @@
+using Cinedex.Application.Abstractions;
+using Cinedex.Application.Exceptions;
+using Cinedex.Domain.GenreAggregate;
 using FluentValidation;
 using Microsoft.Extensions.Logging;
-using Movies.Application.Abstractions;
-using Movies.Application.Exceptions;
-using Movies.Domain.GenreAggregate;
 
-namespace Movies.Application.Genres.UpdateGenre;
+namespace Cinedex.Application.Genres.UpdateGenre;
 
 internal sealed class UpdateGenreHandler(
     IGenreRepository repository,

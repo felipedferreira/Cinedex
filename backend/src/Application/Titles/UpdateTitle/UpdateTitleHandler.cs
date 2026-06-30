@@ -1,10 +1,10 @@
+using Cinedex.Application.Abstractions;
+using Cinedex.Application.Exceptions;
+using Cinedex.Domain.TitleAggregate;
 using FluentValidation;
 using Microsoft.Extensions.Logging;
-using Movies.Application.Abstractions;
-using Movies.Application.Exceptions;
-using Movies.Domain.TitleAggregate;
 
-namespace Movies.Application.Titles.UpdateTitle;
+namespace Cinedex.Application.Titles.UpdateTitle;
 
 internal sealed class UpdateTitleHandler(
     ITitleRepository repository,

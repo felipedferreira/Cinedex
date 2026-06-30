@@ -1,4 +1,4 @@
-namespace Movies.Application.Titles.DeleteTitle;
+namespace Cinedex.Application.Titles.DeleteTitle;
 
 public interface IDeleteTitleHandler
 {

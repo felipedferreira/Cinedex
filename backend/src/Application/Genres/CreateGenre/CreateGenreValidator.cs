@@ -1,6 +1,6 @@
 using FluentValidation;
 
-namespace Movies.Application.Genres.CreateGenre;
+namespace Cinedex.Application.Genres.CreateGenre;
 
 internal sealed class CreateGenreValidator : AbstractValidator<CreateGenreCommand>
 {

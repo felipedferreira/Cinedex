@@ -1,6 +1,6 @@
-using Movies.Domain.TitleAggregate;
+using Cinedex.Domain.TitleAggregate;
 
-namespace Movies.Application.Abstractions;
+namespace Cinedex.Application.Abstractions;
 
 public interface ITitleRepository
 {

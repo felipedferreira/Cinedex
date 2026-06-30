@@ -1,7 +1,7 @@
-using Movies.Application.Exceptions;
-using Movies.Domain.GenreAggregate;
+using Cinedex.Application.Exceptions;
+using Cinedex.Domain.GenreAggregate;
 
-namespace Movies.Application.Titles;
+namespace Cinedex.Application.Titles;
 
 // Helpers for linking a title to existing genres when handling create/update commands.
 internal static class GenreLinking

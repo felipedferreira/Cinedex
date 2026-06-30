@@ -1,4 +1,4 @@
-namespace Movies.Domain.GenreAggregate;
+namespace Cinedex.Domain.GenreAggregate;
 
 public class Genre
 {

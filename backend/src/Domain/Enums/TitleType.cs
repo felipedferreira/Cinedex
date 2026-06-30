@@ -1,4 +1,4 @@
-namespace Movies.Domain.Enums;
+namespace Cinedex.Domain.Enums;
 
 public enum TitleType
 {

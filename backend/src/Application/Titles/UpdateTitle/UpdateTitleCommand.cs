@@ -1,6 +1,6 @@
-using Movies.Domain.Enums;
+using Cinedex.Domain.Enums;
 
-namespace Movies.Application.Titles.UpdateTitle;
+namespace Cinedex.Application.Titles.UpdateTitle;
 
 public sealed record UpdateTitleCommand(
     Guid Id,

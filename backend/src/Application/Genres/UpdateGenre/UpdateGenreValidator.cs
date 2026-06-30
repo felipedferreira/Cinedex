@@ -1,6 +1,6 @@
 using FluentValidation;
 
-namespace Movies.Application.Genres.UpdateGenre;
+namespace Cinedex.Application.Genres.UpdateGenre;
 
 internal sealed class UpdateGenreValidator : AbstractValidator<UpdateGenreCommand>
 {

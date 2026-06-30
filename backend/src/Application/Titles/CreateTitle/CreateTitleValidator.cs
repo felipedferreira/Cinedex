@@ -1,6 +1,6 @@
 using FluentValidation;
 
-namespace Movies.Application.Titles.CreateTitle;
+namespace Cinedex.Application.Titles.CreateTitle;
 
 internal sealed class CreateTitleValidator : AbstractValidator<CreateTitleCommand>
 {

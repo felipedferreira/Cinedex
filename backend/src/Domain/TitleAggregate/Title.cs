@@ -1,6 +1,6 @@
-using Movies.Domain.Enums;
+using Cinedex.Domain.Enums;
 
-namespace Movies.Domain.TitleAggregate;
+namespace Cinedex.Domain.TitleAggregate;
 
 public class Title
 {

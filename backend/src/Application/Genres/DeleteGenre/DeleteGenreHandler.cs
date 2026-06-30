@@ -1,9 +1,9 @@
+using Cinedex.Application.Abstractions;
+using Cinedex.Application.Exceptions;
+using Cinedex.Domain.GenreAggregate;
 using Microsoft.Extensions.Logging;
-using Movies.Application.Abstractions;
-using Movies.Application.Exceptions;
-using Movies.Domain.GenreAggregate;
 
-namespace Movies.Application.Genres.DeleteGenre;
+namespace Cinedex.Application.Genres.DeleteGenre;
 
 internal sealed class DeleteGenreHandler(
     IGenreRepository repository,

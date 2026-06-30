@@ -1,8 +1,8 @@
-using Movies.Application.Genres;
-using Movies.Domain.GenreAggregate;
-using Movies.Domain.TitleAggregate;
+using Cinedex.Application.Genres;
+using Cinedex.Domain.GenreAggregate;
+using Cinedex.Domain.TitleAggregate;
 
-namespace Movies.Application.Titles;
+namespace Cinedex.Application.Titles;
 
 internal static class TitleMappings
 {

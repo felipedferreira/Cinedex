@@ -1,3 +1,3 @@
-namespace Movies.Application.Genres.CreateGenre;
+namespace Cinedex.Application.Genres.CreateGenre;
 
 public sealed record CreateGenreCommand(string Name);

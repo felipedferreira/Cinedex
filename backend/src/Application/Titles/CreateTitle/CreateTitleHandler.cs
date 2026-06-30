@@ -1,0 +1,37 @@
+using Cinedex.Application.Abstractions;
+using Cinedex.Domain.TitleAggregate;
+using FluentValidation;
+using Microsoft.Extensions.Logging;
+
+namespace Cinedex.Application.Titles.CreateTitle;
+
+internal sealed class CreateTitleHandler(
+    ITitleRepository repository,
+    IGenreRepository genreRepository,
+    IValidator<CreateTitleCommand> validator,
+    ILogger<CreateTitleHandler> logger) : ICreateTitleHandler
+{
+    public async Task<Guid> HandleAsync(CreateTitleCommand command, CancellationToken cancellationToken)
+    {
+        logger.LogInformation("Creating title {Title} ({YearOfRelease}).", command.Title, command.YearOfRelease);
+
+        await validator.ValidateAndThrowAsync(command, cancellationToken);
+
+        var genreIds = command.GenreIds.Distinct().ToList();
+        var genres = await genreRepository.GetByIdsAsync(genreIds, cancellationToken);
+        GenreLinking.EnsureAllExist(genreIds, genres);
+
+        var title = Title.Create(
+            command.Title,
+            command.Type,
+            command.YearOfRelease,
+            command.Description,
+            genreIds);
+
+        await repository.CreateAsync(title, cancellationToken);
+
+        logger.LogInformation("Created title {TitleId} ({Title}).", title.Id, title.Name);
+
+        return title.Id;
+    }
+}

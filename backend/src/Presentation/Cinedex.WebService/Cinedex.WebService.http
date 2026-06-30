@@ -1,0 +1,6 @@
+@Cinedex.WebService_HostAddress = http://localhost:5186
+
+GET {{Cinedex.WebService_HostAddress}}/api/titles/
+Accept: application/json
+
+###

@@ -8,12 +8,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 ### Added
-- **`EntityNotFoundException`** - Domain exception in `Movies.Application/Exceptions/` thrown by handlers when a requested entity does not exist; carries `entityName` and `id` for a self-describing message
-- **Chain of Responsibility exception handling** - Replaced the monolithic `ExceptionHandlingMiddleware` with three focused `IExceptionHandler` implementations under `Movies.WebService/ExceptionHandlers/`:
+- **`EntityNotFoundException`** - Domain exception in `Cinedex.Application/Exceptions/` thrown by handlers when a requested entity does not exist; carries `entityName` and `id` for a self-describing message
+- **Chain of Responsibility exception handling** - Replaced the monolithic `ExceptionHandlingMiddleware` with three focused `IExceptionHandler` implementations under `Cinedex.WebService/ExceptionHandlers/`:
   - `ValidationExceptionHandler` — `ValidationException` → HTTP 400 with per-field error map
   - `EntityNotFoundExceptionHandler` — `EntityNotFoundException` → HTTP 404 with the exception message as `detail`
   - `DefaultExceptionHandler` — catch-all → HTTP 500; also logs the exception (was missing before)
-- **Per-use-case handlers with FluentValidation** - Decomposed `IMovieService` / `MovieService` into discrete CQRS-style handler classes in `Movies.Application/Movies/`:
+- **Per-use-case handlers with FluentValidation** - Decomposed `IMovieService` / `MovieService` into discrete CQRS-style handler classes in `Cinedex.Application/Movies/`:
   - `CreateMovieHandler` + `CreateMovieValidator` (title max 256 chars, year range 1888–current)
   - `UpdateMovieHandler` + `UpdateMovieValidator`
   - `DeleteMovieHandler`, `GetMovieByIdHandler`, `ListMoviesHandler`
@@ -29,7 +29,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **Movies CRUD API** - First real resource, implemented with [FastEndpoints](https://fast-endpoints.com/) using the REPR (Request-Endpoint-Response) pattern — one class per endpoint under `Endpoints/Movies/`:
   - `GET /api/movies`, `GET /api/movies/{id}`, `POST /api/movies`, `PUT /api/movies/{id}`, `DELETE /api/movies/{id}`
   - `MovieMappings` - single translation point between `Contracts` DTOs and the `Domain.Movie` model
-- **`MovieRepository`** - EF Core implementation of `IMovieRepository` in `Movies.Persistence.Postgres` (uses `ExecuteUpdateAsync`/`ExecuteDeleteAsync`)
+- **`MovieRepository`** - EF Core implementation of `IMovieRepository` in `Cinedex.Persistence.Postgres` (uses `ExecuteUpdateAsync`/`ExecuteDeleteAsync`)
 - **`AddPersistence(connectionString)`** - DI extension that now owns the `MoviesDbContext` and repository registrations
 - **Docker Compose configuration** - Complete multi-container setup with PostgreSQL:
   - `compose.yaml` with web service and PostgreSQL 17 Alpine
@@ -40,17 +40,17 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **`GetMovieByIdHandler`, `UpdateMovieHandler`, `DeleteMovieHandler`** - Now throw `EntityNotFoundException` when the entity is not found instead of returning `null` / `false`; handler interfaces updated to non-nullable return types (`Task<MovieDto>` / `Task`)
 - **`GetMovieByIdEndpoint`, `UpdateMovieEndpoint`, `DeleteMovieEndpoint`** - Null / bool guards removed; not-found signal is now the handler's responsibility via exception
 - **`Program.cs`** - `UseMiddleware<ExceptionHandlingMiddleware>()` replaced by `UseExceptionHandler()`; three `AddExceptionHandler<T>()` registrations (order matters — `DefaultExceptionHandler` last); also registers `AddApplication()` + `AddPersistence()`, `AddFastEndpoints()`/`UseFastEndpoints()`, and serves the app under `/api` via `UsePathBase`
-- **`DependencyInjection.cs`** (Application) - Handlers registered individually; validators auto-discovered via `AddValidatorsFromAssembly`; `FluentValidation` dependencies added to `Movies.Application.csproj`
+- **`DependencyInjection.cs`** (Application) - Handlers registered individually; validators auto-discovered via `AddValidatorsFromAssembly`; `FluentValidation` dependencies added to `Cinedex.Application.csproj`
 - **CI workflow** - Updated to build and test the frontend alongside the backend
 - **Hexagonal layer layout** - Reorganized the backend folders to make the Ports & Adapters layers explicit, dependencies still inward-only (`Domain ← Application ← {Adapters, Presentation}`). All moves used `git mv` to preserve history:
-  - `src/Applications/` → `src/Presentation/` (hosts `Movies.WebService`)
-  - `src/Core/` dissolved; `Movies.Application` and `Movies.Domain` now sit directly under `src/`
+  - `src/Applications/` → `src/Presentation/` (hosts `Cinedex.WebService`)
+  - `src/Core/` dissolved; `Cinedex.Application` and `Cinedex.Domain` now sit directly under `src/`
   - Updated all `ProjectReference` paths, `Movies.slnx` solution folders, `Dockerfile` COPY paths, and `compose.yaml`
 - **`Directory.Packages.props`** - Centralized versions for `FastEndpoints`, `FluentValidation`, and `Microsoft.Extensions.DependencyInjection.Abstractions`
-- **`Movies.WebService.csproj`** - Added `FastEndpoints` package reference and a project reference to `Movies.WebService.Contracts`
-- **`Movies.Application.csproj`** - Added `Microsoft.Extensions.DependencyInjection.Abstractions` and `FluentValidation`
+- **`Cinedex.WebService.csproj`** - Added `FastEndpoints` package reference and a project reference to `Cinedex.WebService.Contracts`
+- **`Cinedex.Application.csproj`** - Added `Microsoft.Extensions.DependencyInjection.Abstractions` and `FluentValidation`
 - **Dockerfile** - Fixed build paths; added copying of `Directory.Build.props`, `Directory.Packages.props`, and explicit COPY steps for all layer dependencies before restore
-- **Clean-architecture cleanup** - Renamed `Movies.Persistance.Postgres` → `Movies.Persistence.Postgres` (typo fix); merged `Movies.Application.Abstractions` into `Movies.Application`
+- **Clean-architecture cleanup** - Renamed `Cinedex.Persistance.Postgres` → `Cinedex.Persistence.Postgres` (typo fix); merged `Cinedex.Application.Abstractions` into `Cinedex.Application`
 
 ### Removed
 - **`IMovieService` / `MovieService`** - Replaced by per-use-case handlers; the single-service pattern did not scale as use cases multiplied
@@ -68,15 +68,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 - **Entity Framework Core 10** - ORM integration using `Npgsql.EntityFrameworkCore.PostgreSQL`
-- **`MoviesDbContext`** - EF Core `DbContext` in `Movies.Persistance.Postgres`; uses Fluent API configuration via `ApplyConfigurationsFromAssembly` to keep domain models free of EF annotations
+- **`MoviesDbContext`** - EF Core `DbContext` in `Cinedex.Persistence.Postgres`; uses Fluent API configuration via `ApplyConfigurationsFromAssembly` to keep domain models free of EF annotations
 - **`MoviesDbContextFactory`** - `IDesignTimeDbContextFactory` implementation enabling `dotnet ef` CLI tools to run without starting the full application
 - **Database connection string** - `DefaultConnection` added to `appsettings.json` with a default local PostgreSQL configuration
 
 ### Changed
 - **`Program.cs`** - Registers `MoviesDbContext` via `AddDbContext<MoviesDbContext>` wired to `ConnectionStrings:DefaultConnection`
 - **`Directory.Packages.props`** - Centralized versions for `Microsoft.EntityFrameworkCore.Design` and `Npgsql.EntityFrameworkCore.PostgreSQL`
-- **`Movies.Persistance.Postgres.csproj`** - Added EF Core and Npgsql package references
-- **`Movies.WebService.csproj`** - Added `Microsoft.EntityFrameworkCore.Design` (required as the migrations startup project)
+- **`Cinedex.Persistence.Postgres.csproj`** - Added EF Core and Npgsql package references
+- **`Cinedex.WebService.csproj`** - Added `Microsoft.EntityFrameworkCore.Design` (required as the migrations startup project)
 
 ---
 
@@ -94,7 +94,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - `resharper_blank_lines_after_block_statements = 1` - Blank lines after block statements
 
 ### Fixed
-- **Build configuration** - Added `GenerateDocumentationFile=true` to `Movies.WebService.Contracts.csproj`
+- **Build configuration** - Added `GenerateDocumentationFile=true` to `Cinedex.WebService.Contracts.csproj`
   - Enables IDE0005 (Remove unnecessary imports) rule enforcement on build
 
 ---
@@ -170,12 +170,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **.NET SDK configuration** - Global.json for SDK version management
 - **Docker support** - Docker configuration and .dockerignore
 - **Project structure** - Core project organization with:
-  - Movies.WebService (main API)
-  - Movies.Domain (domain models)
-  - Movies.Application (business logic)
-  - Movies.Application.Abstractions (interfaces)
-  - Movies.Persistance.Postgres (data access)
-  - Movies.WebService.Contracts (DTOs)
+  - Cinedex.WebService (main API)
+  - Cinedex.Domain (domain models)
+  - Cinedex.Application (business logic)
+  - Cinedex.Application.Abstractions (interfaces)
+  - Cinedex.Persistence.Postgres (data access)
+  - Cinedex.WebService.Contracts (DTOs)
   - Integration tests project
 - **WeatherForecast endpoint** - Sample endpoint implementation
 

@@ -13,8 +13,8 @@
     <File Path="..\CONTRIBUTING.md" />
     <File Path="..\LICENSE" />
   </Folder>
-  <Folder Name="/libraries/">
-    <Project Path="src\Libraries\Movies.WebService.Contracts\Movies.WebService.Contracts.csproj" Type="Classic C#" />
+  <Folder Name="/nuget-libraries/">
+    <Project Path="NuGetLibraries\Movies.WebService.Contracts\Movies.WebService.Contracts.csproj" Type="Classic C#" />
   </Folder>
   <Folder Name="/src/" />
   <Folder Name="/src/1 - Presentation/">
@@ -24,13 +24,12 @@
     <Project Path="src\Adapters\Movies.Persistence.Postgres\Movies.Persistence.Postgres.csproj" Type="Classic C#" />
   </Folder>
   <Folder Name="/src/3 - Application/">
-    <Project Path="src\Movies.Application\Movies.Application.csproj" Type="Classic C#" />
+    <Project Path="src\Application\Movies.Application.csproj" Type="Classic C#" />
   </Folder>
   <Folder Name="/src/4 - Domain/">
-    <Project Path="src\Movies.Domain\Movies.Domain.csproj" Type="Classic C#" />
+    <Project Path="src\Domain\Movies.Domain.csproj" Type="Classic C#" />
   </Folder>
   <Folder Name="/tests/">
     <Project Path="tests\Movies.WebService.IntegrationTests\Movies.WebService.IntegrationTests.csproj" Type="Classic C#" />
-    <Project Path="tests\Movies.WebService.UnitTests\Movies.WebService.UnitTests.csproj" Type="Classic C#" />
   </Folder>
 </Solution>

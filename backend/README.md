@@ -17,7 +17,7 @@ genre does not hold a back-reference to movies.
 - **Movies reference genres by id** — `CreateMoviesRequest`/`UpdateMoviesRequest` carry a `GenreIds` collection, and movie responses include the linked genres.
 - **Seeded data** — the database ships with 17 common genres (Action, Comedy, Drama, …) so movies can be tagged immediately.
 
-See the [contracts README](src/Libraries/Movies.WebService.Contracts/README.md) for the request/response DTOs.
+See the [contracts README](NuGetLibraries/Movies.WebService.Contracts/README.md) for the request/response DTOs.
 
 ## 🗄️ Database
 
@@ -115,7 +115,7 @@ dotnet ef database update \
 
 - **[Architecture Guide](README.md)** (this file) - Project structure and design patterns
 - **[Changelog](../CHANGELOG.md)** - Version history and release notes
-- **[Libraries](src/Libraries/Movies.WebService.Contracts/README.md)** - NuGet package documentation
+- **[NuGetLibraries](NuGetLibraries/Movies.WebService.Contracts/README.md)** - NuGet package documentation
   - Movies.WebService.Contracts - API contracts and DTOs
 
 ## 🚀 Quick Start
@@ -314,8 +314,8 @@ backend/src/
 │   └── Movies.WebService/            # driving adapter (HTTP entry point)
 ├── Adapters/
 │   └── Movies.Persistence.Postgres/  # driven adapter (implements ports)
-├── Movies.Application/               # use cases + ports (Abstractions/)
-├── Movies.Domain/                    # entities, no outward dependencies
+├── Application/                      # use cases + ports (Abstractions/)
+├── Domain/                           # entities, no outward dependencies
 └── Libraries/
     └── Movies.WebService.Contracts/  # shared API DTOs
 ```

@@ -29,8 +29,9 @@
 
     <ItemGroup>
       <ProjectReference Include="..\..\Adapters\Movies.Persistence.Postgres\Movies.Persistence.Postgres.csproj" />
-      <ProjectReference Include="..\..\Movies.Application\Movies.Application.csproj" />
-      <ProjectReference Include="..\..\Libraries\Movies.WebService.Contracts\Movies.WebService.Contracts.csproj" />
+      <ProjectReference Include="..\..\Application\Movies.Application.csproj" />
+      <ProjectReference Include="..\..\Domain\Movies.Domain.csproj" />
+      <ProjectReference Include="..\..\..\NuGetLibraries\Movies.WebService.Contracts\Movies.WebService.Contracts.csproj" />
     </ItemGroup>
 
 </Project>

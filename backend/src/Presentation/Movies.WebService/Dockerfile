@@ -10,8 +10,8 @@ WORKDIR /src
 COPY ["Directory.Build.props", "Directory.Build.props"]
 COPY ["Directory.Packages.props", "Directory.Packages.props"]
 COPY ["src/Presentation/Movies.WebService/Movies.WebService.csproj", "src/Presentation/Movies.WebService/"]
-COPY ["src/Movies.Application/Movies.Application.csproj", "src/Movies.Application/"]
-COPY ["src/Movies.Domain/Movies.Domain.csproj", "src/Movies.Domain/"]
+COPY ["src/Application/Movies.Application.csproj", "src/Application/"]
+COPY ["src/Domain/Movies.Domain.csproj", "src/Domain/"]
 COPY ["src/Adapters/Movies.Persistence.Postgres/Movies.Persistence.Postgres.csproj", "src/Adapters/Movies.Persistence.Postgres/"]
 RUN dotnet restore "src/Presentation/Movies.WebService/Movies.WebService.csproj"
 COPY . .

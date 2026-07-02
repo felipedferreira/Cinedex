@@ -8,6 +8,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 ### Added
+- **Auth endpoint contracts** - Five contract-only endpoints under `Cinedex.WebService/Endpoints/Auth/` (`POST /auth/register`, `/auth/login`, `/auth/logout`, `/auth/password/forgot`, `/auth/password/reset`) with request/response DTOs in `Cinedex.WebService.Contracts`; handlers return stubbed success responses (201 / 200 with placeholder token / 204 / 202 / 204) pending real implementation. `AuthEndpointTests` integration tests cover each endpoint
 - **`EntityNotFoundException`** - Domain exception in `Cinedex.Application/Exceptions/` thrown by handlers when a requested entity does not exist; carries `entityName` and `id` for a self-describing message
 - **Chain of Responsibility exception handling** - Replaced the monolithic `ExceptionHandlingMiddleware` with three focused `IExceptionHandler` implementations under `Cinedex.WebService/ExceptionHandlers/`:
   - `ValidationExceptionHandler` — `ValidationException` → HTTP 400 with per-field error map
@@ -60,6 +61,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - `GET /test-exception` endpoint and `ExceptionHandlingMiddlewareTests` (the endpoint existed only to exercise the exception middleware)
 
 ### Fixed
+- **Flaky integration test startup** - Test classes now share one app host and Postgres Testcontainer via the `WebApplicationCollection` xUnit collection fixture; booting multiple `WebApplicationFactory<Program>` hosts in parallel raced on shared `JsonSerializerOptions` state inside FastEndpoints/System.Text.Json
+- **`Microsoft.OpenApi` pinned to 2.7.5** - The transitive 2.0.0 pulled in by `Microsoft.AspNetCore.OpenApi` has a known vulnerability (GHSA-v5pm-xwqc-g5wc)
 - **Docker build** - Corrected path references to resolve NuGet restore failures
 
 ---

@@ -6,7 +6,8 @@ using Cinedex.WebService.IntegrationTests.Constants;
 
 namespace Cinedex.WebService.IntegrationTests.Genres;
 
-public sealed class GenreEndpointTests(WebApplicationFixture fixture) : IClassFixture<WebApplicationFixture>
+[Collection(WebApplicationCollection.Name)]
+public sealed class GenreEndpointTests(WebApplicationFixture fixture)
 {
     [Fact]
     public async Task GetAllGenres_ReturnsSeededGenres()

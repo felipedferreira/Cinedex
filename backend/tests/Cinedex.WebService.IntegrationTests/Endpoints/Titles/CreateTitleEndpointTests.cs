@@ -6,7 +6,8 @@ using Cinedex.WebService.IntegrationTests.Constants;
 
 namespace Cinedex.WebService.IntegrationTests.Titles;
 
-public sealed class CreateTitleEndpointTests(WebApplicationFixture fixture) : IClassFixture<WebApplicationFixture>
+[Collection(WebApplicationCollection.Name)]
+public sealed class CreateTitleEndpointTests(WebApplicationFixture fixture)
 {
     [Fact]
     public async Task CreateTitle_WithValidRequest_Returns201Created()

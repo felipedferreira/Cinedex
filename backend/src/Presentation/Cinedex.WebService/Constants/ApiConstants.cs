@@ -25,6 +25,17 @@ internal static class ApiConstants
         public const string GetByIdEndpointName = "GetGenreById";
     }
 
+    public static class Auth
+    {
+        public const string Route = "auth";
+        public const string Tag = "Auth";
+        public const string RegisterRoute = $"{Route}/register";
+        public const string LoginRoute = $"{Route}/login";
+        public const string LogoutRoute = $"{Route}/logout";
+        public const string ForgotPasswordRoute = $"{Route}/password/forgot";
+        public const string ResetPasswordRoute = $"{Route}/password/reset";
+    }
+
     public static class Health
     {
         public const string LiveRoute = "/health/live";

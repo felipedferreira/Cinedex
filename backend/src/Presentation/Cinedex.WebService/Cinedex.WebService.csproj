@@ -35,4 +35,10 @@
       <ProjectReference Include="..\..\..\NuGetLibraries\Cinedex.WebService.Contracts\Cinedex.WebService.Contracts.csproj" />
     </ItemGroup>
 
+
+    <Target Name="CopyChangelog" AfterTargets="Build">
+        <Copy SourceFiles="$(MSBuildThisFileDirectory)..\..\..\CHANGELOG.md"
+              DestinationFolder="$(MSBuildThisFileDirectory)wwwroot" />
+    </Target>
+
 </Project>

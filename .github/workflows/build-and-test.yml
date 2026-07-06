@@ -22,6 +22,17 @@ jobs:
       with:
         global-json-file: backend/global.json
 
+    - name: Setup Node.js
+      uses: actions/setup-node@v6
+      with:
+        node-version: 22
+        cache: npm
+        cache-dependency-path: backend/src/Presentation/Cinedex.WebService/package-lock.json
+
+    - name: Install web dependencies
+      working-directory: backend/src/Presentation/Cinedex.WebService
+      run: npm ci
+
     - name: Restore dependencies
       run: dotnet restore
 

@@ -6,6 +6,9 @@ EXPOSE 8081
 
 FROM mcr.microsoft.com/dotnet/sdk:10.0 AS build
 ARG BUILD_CONFIGURATION=Release
+RUN curl -fsSL https://deb.nodesource.com/setup_22.x | bash - \
+    && apt-get install -y --no-install-recommends nodejs \
+    && rm -rf /var/lib/apt/lists/*
 WORKDIR /src
 COPY ["Directory.Build.props", "Directory.Build.props"]
 COPY ["Directory.Packages.props", "Directory.Packages.props"]
@@ -14,7 +17,9 @@ COPY ["src/Application/Cinedex.Application.csproj", "src/Application/"]
 COPY ["src/Domain/Cinedex.Domain.csproj", "src/Domain/"]
 COPY ["src/Adapters/Cinedex.Persistence.Postgres/Cinedex.Persistence.Postgres.csproj", "src/Adapters/Cinedex.Persistence.Postgres/"]
 COPY ["NuGetLibraries/Cinedex.WebService.Contracts/Cinedex.WebService.Contracts.csproj", "NuGetLibraries/Cinedex.WebService.Contracts/"]
+COPY ["src/Presentation/Cinedex.WebService/package.json", "src/Presentation/Cinedex.WebService/package-lock.json", "src/Presentation/Cinedex.WebService/"]
 RUN dotnet restore "src/Presentation/Cinedex.WebService/Cinedex.WebService.csproj"
+RUN cd src/Presentation/Cinedex.WebService && npm ci
 COPY . .
 WORKDIR "/src/src/Presentation/Cinedex.WebService"
 RUN dotnet build "./Cinedex.WebService.csproj" -c $BUILD_CONFIGURATION -o /app/build

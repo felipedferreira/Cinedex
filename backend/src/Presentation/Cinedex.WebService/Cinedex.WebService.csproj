@@ -41,4 +41,19 @@
               DestinationFolder="$(MSBuildThisFileDirectory)wwwroot" />
     </Target>
 
+    <ItemGroup>
+        <Content Remove="node_modules\**" />
+        <None Remove="node_modules\**" />
+        <Compile Remove="node_modules\**" />
+    </ItemGroup>
+
+    <ItemGroup>
+      <Folder Include="wwwroot\js\" />
+    </ItemGroup>
+
+    <Target Name="CompileTypeScript" BeforeTargets="BeforeBuild">
+        <Exec Command="npx tsc -p tsconfig.json"
+              WorkingDirectory="$(MSBuildThisFileDirectory)" />
+    </Target>
+
 </Project>

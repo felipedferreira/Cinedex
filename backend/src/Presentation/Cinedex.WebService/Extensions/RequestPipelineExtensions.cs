@@ -1,6 +1,7 @@
 using Cinedex.WebService.Constants;
 using FastEndpoints;
 using Microsoft.AspNetCore.Diagnostics.HealthChecks;
+using Microsoft.AspNetCore.StaticFiles;
 using Microsoft.Extensions.Diagnostics.HealthChecks;
 using Scalar.AspNetCore;
 
@@ -37,7 +38,17 @@ public static class RequestPipelineExtensions
 
         app.UseHttpsRedirection();
         app.UseDefaultFiles();
-        app.UseStaticFiles();
+
+        // UseStaticFiles serves a file only when its extension is in the content-type provider;
+        // unknown extensions return 404 by design, to avoid leaking arbitrary files under wwwroot.
+        // The default table covers common web assets but omits `.md`, so we extend it here so
+        // markdown files in wwwroot (e.g. CHANGELOG.md) are served with the correct Content-Type.
+        var contentTypeProvider = new FileExtensionContentTypeProvider();
+        contentTypeProvider.Mappings[".md"] = "text/markdown";
+        app.UseStaticFiles(new StaticFileOptions
+        {
+            ContentTypeProvider = contentTypeProvider,
+        });
 
         // Map FastEndpoints.
         app.UseFastEndpoints();

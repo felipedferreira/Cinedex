@@ -48,12 +48,12 @@
     </ItemGroup>
 
     <ItemGroup>
-      <Folder Include="wwwroot\js\" />
+      <Folder Include="wwwroot\" />
     </ItemGroup>
 
-    <Target Name="CompileTypeScript" BeforeTargets="BeforeBuild"
-            Condition="'$(SkipTypeScriptBuild)' != 'true'">
-        <Exec Command="npx tsc -p tsconfig.json"
+    <Target Name="BuildFrontend" BeforeTargets="BeforeBuild"
+            Condition="'$(SkipFrontendBuild)' != 'true'">
+        <Exec Command="npx vite build"
               WorkingDirectory="$(MSBuildThisFileDirectory)" />
     </Target>
 

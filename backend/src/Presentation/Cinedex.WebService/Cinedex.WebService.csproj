@@ -36,11 +36,6 @@
     </ItemGroup>
 
 
-    <Target Name="CopyChangelog" AfterTargets="Build">
-        <Copy SourceFiles="$(MSBuildThisFileDirectory)..\..\..\CHANGELOG.md"
-              DestinationFolder="$(MSBuildThisFileDirectory)wwwroot" />
-    </Target>
-
     <ItemGroup>
         <Content Remove="node_modules\**" />
         <None Remove="node_modules\**" />
@@ -51,10 +46,20 @@
       <Folder Include="wwwroot\" />
     </ItemGroup>
 
-    <Target Name="BuildFrontend" BeforeTargets="BeforeBuild"
-            Condition="'$(SkipFrontendBuild)' != 'true'">
+    <!--
+        Populates wwwroot before the .NET SDK's static-web-assets pipeline scans it during Build.
+        Both steps live in one target so their order is deterministic:
+          1. Vite build (skipped in Docker via SkipFrontendBuild — the ts-build stage already emitted wwwroot).
+             Vite runs with emptyOutDir, so it wipes wwwroot before writing the fresh output.
+          2. Copy CHANGELOG.md into wwwroot on top of the Vite output. Runs unconditionally so both
+             local and Docker builds end up with the changelog served under /movies-svc/CHANGELOG.md.
+    -->
+    <Target Name="BuildFrontend" BeforeTargets="BeforeBuild">
         <Exec Command="npx vite build"
-              WorkingDirectory="$(MSBuildThisFileDirectory)" />
+              WorkingDirectory="$(MSBuildThisFileDirectory)"
+              Condition="'$(SkipFrontendBuild)' != 'true'" />
+        <Copy SourceFiles="$(MSBuildThisFileDirectory)..\..\..\CHANGELOG.md"
+              DestinationFolder="$(MSBuildThisFileDirectory)wwwroot" />
     </Target>
 
 </Project>

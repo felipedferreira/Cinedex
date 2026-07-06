@@ -51,7 +51,8 @@
       <Folder Include="wwwroot\js\" />
     </ItemGroup>
 
-    <Target Name="CompileTypeScript" BeforeTargets="BeforeBuild">
+    <Target Name="CompileTypeScript" BeforeTargets="BeforeBuild"
+            Condition="'$(SkipTypeScriptBuild)' != 'true'">
         <Exec Command="npx tsc -p tsconfig.json"
               WorkingDirectory="$(MSBuildThisFileDirectory)" />
     </Target>

@@ -1,3 +1,9 @@
+using Cinedex.Application.Auth.ForgotPassword;
+using Cinedex.Application.Auth.Login;
+using Cinedex.Application.Auth.Logout;
+using Cinedex.Application.Auth.RefreshToken;
+using Cinedex.Application.Auth.RegisterUser;
+using Cinedex.Application.Auth.ResetPassword;
 using Cinedex.Application.Genres.CreateGenre;
 using Cinedex.Application.Genres.DeleteGenre;
 using Cinedex.Application.Genres.GetGenreById;
@@ -30,6 +36,14 @@ public static class DependencyInjection
         services.AddScoped<IDeleteGenreHandler, DeleteGenreHandler>();
         services.AddScoped<IGetGenreByIdHandler, GetGenreByIdHandler>();
         services.AddScoped<IListGenresHandler, ListGenresHandler>();
+
+        // IoC for authentication
+        services.AddScoped<IRegisterUserHandler, RegisterUserHandler>();
+        services.AddScoped<ILoginHandler, LoginHandler>();
+        services.AddScoped<ILogoutHandler, LogoutHandler>();
+        services.AddScoped<IRefreshTokenHandler, RefreshTokenHandler>();
+        services.AddScoped<IForgotPasswordHandler, ForgotPasswordHandler>();
+        services.AddScoped<IResetPasswordHandler, ResetPasswordHandler>();
 
         // IoC for FluentValidation
         services.AddValidatorsFromAssembly(

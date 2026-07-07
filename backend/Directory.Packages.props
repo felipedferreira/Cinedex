@@ -9,6 +9,7 @@
     <!-- ASP.NET Core -->
     <PackageVersion Include="FastEndpoints" Version="8.1.0" />
     <PackageVersion Include="Microsoft.AspNetCore.OpenApi" Version="10.0.2" />
+    <PackageVersion Include="Microsoft.AspNetCore.Authentication.JwtBearer" Version="10.0.2" />
     <!-- Direct pin: transitive 2.0.0 from Microsoft.AspNetCore.OpenApi has a known vulnerability (GHSA-v5pm-xwqc-g5wc) -->
     <PackageVersion Include="Microsoft.OpenApi" Version="2.7.5" />
     <PackageVersion Include="Scalar.AspNetCore" Version="1.2.50" />
@@ -34,6 +35,11 @@
     <PackageVersion Include="EFCore.NamingConventions" Version="10.0.1" />
     <PackageVersion Include="Microsoft.EntityFrameworkCore.Design" Version="10.0.2" />
     <PackageVersion Include="Npgsql.EntityFrameworkCore.PostgreSQL" Version="10.0.2" />
+
+    <!-- Identity & JWT -->
+    <PackageVersion Include="Microsoft.AspNetCore.Identity.EntityFrameworkCore" Version="10.0.2" />
+    <PackageVersion Include="Microsoft.IdentityModel.Tokens" Version="8.14.0" />
+    <PackageVersion Include="System.IdentityModel.Tokens.Jwt" Version="8.14.0" />
 
     <!-- Testing -->
     <PackageVersion Include="Testcontainers.PostgreSql" Version="4.4.0" />

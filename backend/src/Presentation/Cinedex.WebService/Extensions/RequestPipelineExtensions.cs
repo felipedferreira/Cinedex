@@ -50,6 +50,10 @@ public static class RequestPipelineExtensions
             ContentTypeProvider = contentTypeProvider,
         });
 
+        // Authentication and authorization must run before endpoint execution.
+        app.UseAuthentication();
+        app.UseAuthorization();
+
         // Map FastEndpoints.
         app.UseFastEndpoints();
 

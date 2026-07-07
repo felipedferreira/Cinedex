@@ -9,6 +9,7 @@
     <ItemGroup>
         <PackageReference Include="AspNetCore.HealthChecks.NpgSql" />
         <PackageReference Include="FastEndpoints" />
+        <PackageReference Include="Microsoft.AspNetCore.Authentication.JwtBearer" />
         <PackageReference Include="Microsoft.AspNetCore.OpenApi" />
         <PackageReference Include="Microsoft.OpenApi" />
         <PackageReference Include="Microsoft.EntityFrameworkCore.Design">
@@ -29,6 +30,7 @@
     </ItemGroup>
 
     <ItemGroup>
+      <ProjectReference Include="..\..\Adapters\Cinedex.Persistence.Auth.Identity\Cinedex.Persistence.Auth.Identity.csproj" />
       <ProjectReference Include="..\..\Adapters\Cinedex.Persistence.Postgres\Cinedex.Persistence.Postgres.csproj" />
       <ProjectReference Include="..\..\Application\Cinedex.Application.csproj" />
       <ProjectReference Include="..\..\Domain\Cinedex.Domain.csproj" />

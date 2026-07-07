@@ -1,5 +1,6 @@
 using System.Globalization;
 using Cinedex.Application;
+using Cinedex.Persistence.Auth.Identity;
 using Cinedex.Persistence.Postgres;
 using Cinedex.WebService.Constants;
 using Cinedex.WebService.ExceptionHandlers;
@@ -22,7 +23,11 @@ public static class ServiceRegistrationExtensions
     {
         builder.Services
             .AddApplication()
-            .AddPersistenceAdapter();
+            .AddPersistenceAdapter()
+            .AddAuthenticationAdapter();
+
+        // Configure JWT bearer authentication and authorization.
+        builder.AddJwtAuthentication();
 
         // Register FastEndpoints (discovers endpoint classes in this assembly)
         builder.Services.AddFastEndpoints();
@@ -48,6 +53,7 @@ public static class ServiceRegistrationExtensions
         // Register exception handlers in chain order — DefaultExceptionHandler must be last (catch-all)
         builder.Services.AddExceptionHandler<ValidationExceptionHandler>();
         builder.Services.AddExceptionHandler<EntityNotFoundExceptionHandler>();
+        builder.Services.AddExceptionHandler<InvalidCredentialsExceptionHandler>();
         builder.Services.AddExceptionHandler<DefaultExceptionHandler>();
 
         return builder;

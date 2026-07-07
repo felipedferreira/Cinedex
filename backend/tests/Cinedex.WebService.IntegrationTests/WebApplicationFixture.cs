@@ -1,9 +1,14 @@
+using Cinedex.Application.Abstractions;
+using Cinedex.Persistence.Auth.Identity;
 using Cinedex.Persistence.Postgres;
+using Cinedex.WebService.IntegrationTests.Fakes;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Mvc.Testing;
+using Microsoft.AspNetCore.TestHost;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.DependencyInjection.Extensions;
 using Testcontainers.PostgreSql;
 
 namespace Cinedex.WebService.IntegrationTests;
@@ -16,6 +21,8 @@ public class WebApplicationFixture : WebApplicationFactory<Program>, IAsyncLifet
 
     public HttpClient Client { get; private set; } = null!;
 
+    internal CapturingEmailSender EmailSender => this.Services.GetRequiredService<CapturingEmailSender>();
+
     public async Task InitializeAsync()
     {
         await _postgresContainer.StartAsync();
@@ -23,8 +30,10 @@ public class WebApplicationFixture : WebApplicationFactory<Program>, IAsyncLifet
         this.Client = this.CreateClient();
 
         using var scope = this.Services.CreateScope();
-        var db = scope.ServiceProvider.GetRequiredService<FilmDbContext>();
-        await db.Database.MigrateAsync();
+        var filmDb = scope.ServiceProvider.GetRequiredService<FilmDbContext>();
+        await filmDb.Database.MigrateAsync();
+
+        await AuthDbInitializer.MigrateAsync(this.Services);
     }
 
     public new async Task DisposeAsync()
@@ -42,6 +51,14 @@ public class WebApplicationFixture : WebApplicationFactory<Program>, IAsyncLifet
             {
                 ["ConnectionStrings:DefaultConnection"] = _postgresContainer.GetConnectionString(),
             });
+        });
+
+        builder.ConfigureTestServices(services =>
+        {
+            // Capture password-reset tokens instead of "sending" them.
+            services.RemoveAll<IEmailSender>();
+            services.AddSingleton<CapturingEmailSender>();
+            services.AddSingleton<IEmailSender>(sp => sp.GetRequiredService<CapturingEmailSender>());
         });
     }
 }

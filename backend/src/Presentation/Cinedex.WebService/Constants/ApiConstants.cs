@@ -31,6 +31,7 @@ internal static class ApiConstants
         public const string Tag = "Auth";
         public const string RegisterRoute = $"{Route}/register";
         public const string LoginRoute = $"{Route}/login";
+        public const string RefreshRoute = $"{Route}/refresh";
         public const string LogoutRoute = $"{Route}/logout";
         public const string ForgotPasswordRoute = $"{Route}/password/forgot";
         public const string ResetPasswordRoute = $"{Route}/password/reset";

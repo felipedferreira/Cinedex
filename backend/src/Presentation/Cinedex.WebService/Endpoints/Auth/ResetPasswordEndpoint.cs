@@ -1,10 +1,11 @@
+using Cinedex.Application.Auth.ResetPassword;
 using Cinedex.WebService.Constants;
 using Cinedex.WebService.Contracts.Requests;
 using FastEndpoints;
 
 namespace Cinedex.WebService.Endpoints.Auth;
 
-internal sealed class ResetPasswordEndpoint : Endpoint<ResetPasswordRequest, EmptyResponse>
+internal sealed class ResetPasswordEndpoint(IResetPasswordHandler handler) : Endpoint<ResetPasswordRequest, EmptyResponse>
 {
     public override void Configure()
     {
@@ -16,7 +17,8 @@ internal sealed class ResetPasswordEndpoint : Endpoint<ResetPasswordRequest, Emp
 
     public override async Task HandleAsync(ResetPasswordRequest request, CancellationToken cancellationToken)
     {
-        // Stub - implementation pending
+        await handler.HandleAsync(request.ToCommand(), cancellationToken);
+
         await Send.NoContentAsync(cancellationToken);
     }
 }

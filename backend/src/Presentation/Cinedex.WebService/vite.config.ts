@@ -9,8 +9,8 @@ export default defineConfig({
     sourcemap: true,
     rollupOptions: {
       input: {
-        main: resolve(__dirname, "index.html"),
-        changelog: resolve(__dirname, "changelog.html"),
+        main: resolve(import.meta.dirname, "index.html"),
+        changelog: resolve(import.meta.dirname, "changelog.html"),
       },
     },
   },

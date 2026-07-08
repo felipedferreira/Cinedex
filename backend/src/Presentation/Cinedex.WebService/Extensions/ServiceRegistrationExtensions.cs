@@ -1,6 +1,7 @@
 using System.Globalization;
 using Cinedex.Application;
 using Cinedex.Auth.Identity;
+using Cinedex.Email.Smtp;
 using Cinedex.Persistence.Postgres;
 using Cinedex.WebService.Constants;
 using Cinedex.WebService.ExceptionHandlers;
@@ -24,7 +25,8 @@ public static class ServiceRegistrationExtensions
         builder.Services
             .AddApplication()
             .AddPersistenceAdapter()
-            .AddAuthenticationAdapter();
+            .AddAuthenticationAdapter()
+            .AddEmailAdapter();
 
         // Configure JWT bearer authentication and authorization.
         builder.AddJwtAuthentication();

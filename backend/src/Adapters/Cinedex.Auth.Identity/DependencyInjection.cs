@@ -58,7 +58,6 @@ public static class DependencyInjection
 
         services.AddScoped<IIdentityService, IdentityService>();
         services.AddScoped<ITokenService, JwtTokenService>();
-        services.AddSingleton<IEmailSender, NoOpEmailSender>();
 
         return services;
     }

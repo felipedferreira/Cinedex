@@ -340,32 +340,32 @@ This deletes local Seq logs, API keys, and settings, but leaves the PostgreSQL v
 The solution is organized into layers that enforce separation of concerns and dependency direction. Dependencies flow inward—outer layers depend on inner layers, never the reverse.
 
 ```
-┌─────────────────────────────────────────────────┐
-│         Cinedex.WebService (Presentation)       │
-│              (Web API / Entry Point)            │
-└──────────────────┬──────────────────────────────┘
-                   │
-     ┌─────────────┴─────────────┐
-     │                           │
-┌────▼─────────────────┐  ┌───────▼─────────────┐
-│ Persistence.Postgres │  │    Auth.Identity    │
-│  (catalog adapter)   │  │   (auth adapter)    │
-└────┬─────────────────┘  └───────┬─────────────┘
-     │                            │
-     └─────────────┬──────────────┘
-                   │
-        ┌──────────▼───────────┐
-        │  Cinedex.Application  │
-        │  (Use Cases + Ports)  │
-        └──────────┬───────────┘
-                   │
-          ┌────────▼──────────┐
-          │   Cinedex.Domain  │
-          │  (Business Logic) │
-          └───────────────────┘
+┌───────────────────────────────────────────────────────┐
+│            Cinedex.WebService (Presentation)          │
+│                (Web API / Entry Point)                │
+└───────────────────────────┬───────────────────────────┘
+                            │
+      ┌─────────────────────┼─────────────────────┐
+      │                     │                     │
+┌─────▼──────────────┐ ┌────▼───────────┐ ┌───────▼──────┐
+│ Persistence.Postgres│ │  Auth.Identity │ │  Email.Smtp  │
+│  (catalog adapter)  │ │  (auth adapter)│ │(email adapter)│
+└─────┬──────────────┘ └────┬───────────┘ └───────┬──────┘
+      │                     │                     │
+      └─────────────────────┼─────────────────────┘
+                            │
+                ┌───────────▼───────────┐
+                │   Cinedex.Application  │
+                │   (Use Cases + Ports)  │
+                └───────────┬───────────┘
+                            │
+                  ┌─────────▼─────────┐
+                  │   Cinedex.Domain  │
+                  │  (Business Logic) │
+                  └───────────────────┘
 ```
 
-Both adapters implement ports defined in `Cinedex.Application` and depend inward on it; the
+All three adapters implement ports defined in `Cinedex.Application` and depend inward on it; the
 Presentation layer wires them together at startup.
 
 ### Solution Layout
@@ -381,7 +381,8 @@ backend/
 │   │   └── Cinedex.WebService/            # driving adapter (HTTP entry point)
 │   ├── Adapters/
 │   │   ├── Cinedex.Persistence.Postgres/  # driven adapter: catalog persistence
-│   │   └── Cinedex.Auth.Identity/         # driven adapter: authentication
+│   │   ├── Cinedex.Auth.Identity/         # driven adapter: authentication
+│   │   └── Cinedex.Email.Smtp/            # driven adapter: email delivery
 │   ├── Application/                      # use cases + ports (Abstractions/)
 │   └── Domain/                           # entities, no outward dependencies
 └── NuGetLibraries/
@@ -428,18 +429,25 @@ backend/
 **Purpose:** Implements authentication, backed by ASP.NET Core Identity  
 **Dependencies:** `Cinedex.Application`, `Cinedex.Domain`  
 **Responsibilities:**
-- Implements the auth ports defined in `Cinedex.Application`:
+- Implements the authentication ports defined in `Cinedex.Application`:
   - `IIdentityService` — registration, credential validation, password reset (via `UserManager`)
   - `ITokenService` — JWT access-token issuance and refresh-token rotation
-  - `IEmailSender` — password-reset delivery (currently a no-op placeholder)
 - `AuthDbContext` — the Identity user store plus hashed, rotating refresh-token storage in the `auth` schema
 - Maps the framework `ApplicationUser` to the framework-free domain `User` (`UserMappings`)
 - Confines ASP.NET Core Identity, JWT signing, and EF Core so none of them leak into Domain or Application
-- *Note: this adapter does more than persistence — hence the name is `Auth.Identity`, not `Persistence.*`. Email delivery (`IEmailSender`) is arguably a separate concern that could move to its own notifications adapter once a real sender replaces the no-op.*
+- *Note: this adapter does more than persistence — hence the name is `Auth.Identity`, not `Persistence.*`.*
 
-### 5. **Cinedex.WebService** (Presentation/Entry Point Layer)
+### 5. **Cinedex.Email.Smtp** (Adapter Layer)
+**Purpose:** Sends transactional email (currently only password-reset messages)  
+**Dependencies:** `Cinedex.Application`  
+**Responsibilities:**
+- Implements the `IEmailSender` port defined in `Cinedex.Application`
+- Kept separate from `Auth.Identity` because email delivery is a messaging concern, not authentication — a real SMTP sender has nothing to do with ASP.NET Core Identity
+- *Note: currently a `NoOpEmailSender` placeholder. The planned replacement is a MailKit-based `SmtpEmailSender` — MailKit is the recommended modern SMTP client (the built-in `System.Net.Mail.SmtpClient` is obsolete) and can target any relay via config. A future API-based provider would be a sibling, e.g. `Cinedex.Email.SendGrid`.*
+
+### 6. **Cinedex.WebService** (Presentation/Entry Point Layer)
 **Purpose:** Web API and HTTP request handling  
-**Dependencies:** `Cinedex.Application`, `Cinedex.Persistence.Postgres`, `Cinedex.Auth.Identity`  
+**Dependencies:** `Cinedex.Application`, `Cinedex.Persistence.Postgres`, `Cinedex.Auth.Identity`, `Cinedex.Email.Smtp`  
 **Responsibilities:**
 - ASP.NET Core web API endpoints
 - HTTP request/response handling
@@ -455,7 +463,7 @@ The architecture enforces these dependency directions:
 |------|-----|----------|
 | Domain | Anything | ❌ No (Domain has no outward dependencies) |
 | Application | Domain | ✅ Yes |
-| Adapters (Persistence, Auth) | Application, Domain | ✅ Yes |
+| Adapters (Persistence, Auth, Email) | Application, Domain | ✅ Yes |
 | WebService | Application, Adapters | ✅ Yes |
 | WebService | Domain | ✅ Yes (transitively) |
 

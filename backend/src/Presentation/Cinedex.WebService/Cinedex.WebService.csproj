@@ -30,7 +30,7 @@
     </ItemGroup>
 
     <ItemGroup>
-      <ProjectReference Include="..\..\Adapters\Cinedex.Persistence.Auth.Identity\Cinedex.Persistence.Auth.Identity.csproj" />
+      <ProjectReference Include="..\..\Adapters\Cinedex.Auth.Identity\Cinedex.Auth.Identity.csproj" />
       <ProjectReference Include="..\..\Adapters\Cinedex.Persistence.Postgres\Cinedex.Persistence.Postgres.csproj" />
       <ProjectReference Include="..\..\Application\Cinedex.Application.csproj" />
       <ProjectReference Include="..\..\Domain\Cinedex.Domain.csproj" />

@@ -22,7 +22,7 @@ See the [contracts README](NuGetLibraries/Cinedex.WebService.Contracts/README.md
 ## 🔐 Authentication
 
 Authentication is built on **ASP.NET Core Identity**, confined to the
-`Cinedex.Persistence.Auth.Identity` adapter behind application-layer ports so the domain and
+`Cinedex.Auth.Identity` adapter behind application-layer ports so the domain and
 application layers stay framework-free. Login issues a short-lived JWT access token plus a rotating
 refresh token; protected endpoints are guarded by JWT bearer middleware.
 
@@ -111,7 +111,7 @@ same physical database:
 | Context | Project | Schema | Covers |
 |---------|---------|--------|--------|
 | `FilmDbContext` | `src/Adapters/Cinedex.Persistence.Postgres` | `catalog` | Titles, genres |
-| `AuthDbContext` | `src/Adapters/Cinedex.Persistence.Auth.Identity` | `auth` | Identity users, refresh tokens |
+| `AuthDbContext` | `src/Adapters/Cinedex.Auth.Identity` | `auth` | Identity users, refresh tokens |
 
 Because more than one context is discoverable, **every `dotnet ef` command must pass `--context`**
 or the tooling fails with "More than one DbContext was found". Run these from this folder
@@ -127,7 +127,7 @@ dotnet ef migrations add <MigrationName> \
 # Add a migration to the auth context
 dotnet ef migrations add <MigrationName> \
   --context AuthDbContext \
-  --project src/Adapters/Cinedex.Persistence.Auth.Identity \
+  --project src/Adapters/Cinedex.Auth.Identity \
   --startup-project src/Presentation/Cinedex.WebService
 ```
 
@@ -141,7 +141,7 @@ dotnet ef database update \
 
 dotnet ef database update \
   --context AuthDbContext \
-  --project src/Adapters/Cinedex.Persistence.Auth.Identity \
+  --project src/Adapters/Cinedex.Auth.Identity \
   --startup-project src/Presentation/Cinedex.WebService
 ```
 

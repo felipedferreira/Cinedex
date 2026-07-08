@@ -1,7 +1,7 @@
+using Cinedex.Auth.Identity.Entities;
 using Cinedex.Domain.UserAggregate;
-using Cinedex.Persistence.Auth.Identity.Entities;
 
-namespace Cinedex.Persistence.Auth.Identity.Services;
+namespace Cinedex.Auth.Identity.Services;
 
 internal static class UserMappings
 {

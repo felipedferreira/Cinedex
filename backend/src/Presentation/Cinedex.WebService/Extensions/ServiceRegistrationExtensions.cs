@@ -1,6 +1,6 @@
 using System.Globalization;
 using Cinedex.Application;
-using Cinedex.Persistence.Auth.Identity;
+using Cinedex.Auth.Identity;
 using Cinedex.Persistence.Postgres;
 using Cinedex.WebService.Constants;
 using Cinedex.WebService.ExceptionHandlers;

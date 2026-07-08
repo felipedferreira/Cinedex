@@ -1,14 +1,14 @@
 using Cinedex.Application.Abstractions;
-using Cinedex.Persistence.Auth.Identity.Constants;
-using Cinedex.Persistence.Auth.Identity.Entities;
-using Cinedex.Persistence.Auth.Identity.Options;
-using Cinedex.Persistence.Auth.Identity.Services;
+using Cinedex.Auth.Identity.Constants;
+using Cinedex.Auth.Identity.Entities;
+using Cinedex.Auth.Identity.Options;
+using Cinedex.Auth.Identity.Services;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 
-namespace Cinedex.Persistence.Auth.Identity;
+namespace Cinedex.Auth.Identity;
 
 public static class DependencyInjection
 {

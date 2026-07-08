@@ -1,5 +1,5 @@
 using Cinedex.Application.Abstractions;
-using Cinedex.Persistence.Auth.Identity;
+using Cinedex.Auth.Identity;
 using Cinedex.Persistence.Postgres;
 using Cinedex.WebService.IntegrationTests.Fakes;
 using Microsoft.AspNetCore.Hosting;

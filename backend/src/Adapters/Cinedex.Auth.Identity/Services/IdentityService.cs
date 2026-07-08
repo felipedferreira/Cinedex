@@ -1,12 +1,12 @@
 using Cinedex.Application.Abstractions;
 using Cinedex.Application.Exceptions;
+using Cinedex.Auth.Identity.Entities;
 using Cinedex.Domain.UserAggregate;
-using Cinedex.Persistence.Auth.Identity.Entities;
 using FluentValidation;
 using FluentValidation.Results;
 using Microsoft.AspNetCore.Identity;
 
-namespace Cinedex.Persistence.Auth.Identity.Services;
+namespace Cinedex.Auth.Identity.Services;
 
 internal sealed class IdentityService(UserManager<ApplicationUser> userManager) : IIdentityService
 {

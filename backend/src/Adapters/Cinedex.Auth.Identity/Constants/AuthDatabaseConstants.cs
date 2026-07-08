@@ -1,4 +1,4 @@
-namespace Cinedex.Persistence.Auth.Identity.Constants;
+namespace Cinedex.Auth.Identity.Constants;
 
 internal static class AuthDatabaseConstants
 {

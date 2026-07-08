@@ -1,9 +1,9 @@
-using Cinedex.Persistence.Auth.Identity.Constants;
-using Cinedex.Persistence.Auth.Identity.Entities;
+using Cinedex.Auth.Identity.Constants;
+using Cinedex.Auth.Identity.Entities;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
 
-namespace Cinedex.Persistence.Auth.Identity.Configurations;
+namespace Cinedex.Auth.Identity.Configurations;
 
 internal sealed class RefreshTokenConfiguration : IEntityTypeConfiguration<RefreshToken>
 {

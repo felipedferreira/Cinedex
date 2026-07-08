@@ -1,7 +1,7 @@
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
 
-namespace Cinedex.Persistence.Auth.Identity;
+namespace Cinedex.Auth.Identity;
 
 /// <summary>
 /// Applies pending migrations for the authentication database (the <c>auth</c> schema).

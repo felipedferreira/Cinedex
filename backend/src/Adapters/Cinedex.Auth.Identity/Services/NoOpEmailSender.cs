@@ -1,7 +1,7 @@
 using Cinedex.Application.Abstractions;
 using Microsoft.Extensions.Logging;
 
-namespace Cinedex.Persistence.Auth.Identity.Services;
+namespace Cinedex.Auth.Identity.Services;
 
 /// <summary>
 /// Placeholder <see cref="IEmailSender"/> that performs no delivery. Logs that a reset was

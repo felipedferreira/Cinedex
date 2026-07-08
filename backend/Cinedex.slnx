@@ -21,7 +21,7 @@
     <Project Path="src\Presentation\Cinedex.WebService\Cinedex.WebService.csproj" Type="Classic C#" />
   </Folder>
   <Folder Name="/src/2 - Adapters/">
-    <Project Path="src\Adapters\Cinedex.Persistence.Auth.Identity\Cinedex.Persistence.Auth.Identity.csproj" Type="Classic C#" />
+    <Project Path="src\Adapters\Cinedex.Auth.Identity\Cinedex.Auth.Identity.csproj" Type="Classic C#" />
     <Project Path="src\Adapters\Cinedex.Persistence.Postgres\Cinedex.Persistence.Postgres.csproj" Type="Classic C#" />
   </Folder>
   <Folder Name="/src/3 - Application/">

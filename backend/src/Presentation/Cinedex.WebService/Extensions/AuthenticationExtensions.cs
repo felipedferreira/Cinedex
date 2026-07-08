@@ -1,6 +1,6 @@
 using System.Globalization;
 using System.Text;
-using Cinedex.Persistence.Auth.Identity.Options;
+using Cinedex.Auth.Identity.Options;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.IdentityModel.Tokens;
 

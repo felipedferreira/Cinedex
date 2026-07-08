@@ -1,4 +1,4 @@
-namespace Cinedex.Persistence.Auth.Identity.Options;
+namespace Cinedex.Auth.Identity.Options;
 
 // Binds the "Jwt" configuration section. Shared by the adapter (token issuance) and the
 // presentation layer (bearer token validation).

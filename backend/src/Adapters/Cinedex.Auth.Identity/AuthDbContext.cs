@@ -1,9 +1,9 @@
-using Cinedex.Persistence.Auth.Identity.Constants;
-using Cinedex.Persistence.Auth.Identity.Entities;
+using Cinedex.Auth.Identity.Constants;
+using Cinedex.Auth.Identity.Entities;
 using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore;
 
-namespace Cinedex.Persistence.Auth.Identity;
+namespace Cinedex.Auth.Identity;
 
 // Identity user store (no role tables) plus refresh-token persistence, all under the "auth" schema.
 internal sealed class AuthDbContext(DbContextOptions<AuthDbContext> options)

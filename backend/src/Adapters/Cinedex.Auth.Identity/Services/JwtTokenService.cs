@@ -5,14 +5,14 @@ using System.Text;
 using Cinedex.Application.Abstractions;
 using Cinedex.Application.Auth;
 using Cinedex.Application.Exceptions;
+using Cinedex.Auth.Identity.Entities;
+using Cinedex.Auth.Identity.Options;
 using Cinedex.Domain.UserAggregate;
-using Cinedex.Persistence.Auth.Identity.Entities;
-using Cinedex.Persistence.Auth.Identity.Options;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Options;
 using Microsoft.IdentityModel.Tokens;
 
-namespace Cinedex.Persistence.Auth.Identity.Services;
+namespace Cinedex.Auth.Identity.Services;
 
 internal sealed class JwtTokenService(AuthDbContext dbContext, IOptions<JwtOptions> options) : ITokenService
 {

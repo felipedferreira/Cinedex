@@ -4,7 +4,7 @@ using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 
 #nullable disable
 
-namespace Cinedex.Persistence.Auth.Identity.Migrations
+namespace Cinedex.Auth.Identity.Migrations
 {
     /// <inheritdoc />
     public partial class InitialAuthIdentity : Migration

@@ -138,8 +138,14 @@ class and generating a migration.
 Configured in `DependencyInjection.AddAuthenticationAdapter`:
 
 - `RequireUniqueEmail = true`
-- Minimum password length: 8
 - Lockout after 5 failed attempts, for 5 minutes
+- **Password policy** — Identity is the single authority for password strength; the application-layer
+  FluentValidation only checks the input is non-empty and at most 256 characters. The policy:
+  - minimum length 8
+  - at least one digit, one uppercase, one lowercase, and one non-alphanumeric character
+
+  All rules are set explicitly in `AddAuthenticationAdapter` (not left to framework defaults), so the
+  policy is visible in one place and enforced at registration and password reset.
 
 ## Configuration
 

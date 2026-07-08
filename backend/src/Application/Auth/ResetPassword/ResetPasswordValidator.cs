@@ -13,9 +13,11 @@ internal sealed class ResetPasswordValidator : AbstractValidator<ResetPasswordCo
         RuleFor(command => command.ResetToken)
             .NotEmpty();
 
+        // Password strength (length + complexity) is owned entirely by ASP.NET Core Identity. Here
+        // we only guard the input shape: non-empty, and bounded so an oversized value never reaches
+        // the password hasher.
         RuleFor(command => command.NewPassword)
             .NotEmpty()
-            .MinimumLength(8)
             .MaximumLength(256);
     }
 }

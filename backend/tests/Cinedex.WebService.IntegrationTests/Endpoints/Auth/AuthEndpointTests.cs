@@ -49,6 +49,16 @@ public sealed class AuthEndpointTests(WebApplicationFixture fixture)
     }
 
     [Fact]
+    public async Task Register_WithLongButSimplePassword_Returns400()
+    {
+        // Long enough (passes the length rule) but no digit, uppercase, or special character.
+        // Rejection proves the complexity policy is enforced, not just length.
+        var response = await RegisterAsync(NewEmail(), "simplepw", "alllowercaseletters");
+
+        Assert.Equal(HttpStatusCode.BadRequest, response.StatusCode);
+    }
+
+    [Fact]
     public async Task Login_SetsHardenedRefreshCookie()
     {
         var email = NewEmail();

@@ -1,6 +1,7 @@
 using System.Net;
 using System.Net.Http.Headers;
 using System.Net.Http.Json;
+using System.Text.Json;
 using Cinedex.WebService.Contracts.Requests;
 using Cinedex.WebService.Contracts.Responses;
 using Cinedex.WebService.IntegrationTests.Constants;
@@ -12,6 +13,10 @@ public sealed class AuthEndpointTests(WebApplicationFixture fixture)
 {
     private const string Password = "P@ssw0rd!";
     private const string NewPassword = "N3wP@ssw0rd!";
+
+    // Asserted here rather than referenced from the web project: the cookie name is part of the
+    // HTTP contract, so a rename should break a test rather than silently ship.
+    private const string RefreshCookieName = "__Secure-cinedex_refresh_token";
 
     [Fact]
     public async Task Register_WithValidRequest_Returns201()
@@ -42,17 +47,48 @@ public sealed class AuthEndpointTests(WebApplicationFixture fixture)
     }
 
     [Fact]
-    public async Task Login_WithValidCredentials_ReturnsTokens()
+    public async Task Login_SetsHardenedRefreshCookie()
+    {
+        var email = NewEmail();
+        await RegisterAsync(email, "cookieuser", Password);
+
+        var response = await PostLoginAsync(email, Password);
+
+        var setCookie = GetRefreshSetCookie(response);
+        Assert.NotNull(setCookie);
+        Assert.Contains("httponly", setCookie, StringComparison.OrdinalIgnoreCase);
+        Assert.Contains("secure", setCookie, StringComparison.OrdinalIgnoreCase);
+        Assert.Contains("samesite=strict", setCookie, StringComparison.OrdinalIgnoreCase);
+        Assert.Contains($"path={TestRouteConstants.MoviesServiceBasePath}/auth", setCookie, StringComparison.OrdinalIgnoreCase);
+    }
+
+    [Fact]
+    public async Task Login_ResponseBodyOmitsRefreshToken()
+    {
+        var email = NewEmail();
+        await RegisterAsync(email, "bodyuser", Password);
+
+        var response = await PostLoginAsync(email, Password);
+
+        // Asserted against the raw JSON, not the typed DTO: a typed assertion cannot detect a
+        // property that is still being serialized.
+        using var document = JsonDocument.Parse(await response.Content.ReadAsStringAsync());
+        Assert.True(document.RootElement.TryGetProperty("accessToken", out _));
+        Assert.False(document.RootElement.TryGetProperty("refreshToken", out _));
+        Assert.False(document.RootElement.TryGetProperty("refreshTokenExpiresAtUtc", out _));
+    }
+
+    [Fact]
+    public async Task Login_WithValidCredentials_ReturnsAccessToken()
     {
         var email = NewEmail();
         await RegisterAsync(email, "loginuser", Password);
 
-        var login = await LoginAsync(email, Password);
+        var (body, refreshCookie) = await LoginAsync(email, Password);
 
-        Assert.False(string.IsNullOrWhiteSpace(login.AccessToken));
-        Assert.False(string.IsNullOrWhiteSpace(login.RefreshToken));
-        Assert.True(login.ExpiresAtUtc > DateTime.UtcNow);
-        Assert.True(login.RefreshTokenExpiresAtUtc > DateTime.UtcNow);
+        Assert.False(string.IsNullOrWhiteSpace(body.AccessToken));
+        Assert.True(body.ExpiresAtUtc > DateTime.UtcNow);
+        Assert.False(string.IsNullOrWhiteSpace(refreshCookie));
     }
 
     [Fact]
@@ -61,7 +97,7 @@ public sealed class AuthEndpointTests(WebApplicationFixture fixture)
         var email = NewEmail();
         await RegisterAsync(email, "wrongpw", Password);
 
-        var response = await fixture.Client.PostAsJsonAsync(
+        var response = await fixture.CookielessClient.PostAsJsonAsync(
             TestRouteConstants.Auth.LoginEndpoint,
             new LoginRequest { Email = email, Password = "Wr0ng@Pass!" });
 
@@ -71,7 +107,7 @@ public sealed class AuthEndpointTests(WebApplicationFixture fixture)
     [Fact]
     public async Task Login_WithUnknownUser_Returns401()
     {
-        var response = await fixture.Client.PostAsJsonAsync(
+        var response = await fixture.CookielessClient.PostAsJsonAsync(
             TestRouteConstants.Auth.LoginEndpoint,
             new LoginRequest { Email = NewEmail(), Password = Password });
 
@@ -79,75 +115,94 @@ public sealed class AuthEndpointTests(WebApplicationFixture fixture)
     }
 
     [Fact]
-    public async Task Refresh_WithValidToken_RotatesTokensAndInvalidatesOld()
+    public async Task Refresh_WithCookie_RotatesCookie()
     {
         var email = NewEmail();
         await RegisterAsync(email, "refreshuser", Password);
-        var login = await LoginAsync(email, Password);
+        var (_, refreshCookie) = await LoginAsync(email, Password);
 
-        var refreshResponse = await fixture.Client.PostAsJsonAsync(
-            TestRouteConstants.Auth.RefreshEndpoint,
-            new RefreshRequest { RefreshToken = login.RefreshToken });
+        var response = await PostAsync(TestRouteConstants.Auth.RefreshEndpoint, refreshCookie);
 
-        Assert.Equal(HttpStatusCode.OK, refreshResponse.StatusCode);
-        var rotated = await refreshResponse.Content.ReadFromJsonAsync<LoginResponse>();
-        Assert.NotNull(rotated);
-        Assert.NotEqual(login.RefreshToken, rotated.RefreshToken);
+        Assert.Equal(HttpStatusCode.OK, response.StatusCode);
+        var rotated = ReadRefreshCookieValue(response);
+        Assert.False(string.IsNullOrWhiteSpace(rotated));
+        Assert.NotEqual(refreshCookie, rotated);
+    }
 
-        // The original refresh token must no longer be accepted after rotation.
-        var reuse = await fixture.Client.PostAsJsonAsync(
-            TestRouteConstants.Auth.RefreshEndpoint,
-            new RefreshRequest { RefreshToken = login.RefreshToken });
+    [Fact]
+    public async Task Refresh_WithRotatedCookie_Returns401()
+    {
+        var email = NewEmail();
+        await RegisterAsync(email, "rotateduser", Password);
+        var (_, refreshCookie) = await LoginAsync(email, Password);
+
+        var rotation = await PostAsync(TestRouteConstants.Auth.RefreshEndpoint, refreshCookie);
+        Assert.Equal(HttpStatusCode.OK, rotation.StatusCode);
+
+        // The pre-rotation token must no longer be accepted.
+        var reuse = await PostAsync(TestRouteConstants.Auth.RefreshEndpoint, refreshCookie);
+
         Assert.Equal(HttpStatusCode.Unauthorized, reuse.StatusCode);
     }
 
     [Fact]
-    public async Task Refresh_WithInvalidToken_Returns401()
+    public async Task Refresh_WithoutCookie_Returns401()
     {
-        var response = await fixture.Client.PostAsJsonAsync(
-            TestRouteConstants.Auth.RefreshEndpoint,
-            new RefreshRequest { RefreshToken = "not-a-real-token" });
+        var response = await PostAsync(TestRouteConstants.Auth.RefreshEndpoint, refreshCookie: null);
 
         Assert.Equal(HttpStatusCode.Unauthorized, response.StatusCode);
+    }
+
+    [Fact]
+    public async Task Refresh_WithInvalidCookie_Returns401AndClearsCookie()
+    {
+        var response = await PostAsync(TestRouteConstants.Auth.RefreshEndpoint, "not-a-real-token");
+
+        Assert.Equal(HttpStatusCode.Unauthorized, response.StatusCode);
+        Assert.Equal(string.Empty, ReadRefreshCookieValue(response));
     }
 
     [Fact]
     public async Task Logout_WithoutBearerToken_Returns401()
     {
-        var response = await fixture.Client.PostAsJsonAsync(
-            TestRouteConstants.Auth.LogoutEndpoint,
-            new LogoutRequest { RefreshToken = "anything" });
+        var response = await PostAsync(TestRouteConstants.Auth.LogoutEndpoint, "anything");
 
         Assert.Equal(HttpStatusCode.Unauthorized, response.StatusCode);
     }
 
     [Fact]
-    public async Task Logout_RevokesRefreshToken()
+    public async Task Logout_RevokesTokenAndClearsCookie()
     {
         var email = NewEmail();
         await RegisterAsync(email, "logoutuser", Password);
-        var login = await LoginAsync(email, Password);
+        var (body, refreshCookie) = await LoginAsync(email, Password);
 
-        var logout = new HttpRequestMessage(HttpMethod.Post, TestRouteConstants.Auth.LogoutEndpoint)
-        {
-            Content = JsonContent.Create(new LogoutRequest { RefreshToken = login.RefreshToken }),
-        };
-        logout.Headers.Authorization = new AuthenticationHeaderValue("Bearer", login.AccessToken);
+        var logout = await PostAsync(TestRouteConstants.Auth.LogoutEndpoint, refreshCookie, body.AccessToken);
 
-        var logoutResponse = await fixture.Client.SendAsync(logout);
-        Assert.Equal(HttpStatusCode.NoContent, logoutResponse.StatusCode);
+        Assert.Equal(HttpStatusCode.NoContent, logout.StatusCode);
+        Assert.Equal(string.Empty, ReadRefreshCookieValue(logout));
 
         // The revoked refresh token can no longer be exchanged.
-        var refresh = await fixture.Client.PostAsJsonAsync(
-            TestRouteConstants.Auth.RefreshEndpoint,
-            new RefreshRequest { RefreshToken = login.RefreshToken });
+        var refresh = await PostAsync(TestRouteConstants.Auth.RefreshEndpoint, refreshCookie);
         Assert.Equal(HttpStatusCode.Unauthorized, refresh.StatusCode);
+    }
+
+    [Fact]
+    public async Task Logout_WithoutCookie_Returns204()
+    {
+        var email = NewEmail();
+        await RegisterAsync(email, "nocookielogout", Password);
+        var (body, _) = await LoginAsync(email, Password);
+
+        var logout = await PostAsync(TestRouteConstants.Auth.LogoutEndpoint, refreshCookie: null, body.AccessToken);
+
+        Assert.Equal(HttpStatusCode.NoContent, logout.StatusCode);
     }
 
     [Fact]
     public async Task ForgotPassword_WithUnknownEmail_Returns202()
     {
-        var response = await fixture.Client.PostAsJsonAsync(
+        var response = await fixture.CookielessClient.PostAsJsonAsync(
             TestRouteConstants.Auth.ForgotPasswordEndpoint,
             new ForgotPasswordRequest { Email = NewEmail() });
 
@@ -160,7 +215,7 @@ public sealed class AuthEndpointTests(WebApplicationFixture fixture)
         var email = NewEmail();
         await RegisterAsync(email, "resetuser", Password);
 
-        var forgot = await fixture.Client.PostAsJsonAsync(
+        var forgot = await fixture.CookielessClient.PostAsJsonAsync(
             TestRouteConstants.Auth.ForgotPasswordEndpoint,
             new ForgotPasswordRequest { Email = email });
         Assert.Equal(HttpStatusCode.Accepted, forgot.StatusCode);
@@ -168,16 +223,16 @@ public sealed class AuthEndpointTests(WebApplicationFixture fixture)
         var resetToken = fixture.EmailSender.LastResetToken;
         Assert.False(string.IsNullOrWhiteSpace(resetToken));
 
-        var reset = await fixture.Client.PostAsJsonAsync(
+        var reset = await fixture.CookielessClient.PostAsJsonAsync(
             TestRouteConstants.Auth.ResetPasswordEndpoint,
             new ResetPasswordRequest { Email = email, ResetToken = resetToken!, NewPassword = NewPassword });
         Assert.Equal(HttpStatusCode.NoContent, reset.StatusCode);
 
         // New password works, old password is rejected.
-        var loginNew = await LoginAsync(email, NewPassword);
+        var (loginNew, _) = await LoginAsync(email, NewPassword);
         Assert.False(string.IsNullOrWhiteSpace(loginNew.AccessToken));
 
-        var loginOld = await fixture.Client.PostAsJsonAsync(
+        var loginOld = await fixture.CookielessClient.PostAsJsonAsync(
             TestRouteConstants.Auth.LoginEndpoint,
             new LoginRequest { Email = email, Password = Password });
         Assert.Equal(HttpStatusCode.Unauthorized, loginOld.StatusCode);
@@ -189,7 +244,7 @@ public sealed class AuthEndpointTests(WebApplicationFixture fixture)
         var email = NewEmail();
         await RegisterAsync(email, "badreset", Password);
 
-        var response = await fixture.Client.PostAsJsonAsync(
+        var response = await fixture.CookielessClient.PostAsJsonAsync(
             TestRouteConstants.Auth.ResetPasswordEndpoint,
             new ResetPasswordRequest { Email = email, ResetToken = "invalid-token", NewPassword = NewPassword });
 
@@ -198,21 +253,67 @@ public sealed class AuthEndpointTests(WebApplicationFixture fixture)
 
     private static string NewEmail() => $"user-{Guid.NewGuid():N}@example.com";
 
-    private async Task<HttpResponseMessage> RegisterAsync(string email, string username, string password) =>
-        await fixture.Client.PostAsJsonAsync(
+    /// <summary>Returns the raw <c>Set-Cookie</c> header for the refresh cookie, or null.</summary>
+    private static string? GetRefreshSetCookie(HttpResponseMessage response) =>
+        response.Headers.TryGetValues("Set-Cookie", out var values)
+            ? values.FirstOrDefault(value => value.StartsWith($"{RefreshCookieName}=", StringComparison.Ordinal))
+            : null;
+
+    /// <summary>
+    /// Returns the refresh cookie's value: the raw token, or <see cref="string.Empty"/> when the
+    /// server cleared it. Null when no refresh cookie was set at all.
+    /// </summary>
+    private static string? ReadRefreshCookieValue(HttpResponseMessage response)
+    {
+        var setCookie = GetRefreshSetCookie(response);
+        if (setCookie is null)
+        {
+            return null;
+        }
+
+        var value = setCookie[(RefreshCookieName.Length + 1)..];
+        var separator = value.IndexOf(';', StringComparison.Ordinal);
+        return separator < 0 ? value : value[..separator];
+    }
+
+    private Task<HttpResponseMessage> RegisterAsync(string email, string username, string password) =>
+        fixture.CookielessClient.PostAsJsonAsync(
             TestRouteConstants.Auth.RegisterEndpoint,
             new RegisterRequest { Email = email, Username = username, Password = password });
 
-    private async Task<LoginResponse> LoginAsync(string email, string password)
-    {
-        var response = await fixture.Client.PostAsJsonAsync(
+    private Task<HttpResponseMessage> PostLoginAsync(string email, string password) =>
+        fixture.CookielessClient.PostAsJsonAsync(
             TestRouteConstants.Auth.LoginEndpoint,
             new LoginRequest { Email = email, Password = password });
 
+    private async Task<(LoginResponse Body, string RefreshCookie)> LoginAsync(string email, string password)
+    {
+        var response = await PostLoginAsync(email, password);
         Assert.Equal(HttpStatusCode.OK, response.StatusCode);
 
-        var login = await response.Content.ReadFromJsonAsync<LoginResponse>();
-        Assert.NotNull(login);
-        return login;
+        var body = await response.Content.ReadFromJsonAsync<LoginResponse>();
+        Assert.NotNull(body);
+
+        var refreshCookie = ReadRefreshCookieValue(response);
+        Assert.False(string.IsNullOrWhiteSpace(refreshCookie));
+
+        return (body, refreshCookie!);
+    }
+
+    private Task<HttpResponseMessage> PostAsync(string route, string? refreshCookie, string? accessToken = null)
+    {
+        var request = new HttpRequestMessage(HttpMethod.Post, route);
+
+        if (refreshCookie is not null)
+        {
+            request.Headers.Add("Cookie", $"{RefreshCookieName}={refreshCookie}");
+        }
+
+        if (accessToken is not null)
+        {
+            request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", accessToken);
+        }
+
+        return fixture.CookielessClient.SendAsync(request);
     }
 }

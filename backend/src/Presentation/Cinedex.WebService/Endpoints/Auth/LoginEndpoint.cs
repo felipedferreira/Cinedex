@@ -19,6 +19,9 @@ internal sealed class LoginEndpoint(ILoginHandler handler) : Endpoint<LoginReque
     {
         var tokens = await handler.HandleAsync(request.ToCommand(), cancellationToken);
 
+        // The refresh token leaves the service only as an HttpOnly cookie, never in the body.
+        RefreshTokenCookie.Append(HttpContext.Response, tokens.RefreshToken, tokens.RefreshTokenExpiresAtUtc);
+
         await Send.OkAsync(tokens.ToResponse(), cancellationToken);
     }
 }

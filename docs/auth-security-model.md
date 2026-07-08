@@ -15,6 +15,7 @@ ports. The domain and application layers never reference ASP.NET Core Identity.
 | Application | `Auth/{Register,Login,Logout,Refresh,ForgotPassword,ResetPassword}` | One handler slice per use case, each with a FluentValidation validator. |
 | Adapter | `Cinedex.Persistence.Auth.Identity` | Implements the ports with Identity + EF Core. `ApplicationUser : IdentityUser<Guid>` maps to the domain `User`. |
 | Presentation | `Extensions/AuthenticationExtensions` | JWT bearer validation, authorization middleware. |
+| Presentation | `Endpoints/Auth/RefreshTokenCookie` | Reads, sets, and clears the HttpOnly refresh-token cookie. Keeps the cookie a transport detail the Application layer never sees. |
 
 ## Endpoints
 
@@ -36,21 +37,70 @@ All routes are relative to the `/movies-svc` base path.
 
 ```
 POST /auth/login
-  ├─ access token   JWT, HS256, 15 min   (Jwt:AccessTokenMinutes)
-  └─ refresh token  32 random bytes, base64, 7 days   (Jwt:RefreshTokenDays)
+  ├─ access token   JWT, HS256, 15 min   (Jwt:AccessTokenMinutes)   → response body
+  └─ refresh token  32 random bytes, base64, 7 days   (Jwt:RefreshTokenDays)   → Set-Cookie only
 
-POST /auth/refresh  (present the refresh token)
+POST /auth/refresh  (refresh token read from the cookie; no request body)
   ├─ look up by SHA-256 hash
-  ├─ reject if missing, revoked, or expired  → 401
+  ├─ reject if the cookie is missing, or the token is revoked or expired  → 401
+  │    on rejection the cookie is also cleared, so the browser stops re-sending a dead token
   └─ rotate:
        old.RevokedAtUtc = now
        old.ReplacedByTokenHash = hash(new)
-       new token pair issued
+       new token pair issued; the new refresh token is written as a fresh Set-Cookie
      (both writes committed in one SaveChangesAsync)
 
-POST /auth/logout  (present the refresh token)
-  └─ RevokedAtUtc = now.  Idempotent: an unknown or already-revoked token is a silent no-op.
+POST /auth/logout  (refresh token read from the cookie; no request body)
+  └─ RevokedAtUtc = now, and the cookie is cleared.
+     Idempotent: an unknown, already-revoked, or absent cookie is a silent no-op that still clears.
 ```
+
+### The refresh token cookie
+
+The refresh token is returned to the browser only as a cookie, never in a response body, so a
+cross-site scripting defect cannot read it. The access token remains in the body; it is short-lived
+(15 minutes) and the client needs to attach it as a bearer header.
+
+```
+Set-Cookie: __Secure-cinedex_refresh_token=<raw token>;
+            HttpOnly; Secure; SameSite=Strict; Path=/movies-svc/auth; Expires=<token expiry>
+```
+
+| Attribute | Purpose |
+|---|---|
+| `HttpOnly` | Unreachable from `document.cookie`. The reason for the change. |
+| `Secure` | Required by the `__Secure-` prefix; the browser refuses to store the cookie unless it was set over HTTPS. |
+| `SameSite=Strict` | The browser never attaches the cookie to a cross-site request, which makes CSRF against `/auth/refresh` structurally impossible rather than something to defend against. |
+| `Path=/movies-svc/auth` | The cookie rides only on the auth endpoints, so it never appears in logs or traces for ordinary API traffic. |
+| `Expires` | Taken from the token's own expiry, so the cookie and the database row agree on the lifetime. |
+
+`RefreshTokenCookie` (Presentation layer) owns the cookie name and a single `CookieOptions` factory
+shared by the set and the clear, so the two cannot drift apart — a cookie is only deleted when the
+delete call's attributes match the ones it was set with. The Application layer is unchanged: it still
+produces the refresh token and does not know it travels as a cookie.
+
+On a failed refresh the endpoint clears the cookie via `HttpContext.Response.OnStarting`. A direct
+clear would be lost, because rethrowing runs `UseExceptionHandler`, which calls `Response.Clear()`
+before writing the 401; the `OnStarting` callback runs later, at header-flush time.
+
+#### Deployment constraints
+
+Both are load-bearing. Violating the first breaks authentication silently; violating the second
+weakens it.
+
+1. **The SPA and the API must be same-site.** `SameSite` is evaluated on registrable domain, not
+   origin (ports are excluded, so `localhost:9000` → `localhost:8080` is already same-site). In
+   production this means either one registrable domain (`app.cinedex.com` + `api.cinedex.com`) or the
+   API served through the SPA's reverse proxy. A `SameSite=Strict` cookie is not sent cross-site, so
+   hosting the UI on an unrelated domain breaks refresh entirely, with a bare 401. Same-site is not
+   the same as same-origin: the two-subdomain option is still cross-origin and additionally needs
+   CORS with credentials, whereas the reverse-proxy option needs neither.
+2. **No untrusted content on sibling subdomains.** The cookie uses the `__Secure-` prefix rather than
+   `__Host-`, because `__Host-` forbids a `Path` and would put the token on every API request. The
+   trade-off is that `__Secure-` does not forbid a `Domain` attribute, so a sibling subdomain can set
+   a same-named cookie scoped to the parent domain and shadow this one. For a refresh token that is
+   session fixation. If untrusted subdomains ever become possible, switch to `__Host-` and accept
+   `Path=/`.
 
 ### Access token claims
 
@@ -63,9 +113,9 @@ and lifetime, with a 30-second clock skew.
 
 ### Why refresh tokens are hashed
 
-The raw refresh token is returned to the client exactly once, at issue time, and is never
-persisted. The database stores only `SHA256(token)` as hex. A dump of the `auth.refreshTokens`
-table therefore does not yield usable tokens.
+The raw refresh token is returned to the client exactly once, at issue time — as the cookie above —
+and is never persisted in raw form. The database stores only `SHA256(token)` as hex. A dump of the
+`auth.refreshTokens` table therefore does not yield usable tokens.
 
 Rotation on every use means a stolen refresh token has a bounded window: the moment the legitimate
 client refreshes, the stolen token is revoked, and vice versa.
@@ -141,7 +191,10 @@ build on this.
 - **No email delivery.** `IEmailSender` is a no-op (see above).
 - **No roles or policies.** `AddAuthorization()` is registered with no policies; Genre and Title
   endpoints are anonymous.
-- **No CORS configuration anywhere in the backend.** The SPA is served from `:9000` and the API
-  from `:8080`. The first cross-origin `fetch` from the frontend will fail until CORS is
-  configured or the UI is served through a reverse proxy.
+- **No CORS configuration or reverse proxy yet.** The SPA is served from `:9000` and the API from
+  `:8080`. A cross-origin `fetch` from the frontend will fail until either CORS with credentials is
+  configured or the UI is served through a reverse proxy. The reverse proxy is the better fix here:
+  it makes the two same-origin, which satisfies both CORS and the `SameSite=Strict` refresh cookie
+  at once (see [Deployment constraints](#deployment-constraints)). The SPA has no code that calls
+  the API today, so nothing exercises this yet.
 - **No email confirmation, external logins, or 2FA.**

@@ -21,13 +21,30 @@ public class WebApplicationFixture : WebApplicationFactory<Program>, IAsyncLifet
 
     public HttpClient Client { get; private set; } = null!;
 
+    /// <summary>
+    /// Gets a client that does not maintain a cookie jar, for tests that must present a specific
+    /// refresh-token cookie rather than whatever a previous request happened to leave behind.
+    /// </summary>
+    public HttpClient CookielessClient { get; private set; } = null!;
+
     internal CapturingEmailSender EmailSender => this.Services.GetRequiredService<CapturingEmailSender>();
 
     public async Task InitializeAsync()
     {
         await _postgresContainer.StartAsync();
 
-        this.Client = this.CreateClient();
+        // The refresh-token cookie is Secure, and CookieContainer refuses to send a Secure cookie
+        // over http://. TestServer performs no real TLS; this only makes Request.IsHttps true.
+        this.Client = this.CreateClient(new WebApplicationFactoryClientOptions
+        {
+            BaseAddress = new Uri("https://localhost"),
+        });
+
+        this.CookielessClient = this.CreateClient(new WebApplicationFactoryClientOptions
+        {
+            BaseAddress = new Uri("https://localhost"),
+            HandleCookies = false,
+        });
 
         using var scope = this.Services.CreateScope();
         var filmDb = scope.ServiceProvider.GetRequiredService<FilmDbContext>();
@@ -39,6 +56,7 @@ public class WebApplicationFixture : WebApplicationFactory<Program>, IAsyncLifet
     public new async Task DisposeAsync()
     {
         this.Client.Dispose();
+        this.CookielessClient.Dispose();
         await base.DisposeAsync();
         await _postgresContainer.DisposeAsync();
     }

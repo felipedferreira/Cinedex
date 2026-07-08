@@ -4,7 +4,7 @@ public class User
 {
     private User()
     {
-        // Required by EF Core for materialization.
+        // Private so callers cannot bypass the factory with an object initializer.
     }
 
     public Guid Id { get; init; }
@@ -15,17 +15,9 @@ public class User
 
     public bool EmailConfirmed { get; set; }
 
-    public static User Create(string email, string userName)
-    {
-        return Create(Guid.CreateVersion7(), email, userName, emailConfirmed: false);
-    }
-
+    // Rebuilds an existing user from stored state. Users are created by ASP.NET Core Identity in the
+    // auth adapter rather than by this aggregate, so there is deliberately no Create factory.
     public static User Reconstitute(Guid id, string email, string userName, bool emailConfirmed)
-    {
-        return Create(id, email, userName, emailConfirmed);
-    }
-
-    private static User Create(Guid id, string email, string userName, bool emailConfirmed)
     {
         return new User
         {

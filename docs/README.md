@@ -1,0 +1,39 @@
+# Cinedex Documentation
+
+Design documentation that describes *why* the system is shaped the way it is. It lives in the
+repository (rather than the GitHub wiki) so it is versioned with the code, reviewed in the same
+pull request as the change it describes, and impossible to update out of band.
+
+Operational instructions — how to build, run, test, and migrate — stay in the READMEs.
+
+## Contents
+
+| Document | What it covers |
+|---|---|
+| [Auth & Security Model](auth-security-model.md) | JWT access tokens, rotating refresh tokens, the `auth` schema, Identity behind ports, and the known gaps. |
+
+## Elsewhere
+
+| Document | What it covers |
+|---|---|
+| [Root README](../README.md) | Repository layout, Docker Compose quick start. |
+| [Backend README](../backend/README.md) | Architecture guide, migrations, health checks, observability, coverage. |
+| [Frontend README](../frontend/cinadex-ui/README.md) | `cinadex-ui` stack, scripts, linting, testing. |
+| [Contracts README](../backend/NuGetLibraries/Cinedex.WebService.Contracts/README.md) | Shared request/response DTOs. |
+| [CONTRIBUTING](../CONTRIBUTING.md) | Workflow, code standards, PR checklist. |
+| [CHANGELOG](../CHANGELOG.md) | Version history. |
+
+## Planned
+
+Not yet written. Listed so the gaps are visible rather than forgotten:
+
+- **Architecture Decision Records** (`adr/`) — hexagonal layering, Identity behind ports, the
+  separate `auth` schema, FastEndpoints/REPR over MVC, EF Fluent API to keep the domain
+  framework-free, Seq via OTLP, Guid v7 keys.
+- **API conventions** — the `/movies-svc` base path, RFC 7807 problem details, the correlation-id
+  header, and the status-code contract. (The endpoint *reference* is generated: see the Scalar UI
+  at `/movies-svc/api-docs/v1`.)
+- **Frontend ↔ backend contract** — CORS or reverse proxy, where the access token is stored,
+  refresh-on-401 retry semantics.
+- **Domain glossary** — `Title` vs. "Movie", and whether the `movies-svc` / `movies.webservice`
+  naming is intentional legacy.

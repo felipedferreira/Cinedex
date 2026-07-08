@@ -8,7 +8,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 ### Added
-- **Auth endpoint contracts** - Five contract-only endpoints under `Cinedex.WebService/Endpoints/Auth/` (`POST /auth/register`, `/auth/login`, `/auth/logout`, `/auth/password/forgot`, `/auth/password/reset`) with request/response DTOs in `Cinedex.WebService.Contracts`; handlers return stubbed success responses (201 / 200 with placeholder token / 204 / 202 / 204) pending real implementation. `AuthEndpointTests` integration tests cover each endpoint
+- **Authentication & authorization via ASP.NET Core Identity** - Replaces the previously stubbed auth endpoints with a real implementation. Users can register, log in, refresh their session, log out, and reset their password. Login issues a JWT access token plus a rotating refresh token; protected endpoints are guarded by JWT bearer middleware. Identity is confined to a new persistence adapter behind application-layer ports, so the domain and application layers stay framework-free. See the [Auth & Security Model](docs/auth-security-model.md)
+  - **Domain** — `User` aggregate in `Cinedex.Domain/UserAggregate/`, mirroring the existing Genre/Title aggregates
+  - **Application** — `IIdentityService` / `ITokenService` / `IEmailSender` ports, `InvalidCredentialsException`, `AuthTokensDto`, and register/login/logout/refresh/forgot/reset handler slices with FluentValidation validators
+  - **Adapter** — new `Cinedex.Persistence.Auth.Identity` project: `AuthDbContext` (an `IdentityUserContext`, so no role tables), `ApplicationUser : IdentityUser<Guid>`, hashed and rotating refresh-token storage, `JwtTokenService`, `IdentityService`, and the initial EF migration. All tables live in a dedicated `auth` schema with its own `__EFMigrationsHistory` table
+  - **Presentation** — JWT bearer authentication and authorization middleware, DI wiring, an `InvalidCredentialsExceptionHandler` mapping to HTTP 401, real endpoints wired to the handlers, and the `Jwt` configuration section
+  - **Endpoints** — `POST /movies-svc/auth/{register,login,refresh,logout,password/forgot,password/reset}`. Adds `refresh`; `logout` now requires a bearer token. `password/forgot` always returns `202` to avoid account enumeration
+  - **Tests** — auth integration tests exercising real register/login/refresh/logout/reset flows against Testcontainers Postgres
+  - ⚠️ `Jwt:SigningKey` in `appsettings.json` is a dev-only placeholder; override it via `Jwt__SigningKey` or User Secrets outside development
+  - Known gaps: no roles or policies (Genre/Title endpoints remain anonymous), `IEmailSender` is a no-op so reset emails are not delivered, no refresh-token reuse detection, and no CORS configuration
+- **Documentation directory** - `docs/` for design documentation that is versioned with the code and reviewed in the same pull request as the change it describes; `docs/README.md` indexes it
 - **`EntityNotFoundException`** - Domain exception in `Cinedex.Application/Exceptions/` thrown by handlers when a requested entity does not exist; carries `entityName` and `id` for a self-describing message
 - **Chain of Responsibility exception handling** - Replaced the monolithic `ExceptionHandlingMiddleware` with three focused `IExceptionHandler` implementations under `Cinedex.WebService/ExceptionHandlers/`:
   - `ValidationExceptionHandler` — `ValidationException` → HTTP 400 with per-field error map

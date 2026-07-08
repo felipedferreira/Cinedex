@@ -1,6 +1,6 @@
 # Movies Backend
 
-[![Build and Test](https://github.com/felipedferreira/Movies/actions/workflows/build-and-test.yml/badge.svg)](https://github.com/felipedferreira/Movies/actions/workflows/build-and-test.yml)
+[![Build and Test](https://github.com/felipedferreira/Cinedex/actions/workflows/build-and-test.yml/badge.svg)](https://github.com/felipedferreira/Cinedex/actions/workflows/build-and-test.yml)
 
 A clean architecture .NET solution for managing movies, their genres, crew members, and roles — inspired by IMDB. Built with a focus on separation of concerns, testability, and maintainability.
 
@@ -19,6 +19,24 @@ genre does not hold a back-reference to movies.
 
 See the [contracts README](NuGetLibraries/Cinedex.WebService.Contracts/README.md) for the request/response DTOs.
 
+## 🔐 Authentication
+
+Authentication is built on **ASP.NET Core Identity**, confined to the
+`Cinedex.Persistence.Auth.Identity` adapter behind application-layer ports so the domain and
+application layers stay framework-free. Login issues a short-lived JWT access token plus a rotating
+refresh token; protected endpoints are guarded by JWT bearer middleware.
+
+- **Endpoints** under `/movies-svc/auth` — `register`, `login`, `refresh`, `logout`,
+  `password/forgot`, `password/reset`.
+- **Tokens** — 15-minute HS256 access token, 7-day refresh token stored hashed and rotated on use.
+- **Schema** — all Identity tables live in a dedicated `auth` schema with its own migration history.
+
+> ⚠️ `Jwt:SigningKey` in `appsettings.json` is a **dev-only placeholder**. Override it per
+> environment via `Jwt__SigningKey` or User Secrets.
+
+Full details, including known gaps (no roles, no email delivery, no CORS), are in the
+**[Auth & Security Model](../docs/auth-security-model.md)**.
+
 ## 🗄️ Database
 
 This project uses **PostgreSQL** via **Entity Framework Core 10**.
@@ -35,8 +53,10 @@ docker compose up            # from the repository root, where compose.yaml live
 This starts:
 - **PostgreSQL 17 Alpine** on port `5432`
 - **Movies WebService** on ports `8080` (HTTP) and `8081` (HTTPS)
-- Automatic database initialization
 - Data persistence via Docker volume
+
+The database is created empty. Apply migrations yourself before the API is usable — see
+[Migrations](#migrations).
 
 #### Option 2: Local PostgreSQL
 Ensure PostgreSQL is installed and running locally. The connection string is **not**
@@ -80,17 +100,48 @@ environment variables or configuration files as needed.
 
 ### Migrations
 
-Run from this folder, specifying the persistence project and the WebService as the startup project:
+> ⚠️ **Migrations are not applied automatically.** Neither `docker compose up` nor
+> `dotnet run` migrates the database — `Program.cs` does not call any initializer. A fresh
+> database has no tables until you run `dotnet ef database update` for **both** contexts below.
+> (`AuthDbInitializer.MigrateAsync` exists but is currently only used by the integration tests.)
+
+The solution has **two `DbContext`s**, backed by two projects and two migration histories in the
+same physical database:
+
+| Context | Project | Schema | Covers |
+|---------|---------|--------|--------|
+| `FilmDbContext` | `src/Adapters/Cinedex.Persistence.Postgres` | `catalog` | Titles, genres |
+| `AuthDbContext` | `src/Adapters/Cinedex.Persistence.Auth.Identity` | `auth` | Identity users, refresh tokens |
+
+Because more than one context is discoverable, **every `dotnet ef` command must pass `--context`**
+or the tooling fails with "More than one DbContext was found". Run these from this folder
+(`backend/`), with the WebService as the startup project:
 
 ```bash
-# Add a new migration
+# Add a migration to the catalog context
 dotnet ef migrations add <MigrationName> \
+  --context FilmDbContext \
   --project src/Adapters/Cinedex.Persistence.Postgres \
   --startup-project src/Presentation/Cinedex.WebService
 
-# Apply migrations to the database
+# Add a migration to the auth context
+dotnet ef migrations add <MigrationName> \
+  --context AuthDbContext \
+  --project src/Adapters/Cinedex.Persistence.Auth.Identity \
+  --startup-project src/Presentation/Cinedex.WebService
+```
+
+Applying them — a fresh database needs **both**:
+
+```bash
 dotnet ef database update \
+  --context FilmDbContext \
   --project src/Adapters/Cinedex.Persistence.Postgres \
+  --startup-project src/Presentation/Cinedex.WebService
+
+dotnet ef database update \
+  --context AuthDbContext \
+  --project src/Adapters/Cinedex.Persistence.Auth.Identity \
   --startup-project src/Presentation/Cinedex.WebService
 ```
 
@@ -101,11 +152,16 @@ container exposed on `localhost:5432` — pass the connection string explicitly 
 
 ```bash
 dotnet ef database update \
+  --context FilmDbContext \
   --project src/Adapters/Cinedex.Persistence.Postgres \
   --startup-project src/Presentation/Cinedex.WebService \
   --connection "<YOUR_CONNECTION_STRING>"
 # e.g. "Host=127.0.0.1;Port=5432;Database=movies;Username=movies_rw;Password=<DB_PASSWORD>"
 ```
+
+Each context keeps its own `__EFMigrationsHistory` table inside its own schema, so the two
+histories never collide. See the [Auth & Security Model](../docs/auth-security-model.md#storage)
+for why auth is isolated in its own schema.
 
 > **Domain models** live in `Cinedex.Domain`. EF entity configurations use **Fluent API** in `Cinedex.Persistence.Postgres`, keeping the domain layer free of any EF dependencies.
 
@@ -114,6 +170,8 @@ dotnet ef database update \
 ## 📚 Documentation
 
 - **[Architecture Guide](README.md)** (this file) - Project structure and design patterns
+- **[Design docs](../docs/README.md)** - Why the system is shaped this way
+  - [Auth & Security Model](../docs/auth-security-model.md) - JWT, refresh rotation, the `auth` schema
 - **[Changelog](../CHANGELOG.md)** - Version history and release notes
 - **[NuGetLibraries](NuGetLibraries/Cinedex.WebService.Contracts/README.md)** - NuGet package documentation
   - Cinedex.WebService.Contracts - API contracts and DTOs

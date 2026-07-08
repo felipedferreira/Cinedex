@@ -2,6 +2,8 @@ using System.Net;
 using System.Net.Http.Headers;
 using System.Net.Http.Json;
 using System.Text.Json;
+using System.Text.RegularExpressions;
+using Cinedex.Application.Email;
 using Cinedex.WebService.Contracts.Requests;
 using Cinedex.WebService.Contracts.Responses;
 using Cinedex.WebService.IntegrationTests.Constants;
@@ -220,12 +222,16 @@ public sealed class AuthEndpointTests(WebApplicationFixture fixture)
             new ForgotPasswordRequest { Email = email });
         Assert.Equal(HttpStatusCode.Accepted, forgot.StatusCode);
 
-        var resetToken = fixture.EmailSender.LastResetToken;
+        // The raw token is embedded in the reset link inside the composed email; extract it the way
+        // a real recipient's client would follow the link.
+        var message = fixture.EmailSender.LastMessage;
+        Assert.NotNull(message);
+        var resetToken = ExtractResetToken(message);
         Assert.False(string.IsNullOrWhiteSpace(resetToken));
 
         var reset = await fixture.CookielessClient.PostAsJsonAsync(
             TestRouteConstants.Auth.ResetPasswordEndpoint,
-            new ResetPasswordRequest { Email = email, ResetToken = resetToken!, NewPassword = NewPassword });
+            new ResetPasswordRequest { Email = email, ResetToken = resetToken, NewPassword = NewPassword });
         Assert.Equal(HttpStatusCode.NoContent, reset.StatusCode);
 
         // New password works, old password is rejected.
@@ -252,6 +258,22 @@ public sealed class AuthEndpointTests(WebApplicationFixture fixture)
     }
 
     private static string NewEmail() => $"user-{Guid.NewGuid():N}@example.com";
+
+    // Pulls the raw reset token out of the composed email's reset link, the way a recipient's mail
+    // client would when they click through.
+    private static string ExtractResetToken(EmailMessage message)
+    {
+        var text = message.Body switch
+        {
+            HtmlEmailBody html => html.PlainTextFallback ?? html.Content,
+            PlainTextEmailBody plain => plain.Content,
+            _ => throw new InvalidOperationException("Unexpected email body type."),
+        };
+
+        var match = Regex.Match(text, "token=([^&\\s\"]+)");
+        Assert.True(match.Success, "reset token not found in email body");
+        return Uri.UnescapeDataString(match.Groups[1].Value);
+    }
 
     /// <summary>Returns the raw <c>Set-Cookie</c> header for the refresh cookie, or null.</summary>
     private static string? GetRefreshSetCookie(HttpResponseMessage response) =>

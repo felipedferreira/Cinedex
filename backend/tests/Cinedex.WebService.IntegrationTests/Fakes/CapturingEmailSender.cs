@@ -1,19 +1,17 @@
 using Cinedex.Application.Abstractions;
+using Cinedex.Application.Email;
 
 namespace Cinedex.WebService.IntegrationTests.Fakes;
 
-// Test double for IEmailSender that records the most recent password-reset token so tests can
-// complete the reset flow without a real mail provider.
+// Test double for IEmailSender that records the most recent message so tests can inspect what would
+// have been sent (and complete the reset flow) without a real mail provider.
 internal sealed class CapturingEmailSender : IEmailSender
 {
-    public string? LastEmail { get; private set; }
+    public EmailMessage? LastMessage { get; private set; }
 
-    public string? LastResetToken { get; private set; }
-
-    public Task SendPasswordResetAsync(string email, string resetToken, CancellationToken cancellationToken)
+    public Task SendAsync(EmailMessage message, CancellationToken cancellationToken)
     {
-        this.LastEmail = email;
-        this.LastResetToken = resetToken;
+        this.LastMessage = message;
         return Task.CompletedTask;
     }
 }

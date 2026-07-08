@@ -1,5 +1,6 @@
 using System.Globalization;
 using Cinedex.Application;
+using Cinedex.Application.Configuration;
 using Cinedex.Auth.Identity;
 using Cinedex.Email.Smtp;
 using Cinedex.Persistence.Postgres;
@@ -27,6 +28,11 @@ public static class ServiceRegistrationExtensions
             .AddPersistenceAdapter()
             .AddAuthenticationAdapter()
             .AddEmailAdapter();
+
+        // Bind the SPA base URL used to build user-facing links (e.g. the password-reset link).
+        var frontendOptions = new FrontendOptions();
+        builder.Configuration.GetSection(FrontendOptions.SectionName).Bind(frontendOptions);
+        builder.Services.AddSingleton(frontendOptions);
 
         // Configure JWT bearer authentication and authorization.
         builder.AddJwtAuthentication();

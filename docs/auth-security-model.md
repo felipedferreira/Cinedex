@@ -144,8 +144,9 @@ Configured in `DependencyInjection.AddAuthenticationAdapter`:
   - minimum length 8
   - at least one digit, one uppercase, one lowercase, and one non-alphanumeric character
 
-  All rules are set explicitly in `AddAuthenticationAdapter` (not left to framework defaults), so the
-  policy is visible in one place and enforced at registration and password reset.
+  All rules are defined in `PasswordPolicyConstants` and applied explicitly in
+  `AddAuthenticationAdapter` (not left to framework defaults), so the policy is visible in one place
+  and enforced at registration and password reset.
 
 ## Configuration
 

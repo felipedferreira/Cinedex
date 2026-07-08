@@ -13,7 +13,7 @@ ports. The domain and application layers never reference ASP.NET Core Identity.
 | Domain | `UserAggregate/User` | Framework-free user aggregate. No password hashes, no tokens. |
 | Application | `IIdentityService`, `ITokenService`, `IEmailSender` | Ports the use cases depend on. |
 | Application | `Auth/{Register,Login,Logout,Refresh,ForgotPassword,ResetPassword}` | One handler slice per use case, each with a FluentValidation validator. |
-| Adapter | `Cinedex.Auth.Identity` | Implements the ports with Identity + EF Core. `ApplicationUser : IdentityUser<Guid>` maps to the domain `User`. |
+| Adapter | `Cinedex.Auth.Identity` | Implements all three auth ports: ASP.NET Core Identity for accounts, JWT for tokens, EF Core for hashed refresh-token storage. `ApplicationUser : IdentityUser<Guid>` maps to the domain `User`. |
 | Presentation | `Extensions/AuthenticationExtensions` | JWT bearer validation, authorization middleware. |
 | Presentation | `Endpoints/Auth/RefreshTokenCookie` | Reads, sets, and clears the HttpOnly refresh-token cookie. Keeps the cookie a transport detail the Application layer never sees. |
 

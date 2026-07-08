@@ -20,12 +20,13 @@ internal sealed class JwtTokenService(AuthDbContext dbContext, IOptions<JwtOptio
 
     public async Task<AuthTokensDto> IssueTokensAsync(User user, CancellationToken cancellationToken)
     {
-        var (dto, refreshEntity) = CreateTokens(user);
+        var rawRefreshToken = GenerateRefreshToken();
+        var refreshEntity = CreateRefreshTokenEntity(user.Id, rawRefreshToken);
 
         dbContext.RefreshTokens.Add(refreshEntity);
         await dbContext.SaveChangesAsync(cancellationToken);
 
-        return dto;
+        return CreateTokenResponse(user, rawRefreshToken, refreshEntity.ExpiresAtUtc);
     }
 
     public async Task<AuthTokensDto> RefreshAsync(string refreshToken, CancellationToken cancellationToken)
@@ -48,7 +49,9 @@ internal sealed class JwtTokenService(AuthDbContext dbContext, IOptions<JwtOptio
             throw new InvalidCredentialsException("The refresh token is invalid or has expired.");
         }
 
-        var (dto, refreshEntity) = CreateTokens(applicationUser.ToDomainUser());
+        var domainUser = applicationUser.ToDomainUser();
+        var rawRefreshToken = GenerateRefreshToken();
+        var refreshEntity = CreateRefreshTokenEntity(domainUser.Id, rawRefreshToken);
 
         // Rotate: revoke the presented token and persist its replacement atomically.
         existing.RevokedAtUtc = DateTime.UtcNow;
@@ -56,7 +59,7 @@ internal sealed class JwtTokenService(AuthDbContext dbContext, IOptions<JwtOptio
         dbContext.RefreshTokens.Add(refreshEntity);
         await dbContext.SaveChangesAsync(cancellationToken);
 
-        return dto;
+        return CreateTokenResponse(domainUser, rawRefreshToken, refreshEntity.ExpiresAtUtc);
     }
 
     public async Task RevokeRefreshTokenAsync(string refreshToken, CancellationToken cancellationToken)
@@ -81,26 +84,30 @@ internal sealed class JwtTokenService(AuthDbContext dbContext, IOptions<JwtOptio
     private static string HashToken(string token) =>
         Convert.ToHexString(SHA256.HashData(Encoding.UTF8.GetBytes(token)));
 
-    private (AuthTokensDto Dto, RefreshToken RefreshEntity) CreateTokens(User user)
+    // Builds the persistence-side entity, which stores only the hash of the raw token.
+    private RefreshToken CreateRefreshTokenEntity(Guid userId, string rawRefreshToken)
+    {
+        var now = DateTime.UtcNow;
+
+        return new RefreshToken
+        {
+            Id = Guid.CreateVersion7(),
+            UserId = userId,
+            TokenHash = HashToken(rawRefreshToken),
+            ExpiresAtUtc = now.AddDays(_options.RefreshTokenDays),
+            CreatedAtUtc = now,
+        };
+    }
+
+    // Builds the client-facing response, which carries the raw token. The refresh expiry is taken
+    // from the persisted entity so the two can never disagree on the token's lifetime.
+    private AuthTokensDto CreateTokenResponse(User user, string rawRefreshToken, DateTime refreshTokenExpiresAtUtc)
     {
         var now = DateTime.UtcNow;
         var accessExpiresAt = now.AddMinutes(_options.AccessTokenMinutes);
-        var refreshExpiresAt = now.AddDays(_options.RefreshTokenDays);
-
         var accessToken = CreateAccessToken(user, now, accessExpiresAt);
-        var rawRefreshToken = GenerateRefreshToken();
 
-        var refreshEntity = new RefreshToken
-        {
-            Id = Guid.CreateVersion7(),
-            UserId = user.Id,
-            TokenHash = HashToken(rawRefreshToken),
-            ExpiresAtUtc = refreshExpiresAt,
-            CreatedAtUtc = now,
-        };
-
-        var dto = new AuthTokensDto(accessToken, accessExpiresAt, rawRefreshToken, refreshExpiresAt);
-        return (dto, refreshEntity);
+        return new AuthTokensDto(accessToken, accessExpiresAt, rawRefreshToken, refreshTokenExpiresAtUtc);
     }
 
     private string CreateAccessToken(User user, DateTime issuedAt, DateTime expiresAt)

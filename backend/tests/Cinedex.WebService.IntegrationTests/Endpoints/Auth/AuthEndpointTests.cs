@@ -104,6 +104,31 @@ public sealed class AuthEndpointTests(WebApplicationFixture fixture)
     }
 
     [Fact]
+    public async Task Login_WithEmptyFields_Returns400WithSpecificMessages()
+    {
+        // The message strings are a client contract — they surface in the 400 body under
+        // errors.Email / errors.Password. Pinning them here catches accidental wording drift.
+        var response = await fixture.CookielessClient.PostAsJsonAsync(
+            TestRouteConstants.Auth.LoginEndpoint,
+            new LoginRequest { Email = string.Empty, Password = string.Empty });
+
+        Assert.Equal(HttpStatusCode.BadRequest, response.StatusCode);
+
+        using var document = JsonDocument.Parse(await response.Content.ReadAsStringAsync());
+        var errors = document.RootElement.GetProperty("errors");
+
+        // Dictionary keys are camelCased in the response body ("email" / "password").
+        // The empty-email case also triggers the EmailAddress rule (CascadeMode.Continue is the
+        // default), so Contains rather than Equal is the right assertion.
+        Assert.Contains(
+            "Email must not be empty.",
+            errors.GetProperty("email").EnumerateArray().Select(element => element.GetString()));
+        Assert.Contains(
+            "Password must not be empty.",
+            errors.GetProperty("password").EnumerateArray().Select(element => element.GetString()));
+    }
+
+    [Fact]
     public async Task Login_WithWrongPassword_Returns401()
     {
         var email = NewEmail();

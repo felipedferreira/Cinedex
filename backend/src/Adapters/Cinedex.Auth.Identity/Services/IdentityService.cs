@@ -6,6 +6,8 @@ using Cinedex.Domain.UserAggregate;
 using FluentValidation;
 using FluentValidation.Results;
 using Microsoft.AspNetCore.Identity;
+using Microsoft.EntityFrameworkCore;
+using Npgsql;
 
 namespace Cinedex.Auth.Identity.Services;
 
@@ -20,7 +22,16 @@ internal sealed class IdentityService(UserManager<ApplicationUser> userManager) 
             UserName = userName,
         };
 
-        var result = await userManager.CreateAsync(applicationUser, password);
+        IdentityResult result;
+        try
+        {
+            result = await userManager.CreateAsync(applicationUser, password);
+        }
+        catch (DbUpdateException exception) when (IsUniqueEmailViolation(exception))
+        {
+            throw ToDuplicateEmailValidationException(email);
+        }
+
         if (!result.Succeeded)
         {
             throw ToValidationException(result);
@@ -88,6 +99,14 @@ internal sealed class IdentityService(UserManager<ApplicationUser> userManager) 
             throw ToValidationException(result);
         }
     }
+
+    private static bool IsUniqueEmailViolation(DbUpdateException exception) =>
+        exception.InnerException is PostgresException postgresException &&
+        postgresException.SqlState == PostgresErrorCodes.UniqueViolation &&
+        string.Equals(postgresException.ConstraintName, "EmailIndex", StringComparison.Ordinal);
+
+    private static ValidationException ToDuplicateEmailValidationException(string email) =>
+        new([new ValidationFailure("DuplicateEmail", $"Email '{email}' is already taken.")]);
 
     private static ValidationException ToValidationException(IdentityResult result)
     {

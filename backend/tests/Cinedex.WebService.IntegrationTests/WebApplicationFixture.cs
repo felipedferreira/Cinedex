@@ -29,6 +29,8 @@ public class WebApplicationFixture : WebApplicationFactory<Program>, IAsyncLifet
 
     internal CapturingEmailSender EmailSender => this.Services.GetRequiredService<CapturingEmailSender>();
 
+    internal string ConnectionString => _postgresContainer.GetConnectionString();
+
     public async Task InitializeAsync()
     {
         await _postgresContainer.StartAsync();

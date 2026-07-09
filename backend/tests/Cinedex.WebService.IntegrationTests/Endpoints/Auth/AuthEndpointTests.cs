@@ -9,6 +9,7 @@ using Cinedex.Application.Email;
 using Cinedex.WebService.Contracts.Requests;
 using Cinedex.WebService.Contracts.Responses;
 using Cinedex.WebService.IntegrationTests.Constants;
+using Npgsql;
 
 namespace Cinedex.WebService.IntegrationTests.Auth;
 
@@ -40,6 +41,43 @@ public sealed class AuthEndpointTests(WebApplicationFixture fixture)
         var second = await RegisterAsync(email, "seconduser", Password);
 
         Assert.Equal(HttpStatusCode.BadRequest, second.StatusCode);
+    }
+
+    [Fact]
+    public async Task Register_WithDuplicateEmailConcurrently_AllowsOnlyOneAccount()
+    {
+        var email = NewEmail();
+
+        var responses = await Task.WhenAll(
+            Enumerable.Range(0, 8)
+                .Select(index => RegisterAsync(email, $"duplicate{index}", Password)));
+
+        Assert.Single(responses, response => response.StatusCode == HttpStatusCode.Created);
+        Assert.Equal(responses.Length - 1, responses.Count(response => response.StatusCode == HttpStatusCode.BadRequest));
+    }
+
+    [Fact]
+    public async Task AuthDatabase_EmailIndex_IsUnique()
+    {
+        await using var connection = new NpgsqlConnection(fixture.ConnectionString);
+        await connection.OpenAsync();
+
+        await using var command = new NpgsqlCommand(
+            """
+            SELECT i.indisunique
+            FROM pg_class AS t
+            JOIN pg_namespace AS n ON n.oid = t.relnamespace
+            JOIN pg_index AS i ON i.indrelid = t.oid
+            JOIN pg_class AS ix ON ix.oid = i.indexrelid
+            WHERE n.nspname = 'auth'
+              AND t.relname = 'AspNetUsers'
+              AND ix.relname = 'EmailIndex';
+            """,
+            connection);
+
+        var isUnique = await command.ExecuteScalarAsync();
+
+        Assert.True(Assert.IsType<bool>(isUnique));
     }
 
     [Fact]

@@ -107,10 +107,15 @@ weakens it.
 
 Issued by `JwtTokenService.CreateAccessToken`, signed HS256 with `Jwt:SigningKey`:
 
-`sub` (user id) · `email` · `jti` (Guid v7) · `ClaimTypes.NameIdentifier` · `ClaimTypes.Name`
+`sub` (user id) · `email` · `jti` (Guid v7) · `ClaimTypes.NameIdentifier` · `ClaimTypes.Name` ·
+`ClaimTypes.Role` (repeatable — one entry per assigned role)
+
+Roles are re-read from Identity on both issue and refresh, so a role change propagates on the next
+refresh — the lag is bounded by the access-token lifetime (15 min).
 
 Validation (`AuthenticationExtensions.AddJwtAuthentication`) checks issuer, audience, signing key,
-and lifetime, with a 30-second clock skew.
+and lifetime, with a 30-second clock skew. The JwtBearer default `RoleClaimType` is `ClaimTypes.Role`,
+so `[Authorize(Roles = ...)]` reads these claims without further configuration.
 
 ### Why refresh tokens are hashed
 
@@ -129,9 +134,19 @@ All Identity and refresh-token tables live in a dedicated **`auth` schema**, set
 `__EFMigrationsHistory` table inside the `auth` schema so the two migration histories cannot
 collide.
 
-`AuthDbContext` derives from `IdentityUserContext<ApplicationUser, Guid>` rather than
-`IdentityDbContext`, so **no role tables are created**. Adding roles later means switching the base
-class and generating a migration.
+`AuthDbContext` derives from `IdentityDbContext<ApplicationUser, IdentityRole<Guid>, Guid>`, so the
+usual Identity role tables (`AspNetRoles`, `AspNetUserRoles`, `AspNetRoleClaims`) live in the `auth`
+schema alongside users. Three roles are seeded via `HasData` in `RoleConfiguration` and applied by the
+`AddIdentityRoles` migration:
+
+| Role | Purpose |
+|---|---|
+| `User` | Baseline role. Every account created by `POST /auth/register` is placed here automatically by `IdentityService.RegisterAsync`. |
+| `Moderator` | Reserved for future moderation surfaces (e.g., Title/Genre curation). No endpoint uses it yet. |
+| `Administrator` | Full access. Bootstrapping the first Administrator is manual — assign via SQL against `auth."AspNetUserRoles"`, or add a config-driven seed later. |
+
+Role names live as constants in `RoleNames`; reference them from `[Authorize(Roles = ...)]` rather
+than string literals.
 
 ### Identity options
 
@@ -202,8 +217,10 @@ build on this.
   the chain — so a stolen-then-rotated token cannot be detected as a compromise.
 - **No email delivery.** `IEmailSender`'s only implementation is `NoOpEmailSender` in the
   `Cinedex.Email.Smtp` adapter (see above); a MailKit `SmtpEmailSender` is the planned replacement.
-- **No roles or policies.** `AddAuthorization()` is registered with no policies; Genre and Title
-  endpoints are anonymous.
+- **No endpoint yet enforces roles.** The `User`, `Moderator`, and `Administrator` roles are seeded
+  and the access token carries them, but no endpoint is decorated with `[Authorize(Roles = ...)]`
+  yet — Genre and Title endpoints remain anonymous. Bootstrapping the first `Administrator` is also
+  manual (SQL against `auth."AspNetUserRoles"`); no `Auth:BootstrapAdminEmail` seed exists.
 - **No CORS configuration or reverse proxy yet.** The SPA is served from `:9000` and the API from
   `:8080`. A cross-origin `fetch` from the frontend will fail until either CORS with credentials is
   configured or the UI is served through a reverse proxy. The reverse proxy is the better fix here:

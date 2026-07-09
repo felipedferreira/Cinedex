@@ -1,5 +1,6 @@
 using Cinedex.Application.Abstractions;
 using Cinedex.Application.Exceptions;
+using Cinedex.Auth.Identity.Constants;
 using Cinedex.Auth.Identity.Entities;
 using Cinedex.Domain.UserAggregate;
 using FluentValidation;
@@ -23,6 +24,15 @@ internal sealed class IdentityService(UserManager<ApplicationUser> userManager) 
         if (!result.Succeeded)
         {
             throw ToValidationException(result);
+        }
+
+        // Every new account is placed in the baseline User role. A failure here means the user was
+        // created but is roleless — a server-side inconsistency, not a validation problem.
+        var roleResult = await userManager.AddToRoleAsync(applicationUser, RoleNames.User);
+        if (!roleResult.Succeeded)
+        {
+            var errors = string.Join("; ", roleResult.Errors.Select(error => error.Description));
+            throw new InvalidOperationException($"Failed to assign default role to new user: {errors}");
         }
 
         return applicationUser.ToDomainUser();

@@ -8,25 +8,33 @@ using Cinedex.Application.Exceptions;
 using Cinedex.Auth.Identity.Entities;
 using Cinedex.Auth.Identity.Options;
 using Cinedex.Domain.UserAggregate;
+using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Options;
 using Microsoft.IdentityModel.Tokens;
 
 namespace Cinedex.Auth.Identity.Services;
 
-internal sealed class JwtTokenService(AuthDbContext dbContext, IOptions<JwtOptions> options) : ITokenService
+internal sealed class JwtTokenService(
+    AuthDbContext dbContext,
+    UserManager<ApplicationUser> userManager,
+    IOptions<JwtOptions> options) : ITokenService
 {
     private readonly JwtOptions _options = options.Value;
 
     public async Task<AuthTokensDto> IssueTokensAsync(User user, CancellationToken cancellationToken)
     {
+        var applicationUser = await userManager.FindByIdAsync(user.Id.ToString())
+            ?? throw new InvalidCredentialsException("The user could not be found.");
+        var roles = await userManager.GetRolesAsync(applicationUser);
+
         var rawRefreshToken = GenerateRefreshToken();
         var refreshEntity = CreateRefreshTokenEntity(user.Id, rawRefreshToken);
 
         dbContext.RefreshTokens.Add(refreshEntity);
         await dbContext.SaveChangesAsync(cancellationToken);
 
-        return CreateTokenResponse(user, rawRefreshToken, refreshEntity.ExpiresAtUtc);
+        return CreateTokenResponse(user, roles, rawRefreshToken, refreshEntity.ExpiresAtUtc);
     }
 
     public async Task<AuthTokensDto> RefreshAsync(string refreshToken, CancellationToken cancellationToken)
@@ -50,6 +58,7 @@ internal sealed class JwtTokenService(AuthDbContext dbContext, IOptions<JwtOptio
         }
 
         var domainUser = applicationUser.ToDomainUser();
+        var roles = await userManager.GetRolesAsync(applicationUser);
         var rawRefreshToken = GenerateRefreshToken();
         var refreshEntity = CreateRefreshTokenEntity(domainUser.Id, rawRefreshToken);
 
@@ -59,7 +68,7 @@ internal sealed class JwtTokenService(AuthDbContext dbContext, IOptions<JwtOptio
         dbContext.RefreshTokens.Add(refreshEntity);
         await dbContext.SaveChangesAsync(cancellationToken);
 
-        return CreateTokenResponse(domainUser, rawRefreshToken, refreshEntity.ExpiresAtUtc);
+        return CreateTokenResponse(domainUser, roles, rawRefreshToken, refreshEntity.ExpiresAtUtc);
     }
 
     public async Task RevokeRefreshTokenAsync(string refreshToken, CancellationToken cancellationToken)
@@ -101,16 +110,16 @@ internal sealed class JwtTokenService(AuthDbContext dbContext, IOptions<JwtOptio
 
     // Builds the client-facing response, which carries the raw token. The refresh expiry is taken
     // from the persisted entity so the two can never disagree on the token's lifetime.
-    private AuthTokensDto CreateTokenResponse(User user, string rawRefreshToken, DateTime refreshTokenExpiresAtUtc)
+    private AuthTokensDto CreateTokenResponse(User user, IList<string> roles, string rawRefreshToken, DateTime refreshTokenExpiresAtUtc)
     {
         var now = DateTime.UtcNow;
         var accessExpiresAt = now.AddMinutes(_options.AccessTokenMinutes);
-        var accessToken = CreateAccessToken(user, now, accessExpiresAt);
+        var accessToken = CreateAccessToken(user, roles, now, accessExpiresAt);
 
         return new AuthTokensDto(accessToken, accessExpiresAt, rawRefreshToken, refreshTokenExpiresAtUtc);
     }
 
-    private string CreateAccessToken(User user, DateTime issuedAt, DateTime expiresAt)
+    private string CreateAccessToken(User user, IList<string> roles, DateTime issuedAt, DateTime expiresAt)
     {
         var signingKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(_options.SigningKey));
         var credentials = new SigningCredentials(signingKey, SecurityAlgorithms.HmacSha256);
@@ -123,6 +132,13 @@ internal sealed class JwtTokenService(AuthDbContext dbContext, IOptions<JwtOptio
             new(ClaimTypes.NameIdentifier, user.Id.ToString()),
             new(ClaimTypes.Name, user.UserName),
         };
+
+        // One ClaimTypes.Role per assignment; the default JwtBearer RoleClaimType is ClaimTypes.Role,
+        // so [Authorize(Roles = ...)] reads these directly.
+        foreach (var role in roles)
+        {
+            claims.Add(new Claim(ClaimTypes.Role, role));
+        }
 
         var token = new JwtSecurityToken(
             issuer: _options.Issuer,

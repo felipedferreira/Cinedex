@@ -1,6 +1,8 @@
+using System.IdentityModel.Tokens.Jwt;
 using System.Net;
 using System.Net.Http.Headers;
 using System.Net.Http.Json;
+using System.Security.Claims;
 using System.Text.Json;
 using System.Text.RegularExpressions;
 using Cinedex.Application.Email;
@@ -101,6 +103,23 @@ public sealed class AuthEndpointTests(WebApplicationFixture fixture)
         Assert.False(string.IsNullOrWhiteSpace(body.AccessToken));
         Assert.True(body.ExpiresAtUtc > DateTime.UtcNow);
         Assert.False(string.IsNullOrWhiteSpace(refreshCookie));
+    }
+
+    [Fact]
+    public async Task Login_AccessTokenCarriesUserRoleClaim()
+    {
+        var email = NewEmail();
+        await RegisterAsync(email, "roleuser", Password);
+
+        var (body, _) = await LoginAsync(email, Password);
+
+        var jwt = new JwtSecurityTokenHandler().ReadJwtToken(body.AccessToken);
+        var roles = jwt.Claims
+            .Where(claim => claim.Type == ClaimTypes.Role || claim.Type == "role")
+            .Select(claim => claim.Value)
+            .ToList();
+
+        Assert.Contains("User", roles);
     }
 
     [Fact]

@@ -15,11 +15,8 @@ internal sealed class RegisterUserValidator : AbstractValidator<RegisterUserComm
             .NotEmpty()
             .MaximumLength(256);
 
-        // Password strength (length + complexity) is owned entirely by ASP.NET Core Identity. Here
-        // we only guard the input shape: non-empty, and bounded so an oversized value never reaches
-        // the password hasher.
-        RuleFor(command => command.Password)
-            .NotEmpty()
-            .MaximumLength(256);
+        // Password strength is owned by Identity (see PasswordPolicyConstants). Only the input
+        // shape is guarded here, via the shared rule in PasswordRules.
+        RuleFor(command => command.Password).PasswordInputGuard();
     }
 }

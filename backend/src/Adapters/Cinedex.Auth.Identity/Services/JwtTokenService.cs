@@ -40,11 +40,14 @@ internal sealed class JwtTokenService(
     public async Task<AuthTokensDto> RefreshAsync(string refreshToken, CancellationToken cancellationToken)
     {
         var tokenHash = HashToken(refreshToken);
+        var now = DateTime.UtcNow;
 
+        await using var transaction = await dbContext.Database.BeginTransactionAsync(cancellationToken);
         var existing = await dbContext.RefreshTokens
+            .AsNoTracking()
             .FirstOrDefaultAsync(token => token.TokenHash == tokenHash, cancellationToken);
 
-        if (existing is null || existing.RevokedAtUtc is not null || existing.ExpiresAtUtc <= DateTime.UtcNow)
+        if (existing is null || existing.ExpiresAtUtc <= now)
         {
             throw new InvalidCredentialsException("The refresh token is invalid or has expired.");
         }
@@ -62,11 +65,26 @@ internal sealed class JwtTokenService(
         var rawRefreshToken = GenerateRefreshToken();
         var refreshEntity = CreateRefreshTokenEntity(domainUser.Id, rawRefreshToken);
 
-        // Rotate: revoke the presented token and persist its replacement atomically.
-        existing.RevokedAtUtc = DateTime.UtcNow;
-        existing.ReplacedByTokenHash = refreshEntity.TokenHash;
+        // Rotate with a conditional update so concurrent refreshes cannot both win the same token.
+        var revokedCount = await dbContext.RefreshTokens
+            .Where(token =>
+                token.TokenHash == tokenHash &&
+                token.RevokedAtUtc == null &&
+                token.ExpiresAtUtc > now)
+            .ExecuteUpdateAsync(
+                setters => setters
+                    .SetProperty(token => token.RevokedAtUtc, now)
+                    .SetProperty(token => token.ReplacedByTokenHash, refreshEntity.TokenHash),
+                cancellationToken);
+
+        if (revokedCount != 1)
+        {
+            throw new InvalidCredentialsException("The refresh token is invalid or has expired.");
+        }
+
         dbContext.RefreshTokens.Add(refreshEntity);
         await dbContext.SaveChangesAsync(cancellationToken);
+        await transaction.CommitAsync(cancellationToken);
 
         return CreateTokenResponse(domainUser, roles, rawRefreshToken, refreshEntity.ExpiresAtUtc);
     }

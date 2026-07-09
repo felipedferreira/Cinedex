@@ -202,6 +202,26 @@ public sealed class AuthEndpointTests(WebApplicationFixture fixture)
     }
 
     [Fact]
+    public async Task Refresh_WithSameCookieConcurrently_AllowsOnlyOneRotation()
+    {
+        var email = NewEmail();
+        await RegisterAsync(email, "concurrentrefresh", Password);
+        var (_, refreshCookie) = await LoginAsync(email, Password);
+
+        var responses = await Task.WhenAll(
+            Enumerable.Range(0, 8)
+                .Select(_ => PostAsync(TestRouteConstants.Auth.RefreshEndpoint, refreshCookie)));
+
+        Assert.Single(responses, response => response.StatusCode == HttpStatusCode.OK);
+        Assert.Equal(responses.Length - 1, responses.Count(response => response.StatusCode == HttpStatusCode.Unauthorized));
+
+        var rotatedCookie = Assert.Single(
+            responses.Select(ReadRefreshCookieValue),
+            value => !string.IsNullOrWhiteSpace(value));
+        Assert.NotEqual(refreshCookie, rotatedCookie);
+    }
+
+    [Fact]
     public async Task Refresh_WithoutCookie_Returns401()
     {
         var response = await PostAsync(TestRouteConstants.Auth.RefreshEndpoint, refreshCookie: null);

@@ -1,3 +1,4 @@
+using Cinedex.Application.Validation;
 using FluentValidation;
 
 namespace Cinedex.Application.Auth.Login;
@@ -6,14 +7,13 @@ internal sealed class LoginValidator : AbstractValidator<LoginCommand>
 {
     public LoginValidator()
     {
-        // Explicit messages: the login 400 body carries these strings to the client, so the wording
-        // is a contract. Deliberately generic (no format hints, no "at least N characters") — login
-        // must never leak information about what a valid credential looks like.
+        // The messages here surface in the 400 body under errors.email / errors.password. Login
+        // deliberately does NOT check length or complexity — those would leak credential shape.
         RuleFor(command => command.Email)
-            .NotEmpty().WithMessage("Email must not be empty.")
-            .EmailAddress().WithMessage("Email must be a valid email address.");
+            .NotEmpty().WithMessage(ValidationMessages.EmailMustNotBeEmpty)
+            .EmailAddress().WithMessage(ValidationMessages.EmailMustBeValid);
 
         RuleFor(command => command.Password)
-            .NotEmpty().WithMessage("Password must not be empty.");
+            .NotEmpty().WithMessage(ValidationMessages.PasswordMustNotBeEmpty);
     }
 }

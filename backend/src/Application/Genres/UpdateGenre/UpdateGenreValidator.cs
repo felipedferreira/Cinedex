@@ -1,3 +1,4 @@
+using Cinedex.Application.Validation;
 using FluentValidation;
 
 namespace Cinedex.Application.Genres.UpdateGenre;
@@ -7,10 +8,10 @@ internal sealed class UpdateGenreValidator : AbstractValidator<UpdateGenreComman
     public UpdateGenreValidator()
     {
         RuleFor(command => command.Id)
-            .NotEmpty();
+            .NotEmpty().WithMessage(ValidationMessages.IdMustNotBeEmpty);
 
         RuleFor(command => command.Name)
-            .NotEmpty()
-            .MaximumLength(100);
+            .NotEmpty().WithMessage(ValidationMessages.GenreNameMustNotBeEmpty)
+            .MaximumLength(100).WithMessage(ValidationMessages.GenreNameMustNotExceedLength);
     }
 }

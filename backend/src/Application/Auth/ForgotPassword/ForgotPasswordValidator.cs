@@ -1,3 +1,4 @@
+using Cinedex.Application.Validation;
 using FluentValidation;
 
 namespace Cinedex.Application.Auth.ForgotPassword;
@@ -7,7 +8,7 @@ internal sealed class ForgotPasswordValidator : AbstractValidator<ForgotPassword
     public ForgotPasswordValidator()
     {
         RuleFor(command => command.Email)
-            .NotEmpty()
-            .EmailAddress();
+            .NotEmpty().WithMessage(ValidationMessages.EmailMustNotBeEmpty)
+            .EmailAddress().WithMessage(ValidationMessages.EmailMustBeValid);
     }
 }

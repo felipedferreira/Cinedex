@@ -16,7 +16,7 @@ ports. The domain and application layers never reference ASP.NET Core Identity.
 | Adapter | `Cinedex.Auth.Identity` | Implements `IIdentityService` and `ITokenService`: ASP.NET Core Identity for accounts, JWT for tokens, EF Core for hashed refresh-token storage. `ApplicationUser : IdentityUser<Guid>` maps to the domain `User`. |
 | Adapter | `Cinedex.Email.Smtp` | Implements `IEmailSender`. Email delivery is a messaging concern, not authentication, so it lives in its own adapter. Currently a no-op placeholder; a MailKit `SmtpEmailSender` is the planned replacement. |
 | Presentation | `Extensions/AuthenticationExtensions` | JWT bearer validation, authorization middleware. |
-| Presentation | `Endpoints/Auth/RefreshTokenCookie` | Reads, sets, and clears the HttpOnly refresh-token cookie. Keeps the cookie a transport detail the Application layer never sees. |
+| Presentation | `Http/RefreshTokenCookie` | Reads, sets, and clears the HttpOnly refresh-token cookie. Keeps the cookie a transport detail the Application layer never sees. |
 
 ## Endpoints
 

@@ -1,6 +1,6 @@
 using Cinedex.WebService.Constants;
 
-namespace Cinedex.WebService.Endpoints.Auth;
+namespace Cinedex.WebService.Http;
 
 /// <summary>
 /// Reads, writes and clears the refresh-token cookie. The raw refresh token never appears in a

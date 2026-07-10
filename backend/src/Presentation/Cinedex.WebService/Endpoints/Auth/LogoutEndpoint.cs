@@ -1,5 +1,6 @@
 using Cinedex.Application.Auth.Logout;
 using Cinedex.WebService.Constants;
+using Cinedex.WebService.Http;
 using FastEndpoints;
 
 namespace Cinedex.WebService.Endpoints.Auth;

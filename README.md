@@ -34,12 +34,14 @@ docker compose up --build
 > [Migrations](backend/README.md#migrations).
 
 Access the application:
-- **UI:** http://localhost:9000
-- **API:** http://localhost:8080
-- **API Documentation:** http://127.0.0.1:8080/movies-svc/api-docs/v1 (Scalar UI)
-- **OpenAPI Spec:** http://127.0.0.1:8080/movies-svc/openapi/v1.json
+- **UI:** https://localhost:9000
+- **API:** https://localhost:9000/movies-svc
+- **API Documentation:** https://localhost:9000/movies-svc/api-docs/v1 (Scalar UI)
+- **OpenAPI Spec:** https://localhost:9000/movies-svc/openapi/v1.json
 - **Seq (logs & traces):** http://localhost:5341
 - **PostgreSQL:** localhost:5432
+
+The local UI/proxy uses a self-signed TLS certificate, so your browser may ask you to trust it on first visit.
 
 For local development without Docker, and for first-run Seq setup, see the
 [backend README](backend/README.md).

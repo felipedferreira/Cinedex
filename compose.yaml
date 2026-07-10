@@ -49,9 +49,10 @@ services:
       context: ./backend
       dockerfile: src/Presentation/Cinedex.WebService/Dockerfile
     container_name: movies-web
-    ports:
-      - "8080:8080"
-      - "8081:8081"
+    expose:
+      # The API is reached through the HTTPS frontend reverse proxy so Secure auth cookies
+      # are set on an HTTPS response and stay same-origin with the SPA.
+      - "8080"
     depends_on:
       postgres:
         condition: service_healthy
@@ -74,7 +75,7 @@ services:
       context: ./frontend/cinadex-ui
     container_name: cinadex-ui
     ports:
-      - "127.0.0.1:9000:80"
+      - "127.0.0.1:9000:443"
     depends_on:
       - movies.webservice
 

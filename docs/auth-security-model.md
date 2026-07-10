@@ -221,10 +221,9 @@ build on this.
   and the access token carries them, but no endpoint is decorated with `[Authorize(Roles = ...)]`
   yet — Genre and Title endpoints remain anonymous. Bootstrapping the first `Administrator` is also
   manual (SQL against `auth."AspNetUserRoles"`); no `Auth:BootstrapAdminEmail` seed exists.
-- **No CORS configuration or reverse proxy yet.** The SPA is served from `:9000` and the API from
-  `:8080`. A cross-origin `fetch` from the frontend will fail until either CORS with credentials is
-  configured or the UI is served through a reverse proxy. The reverse proxy is the better fix here:
-  it makes the two same-origin, which satisfies both CORS and the `SameSite=Strict` refresh cookie
-  at once (see [Deployment constraints](#deployment-constraints)). The SPA has no code that calls
-  the API today, so nothing exercises this yet.
+- **No CORS configuration.** Docker Compose serves the SPA and API through the HTTPS Nginx reverse
+  proxy at `https://localhost:9000`, and `npm run dev` serves HTTPS with a Vite `/movies-svc`
+  proxy to the backend's HTTPS development profile. Browser auth flows are same-origin in both
+  local modes and do not need CORS. Non-local deployments that split the API and SPA origins must
+  add credentialed CORS or provide an equivalent reverse proxy (see [Deployment constraints](#deployment-constraints)).
 - **No email confirmation, external logins, or 2FA.**

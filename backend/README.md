@@ -34,7 +34,7 @@ refresh token; protected endpoints are guarded by JWT bearer middleware.
 > ⚠️ `Jwt:SigningKey` in `appsettings.json` is a **dev-only placeholder**. Override it per
 > environment via `Jwt__SigningKey` or User Secrets.
 
-Full details, including known gaps (no roles, no email delivery, no CORS), are in the
+Full details, including known gaps (no roles, no email delivery, no refresh-token reuse detection), are in the
 **[Auth & Security Model](../docs/auth-security-model.md)**.
 
 ## 🗄️ Database
@@ -52,7 +52,9 @@ docker compose up            # from the repository root, where compose.yaml live
 
 This starts:
 - **PostgreSQL 17 Alpine** on port `5432`
-- **Movies WebService** on ports `8080` (HTTP) and `8081` (HTTPS)
+- **Movies WebService** on Docker-network port `8080` only
+- **Cinedex UI / reverse proxy** on `https://localhost:9000`
+- Browser auth flows should use the HTTPS proxy URL so `Secure` refresh cookies are accepted and same-origin with the SPA.
 - Data persistence via Docker volume
 
 The database is created empty. Apply migrations yourself before the API is usable — see
@@ -209,19 +211,22 @@ and a [Seq](https://datalust.co/seq) instance for logs and traces.
    ```
 
 Access the application:
-- **API:** http://localhost:8080
-- **API Documentation:** http://127.0.0.1:8080/movies-svc/api-docs/v1 (Scalar UI)
-- **OpenAPI Spec:** http://127.0.0.1:8080/movies-svc/openapi/v1.json
+- **UI:** https://localhost:9000
+- **API:** https://localhost:9000/movies-svc
+- **API Documentation:** https://localhost:9000/movies-svc/api-docs/v1 (Scalar UI)
+- **OpenAPI Spec:** https://localhost:9000/movies-svc/openapi/v1.json
 - **Seq (logs & traces):** http://localhost:5341 — first login is `admin` with `SEQ_ADMIN_PASSWORD`; after the required password change, use the password you chose
 - **PostgreSQL:** localhost:5432
+
+The local UI/proxy certificate is self-signed, so your browser or `curl` may require an explicit trust/`-k` choice during development.
 
 ### Services
 
 | Service | Image | Port | Purpose |
 |---------|-------|------|---------|
 | `postgres` | postgres:17-alpine | 5432 | PostgreSQL database with persistent storage |
-| `movies.webservice` | movies.webservice | 8080/8081 | ASP.NET Core web API |
-| `cinadex-ui` | cinadex-ui | 9000 | React SPA frontend (Nginx) |
+| `movies.webservice` | movies.webservice | 8080 internal | ASP.NET Core web API |
+| `cinadex-ui` | cinadex-ui | 9000 HTTPS | React SPA frontend and reverse proxy (Nginx) |
 | `seq` | datalust/seq | 5341 | Structured logs + distributed traces (OpenTelemetry/OTLP) |
 
 ### Features
@@ -258,16 +263,16 @@ exception detail so the endpoints don't leak internal information.
 
 ```bash
 # Liveness
-curl -s http://localhost:8080/movies-svc/health/live
+curl -k -s https://localhost:9000/movies-svc/health/live
 # {"status":"Healthy","checks":[]}
 
 # Readiness (includes the Postgres connectivity check)
-curl -s http://localhost:8080/movies-svc/health/ready
+curl -k -s https://localhost:9000/movies-svc/health/ready
 # {"status":"Healthy","checks":[{"name":"postgres","status":"Healthy"}]}
 ```
 
-The Compose container healthcheck polls `/health/live` (see `compose.yaml`); `cinadex-ui` waits for
-the web service to report healthy before starting.
+The public Compose path goes through the HTTPS `cinadex-ui` reverse proxy; use `-k` with curl unless
+you have trusted the local self-signed certificate.
 
 ## 📈 Observability (Seq)
 

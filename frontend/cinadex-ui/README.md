@@ -1,6 +1,6 @@
 # cinadex-ui
 
-The standalone SPA for the Movies project. It consumes the backend's OpenAPI spec (`http://localhost:8080/openapi/v1.json`).
+The standalone SPA for the Movies project. In Docker Compose, Nginx serves it and reverse-proxies the backend OpenAPI spec at `https://localhost:9000/movies-svc/openapi/v1.json`.
 
 ## 📁 Layout
 
@@ -35,7 +35,11 @@ npm install     # install dependencies
 npm run dev     # start the dev server with HMR
 ```
 
-The dev server runs on http://localhost:9000 (configured in [`vite.config.ts`](vite.config.ts)).
+The dev server runs on https://localhost:9000 (configured in [`vite.config.ts`](vite.config.ts)).
+It uses a local HTTPS certificate and proxies `/movies-svc` to the backend's HTTPS dev profile at
+`https://localhost:7201`, so auth cookies use the same secure, same-origin shape as Docker Compose.
+Override the backend target with `VITE_API_PROXY_TARGET` if your API runs somewhere else, for example
+`VITE_API_PROXY_TARGET=https://localhost:7443 npm run dev`.
 
 ## 📜 Scripts
 
@@ -111,5 +115,9 @@ The following reporters are configured in [`vite.config.ts`](vite.config.ts) so 
 
 The SPA consumes the backend API. With the backend running (see the [root README](../../README.md)), the API is available at:
 
-- **API:** http://localhost:8080
-- **OpenAPI Spec:** http://localhost:8080/openapi/v1.json
+- **npm dev server:** https://localhost:9000/movies-svc
+- **npm dev OpenAPI Spec:** https://localhost:9000/movies-svc/openapi/v1.json
+- **Docker Compose:** https://localhost:9000/movies-svc
+- **Docker Compose OpenAPI Spec:** https://localhost:9000/movies-svc/openapi/v1.json
+
+In both local modes, browser code should call the API with relative paths such as `/movies-svc/auth/login`.

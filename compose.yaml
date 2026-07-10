@@ -61,18 +61,12 @@ services:
       ASPNETCORE_ENVIRONMENT: Production
       Features__ApiDocumentationEnabled: "true"
       ConnectionStrings__DefaultConnection: "${DB_CONNECTION_STRING}"
-      Kestrel__Endpoints__Http__Url: "http://0:0:0:0:8080"
+      Kestrel__Endpoints__Http__Url: "http://0.0.0.0:8080"
       # OpenTelemetry -> Seq OTLP ingestion (Seq listens on container port 80)
       OTEL_EXPORTER_OTLP_ENDPOINT: "http://seq/ingest/otlp"
       OTEL_EXPORTER_OTLP_PROTOCOL: "http/protobuf"
       OTEL_EXPORTER_OTLP_HEADERS: "X-Seq-ApiKey=${SEQ_API_KEY}"
       OTEL_SERVICE_NAME: "Cinedex.WebService"
-    healthcheck:
-      test: ["CMD-SHELL", "curl -sf http://localhost:8080/movies-svc/health/live || exit 1"]
-      interval: 30s
-      timeout: 5s
-      retries: 3
-      start_period: 15s
 
   cinadex-ui:
     image: cinadex-ui
@@ -82,8 +76,7 @@ services:
     ports:
       - "127.0.0.1:9000:80"
     depends_on:
-      movies.webservice:
-        condition: service_healthy
+      - movies.webservice
 
 volumes:
   postgres_data:

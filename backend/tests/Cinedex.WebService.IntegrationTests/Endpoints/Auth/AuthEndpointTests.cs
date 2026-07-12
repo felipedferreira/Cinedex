@@ -328,6 +328,7 @@ public sealed class AuthEndpointTests(WebApplicationFixture fixture)
     {
         var email = NewEmail();
         await RegisterAsync(email, "resetuser", Password);
+        var (_, refreshCookie) = await LoginAsync(email, Password);
 
         var forgot = await fixture.CookielessClient.PostAsJsonAsync(
             TestRouteConstants.Auth.ForgotPasswordEndpoint,
@@ -345,6 +346,10 @@ public sealed class AuthEndpointTests(WebApplicationFixture fixture)
             TestRouteConstants.Auth.ResetPasswordEndpoint,
             new ResetPasswordRequest { Email = email, ResetToken = resetToken, NewPassword = NewPassword });
         Assert.Equal(HttpStatusCode.NoContent, reset.StatusCode);
+
+        // Password recovery revokes refresh tokens issued before the reset.
+        var refresh = await PostAsync(TestRouteConstants.Auth.RefreshEndpoint, refreshCookie);
+        Assert.Equal(HttpStatusCode.Unauthorized, refresh.StatusCode);
 
         // New password works, old password is rejected.
         var (loginNew, _) = await LoginAsync(email, NewPassword);

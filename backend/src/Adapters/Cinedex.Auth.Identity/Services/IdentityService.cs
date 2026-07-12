@@ -11,7 +11,9 @@ using Npgsql;
 
 namespace Cinedex.Auth.Identity.Services;
 
-internal sealed class IdentityService(UserManager<ApplicationUser> userManager) : IIdentityService
+internal sealed class IdentityService(
+    UserManager<ApplicationUser> userManager,
+    AuthDbContext dbContext) : IIdentityService
 {
     public async Task<User> RegisterAsync(string email, string userName, string password, CancellationToken cancellationToken)
     {
@@ -93,11 +95,21 @@ internal sealed class IdentityService(UserManager<ApplicationUser> userManager) 
             throw new ValidationException([new ValidationFailure("ResetToken", "The password reset request is invalid.")]);
         }
 
+        await using var transaction = await dbContext.Database.BeginTransactionAsync(cancellationToken);
         var result = await userManager.ResetPasswordAsync(applicationUser, resetToken, newPassword);
         if (!result.Succeeded)
         {
             throw ToValidationException(result);
         }
+
+        var revokedAtUtc = DateTime.UtcNow;
+        await dbContext.RefreshTokens
+            .Where(token => token.UserId == applicationUser.Id && token.RevokedAtUtc == null)
+            .ExecuteUpdateAsync(
+                setters => setters.SetProperty(token => token.RevokedAtUtc, revokedAtUtc),
+                cancellationToken);
+
+        await transaction.CommitAsync(cancellationToken);
     }
 
     private static bool IsUniqueEmailViolation(DbUpdateException exception) =>

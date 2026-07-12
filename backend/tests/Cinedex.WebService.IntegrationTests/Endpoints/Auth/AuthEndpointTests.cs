@@ -57,6 +57,26 @@ public sealed class AuthEndpointTests(WebApplicationFixture fixture)
     }
 
     [Fact]
+    public async Task Register_WhenDefaultRoleIsMissing_DoesNotPersistUser()
+    {
+        var email = NewEmail();
+        var username = $"missingrole{Guid.NewGuid():N}";
+
+        await DeleteUserRoleAsync();
+        try
+        {
+            var response = await RegisterAsync(email, username, Password);
+
+            Assert.Equal(HttpStatusCode.InternalServerError, response.StatusCode);
+            Assert.Equal(0, await CountUsersByEmailAsync(email));
+        }
+        finally
+        {
+            await RestoreUserRoleAsync();
+        }
+    }
+
+    [Fact]
     public async Task AuthDatabase_EmailIndex_IsUnique()
     {
         await using var connection = new NpgsqlConnection(fixture.ConnectionString);
@@ -413,6 +433,60 @@ public sealed class AuthEndpointTests(WebApplicationFixture fixture)
         var value = setCookie[(RefreshCookieName.Length + 1)..];
         var separator = value.IndexOf(';', StringComparison.Ordinal);
         return separator < 0 ? value : value[..separator];
+    }
+
+    private async Task DeleteUserRoleAsync()
+    {
+        await using var connection = new NpgsqlConnection(fixture.ConnectionString);
+        await connection.OpenAsync();
+
+        await using var command = new NpgsqlCommand(
+            """
+            DELETE FROM auth."AspNetRoles"
+            WHERE "normalizedName" = 'USER';
+            """,
+            connection);
+
+        await command.ExecuteNonQueryAsync();
+    }
+
+    private async Task RestoreUserRoleAsync()
+    {
+        await using var connection = new NpgsqlConnection(fixture.ConnectionString);
+        await connection.OpenAsync();
+
+        await using var command = new NpgsqlCommand(
+            """
+            DELETE FROM auth."AspNetRoles"
+            WHERE "normalizedName" = 'USER';
+
+            INSERT INTO auth."AspNetRoles" (id, "concurrencyStamp", name, "normalizedName")
+            VALUES (
+                'a5f0c1a0-1000-7000-8000-000000000001',
+                'f6b1c2a1-2000-7000-8000-000000000001',
+                'User',
+                'USER');
+            """,
+            connection);
+
+        await command.ExecuteNonQueryAsync();
+    }
+
+    private async Task<long> CountUsersByEmailAsync(string email)
+    {
+        await using var connection = new NpgsqlConnection(fixture.ConnectionString);
+        await connection.OpenAsync();
+
+        await using var command = new NpgsqlCommand(
+            """
+            SELECT COUNT(*)
+            FROM auth."AspNetUsers"
+            WHERE "normalizedEmail" = @email;
+            """,
+            connection);
+        command.Parameters.AddWithValue("email", email.ToUpperInvariant());
+
+        return (long)(await command.ExecuteScalarAsync() ?? 0L);
     }
 
     private Task<HttpResponseMessage> RegisterAsync(string email, string username, string password) =>

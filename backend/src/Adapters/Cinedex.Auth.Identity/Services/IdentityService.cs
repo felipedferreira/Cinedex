@@ -25,6 +25,7 @@ internal sealed class IdentityService(
         };
 
         IdentityResult result;
+        await using var transaction = await dbContext.Database.BeginTransactionAsync(cancellationToken);
         try
         {
             result = await userManager.CreateAsync(applicationUser, password);
@@ -47,6 +48,8 @@ internal sealed class IdentityService(
             var errors = string.Join("; ", roleResult.Errors.Select(error => error.Description));
             throw new InvalidOperationException($"Failed to assign default role to new user: {errors}");
         }
+
+        await transaction.CommitAsync(cancellationToken);
 
         return applicationUser.ToDomainUser();
     }

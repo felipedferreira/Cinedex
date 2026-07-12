@@ -4,7 +4,7 @@
     "docker-compose": {
       "commandName": "DockerCompose",
       "composeLaunchAction": "LaunchBrowser",
-      "composeLaunchUrl": "http://localhost:9000/movies-svc/api-docs/v1",
+      "composeLaunchUrl": "https://localhost:9000/movies-svc/api-docs/v1",
       "dockerComposeFile": "../../../../compose.yaml"
     },
     "https-api-docs": {

@@ -75,7 +75,7 @@ services:
       context: ./frontend/cinadex-ui
     container_name: cinadex-ui
     ports:
-      - "127.0.0.1:9000:80"
+      - "127.0.0.1:9000:443"
     depends_on:
       - movies.webservice
 

@@ -28,8 +28,8 @@ cp .env.example .env       # fill in the Seq values
 docker compose up --build
 ```
 
-- **UI:** http://localhost:9000
-- **API:** http://localhost:8080
+- **UI:** https://localhost:9000
+- **API:** https://localhost:9000/movies-svc
 - **Seq (logs & traces):** http://localhost:5341
 - **PostgreSQL:** localhost:5432
 
@@ -65,7 +65,7 @@ docker compose up --build
    npm ci
    ```
 
-2. Start the dev server (http://localhost:9000):
+2. Start the dev server (https://localhost:9000):
    ```bash
    npm run dev
    ```

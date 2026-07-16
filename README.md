@@ -1,4 +1,4 @@
-# Movies Project
+# Cinedex
 
 [![Build and Test](https://github.com/felipedferreira/Cinedex/actions/workflows/build-and-test.yml/badge.svg)](https://github.com/felipedferreira/Cinedex/actions/workflows/build-and-test.yml)
 
@@ -7,7 +7,7 @@ A full-stack portfolio application for managing movies, crew members, and their 
 ## 📁 Repository Layout
 
 ```
-Movies/
+Cinedex/
 ├── backend/      # .NET solution (Web API, application core, persistence, tests)
 ├── frontend/     # Standalone SPA consuming the backend's OpenAPI spec
 └── compose.yaml  # Orchestrates PostgreSQL, the web service, the frontend, and Seq

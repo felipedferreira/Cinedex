@@ -305,7 +305,7 @@ two `.env` values need preparing once.
 
    **Option A — CLI (`seqcli`):**
    ```bash
-   docker run --rm --network movies_default datalust/seqcli apikey create \
+   docker run --rm --network cinedex_default datalust/seqcli apikey create \
      -t "Movies WebService" --token "<your-SEQ_API_KEY>" --permissions "Ingest" \
      -s http://seq --connect-username admin --connect-password "<your-password>"
    ```
@@ -330,9 +330,13 @@ reset only the Seq volume and start it again:
 
 ```bash
 docker compose down
-docker volume rm movies_seq_data
+docker volume rm cinedex_seq_data
 docker compose up -d seq
 ```
+
+> The `cinedex_` prefix on volume and network names comes from the Compose project name,
+> which Docker derives from the repository folder name. If your checkout folder is named
+> differently, adjust the prefix accordingly (`docker volume ls` shows the real names).
 
 This deletes local Seq logs, API keys, and settings, but leaves the PostgreSQL volume alone.
 

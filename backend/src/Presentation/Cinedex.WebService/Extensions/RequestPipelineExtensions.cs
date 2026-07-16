@@ -124,14 +124,13 @@ public static class RequestPipelineExtensions
         }
 
         app.MapOpenApi();
-        app.MapScalarApiReference(options =>
+        app.MapScalarApiReference("/api-docs", options =>
         {
             options.TagSorter = TagSorter.Alpha;
             options.EnabledClients = [ScalarClient.HttpClient, ScalarClient.Axios, ScalarClient.Fetch];
             options.EnabledTargets = [ScalarTarget.CSharp, ScalarTarget.JavaScript];
             options.Theme = ScalarTheme.Solarized;
-            options.Favicon = "/favicon.ico";
-            options.EndpointPathPrefix = "/api-docs/{documentName}";
+            options.Favicon = $"{ApiConstants.BasePath}/favicon.ico";
             options.Title = "API Documentation - {documentName}";
         });
 

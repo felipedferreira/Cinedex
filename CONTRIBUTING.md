@@ -167,14 +167,14 @@ Version numbers are centralized in `backend/Directory.Build.props`:
 
 ```xml
 <PropertyGroup>
-  <Version>0.4.0</Version>
-  <AssemblyVersion>0.4.0</AssemblyVersion>
-  <FileVersion>0.4.0</FileVersion>
-  <InformationalVersion>0.4.0</InformationalVersion>
+  <Version>0.5.0</Version>
+  <FileVersion>0.5.0</FileVersion>
+  <InformationalVersion>0.5.0</InformationalVersion>
 </PropertyGroup>
 ```
 
-Update all four properties together for consistency.
+Update all three properties together for consistency, and keep them in step with the
+version headings in `CHANGELOG.md`.
 
 ## Code Standards
 

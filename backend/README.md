@@ -92,6 +92,7 @@ cp .env.example .env          # from the repository root
 
 | Variable | Purpose |
 |----------|---------|
+| `DB_PASSWORD` | Password for the `movies_rw` Postgres user. Applied only when the `postgres_data` volume is first initialized; must match the password inside `DB_CONNECTION_STRING`. |
 | `DB_CONNECTION_STRING` | Full Postgres connection string for the web service container (host is the `postgres` service name). |
 | `SEQ_ADMIN_PASSWORD` | First-login password for the Seq UI `admin` user. Seq prompts you to choose the permanent UI password on first login. |
 | `SEQ_API_KEY` | Ingestion API-key token the web service sends to Seq over OTLP (`X-Seq-ApiKey`). |

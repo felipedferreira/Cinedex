@@ -4,14 +4,16 @@ services:
     container_name: movies-db
     environment:
       POSTGRES_USER: movies_rw
-      POSTGRES_PASSWORD: P@ssw0rd!Secure#2024
+      # Read from the git-ignored .env; must match the password in DB_CONNECTION_STRING.
+      # Only used when the postgres_data volume is initialized for the first time.
+      POSTGRES_PASSWORD: "${DB_PASSWORD}"
       POSTGRES_DB: movies
     ports:
       - "5432:5432"
     volumes:
       - postgres_data:/var/lib/postgresql/data
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      test: ["CMD-SHELL", "pg_isready -U movies_rw -d movies"]
       interval: 10s
       timeout: 5s
       retries: 5

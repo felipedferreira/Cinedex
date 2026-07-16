@@ -11,7 +11,6 @@ internal sealed class CreateGenreEndpoint(ICreateGenreHandler handler) : Endpoin
     {
         Post(ApiConstants.Genre.Route);
         Tags(ApiConstants.Genre.Tag);
-        AllowAnonymous();
     }
 
     public override async Task HandleAsync(CreateGenreRequest request, CancellationToken cancellationToken)

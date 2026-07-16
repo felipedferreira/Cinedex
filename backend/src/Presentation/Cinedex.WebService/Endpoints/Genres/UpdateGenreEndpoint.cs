@@ -11,7 +11,6 @@ internal sealed class UpdateGenreEndpoint(IUpdateGenreHandler handler) : Endpoin
     {
         Put(ApiConstants.Genre.RouteById);
         Tags(ApiConstants.Genre.Tag);
-        AllowAnonymous();
     }
 
     public override async Task HandleAsync(UpdateGenreRequest request, CancellationToken cancellationToken)

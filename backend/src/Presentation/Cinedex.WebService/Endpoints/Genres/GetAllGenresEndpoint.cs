@@ -11,7 +11,6 @@ internal sealed class GetAllGenresEndpoint(IListGenresHandler handler) : Endpoin
     {
         Get(ApiConstants.Genre.Route);
         Tags(ApiConstants.Genre.Tag);
-        AllowAnonymous();
     }
 
     public override async Task HandleAsync(CancellationToken cancellationToken)

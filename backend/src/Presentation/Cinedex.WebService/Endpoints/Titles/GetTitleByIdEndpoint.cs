@@ -11,7 +11,6 @@ internal sealed class GetTitleByIdEndpoint(IGetTitleByIdHandler handler) : Endpo
     {
         Get(ApiConstants.Title.RouteById);
         Tags(ApiConstants.Title.Tag);
-        AllowAnonymous();
         Description(b => b.WithName(ApiConstants.Title.GetByIdEndpointName));
     }
 

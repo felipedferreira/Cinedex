@@ -10,7 +10,6 @@ internal sealed class DeleteGenreEndpoint(IDeleteGenreHandler handler) : Endpoin
     {
         Delete(ApiConstants.Genre.RouteById);
         Tags(ApiConstants.Genre.Tag);
-        AllowAnonymous();
     }
 
     public override async Task HandleAsync(CancellationToken cancellationToken)

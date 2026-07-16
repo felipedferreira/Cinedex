@@ -11,7 +11,6 @@ internal sealed class GetGenreByIdEndpoint(IGetGenreByIdHandler handler) : Endpo
     {
         Get(ApiConstants.Genre.RouteById);
         Tags(ApiConstants.Genre.Tag);
-        AllowAnonymous();
         Description(b => b.WithName(ApiConstants.Genre.GetByIdEndpointName));
     }
 

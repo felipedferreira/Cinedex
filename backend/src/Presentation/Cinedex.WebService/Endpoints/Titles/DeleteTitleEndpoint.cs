@@ -10,7 +10,6 @@ internal sealed class DeleteTitleEndpoint(IDeleteTitleHandler handler) : Endpoin
     {
         Delete(ApiConstants.Title.RouteById);
         Tags(ApiConstants.Title.Tag);
-        AllowAnonymous();
     }
 
     public override async Task HandleAsync(CancellationToken cancellationToken)

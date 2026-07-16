@@ -31,8 +31,11 @@ All routes are relative to the `/movies-svc` base path.
 | `POST /movies-svc/auth/password/forgot` | Anonymous | Always `202 Accepted`. |
 | `POST /movies-svc/auth/password/reset` | Anonymous | Reset the password with a valid reset token. `204 No Content`. |
 
-`logout` is the only endpoint that requires a bearer token — every other auth endpoint calls
-`AllowAnonymous()`. The existing Genre and Title endpoints are currently anonymous as well.
+The catalog is members-only: **every Genre and Title endpoint requires a bearer token**, reads and
+writes alike. Those endpoints simply omit `AllowAnonymous()` — FastEndpoints requires an
+authenticated user by default — so the anonymous surface is exactly the five auth endpoints above.
+Anonymous catalog requests receive `401 Unauthorized`
+(pinned by `CatalogAuthorizationTests`).
 
 ## Token lifecycle
 
@@ -218,9 +221,10 @@ build on this.
 - **No email delivery.** `IEmailSender`'s only implementation is `NoOpEmailSender` in the
   `Cinedex.Email.Smtp` adapter (see above); a MailKit `SmtpEmailSender` is the planned replacement.
 - **No endpoint yet enforces roles.** The `User`, `Moderator`, and `Administrator` roles are seeded
-  and the access token carries them, but no endpoint is decorated with `[Authorize(Roles = ...)]`
-  yet — Genre and Title endpoints remain anonymous. Bootstrapping the first `Administrator` is also
-  manual (SQL against `auth."AspNetUserRoles"`); no `Auth:BootstrapAdminEmail` seed exists.
+  and the access token carries them, but no endpoint restricts by role — Genre and Title endpoints
+  require authentication, not a particular role, so any logged-in account can edit the catalog.
+  Bootstrapping the first `Administrator` is also manual (SQL against `auth."AspNetUserRoles"`);
+  no `Auth:BootstrapAdminEmail` seed exists.
 - **No CORS configuration.** Docker Compose serves the SPA and API through the HTTPS Nginx reverse
   proxy at `https://localhost:9000`, and `npm run dev` serves HTTPS with a Vite `/movies-svc`
   proxy to the backend's HTTPS development profile. Browser auth flows are same-origin in both

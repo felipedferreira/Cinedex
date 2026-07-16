@@ -12,7 +12,7 @@ public sealed class GenreEndpointTests(WebApplicationFixture fixture)
     [Fact]
     public async Task GetAllGenres_ReturnsSeededGenres()
     {
-        var response = await fixture.Client.GetFromJsonAsync<GenresResponse>(TestRouteConstants.Genre.Endpoint);
+        var response = await fixture.AuthenticatedClient.GetFromJsonAsync<GenresResponse>(TestRouteConstants.Genre.Endpoint);
 
         Assert.NotNull(response);
         var names = response.Genres.Select(genre => genre.Name).ToList();
@@ -29,7 +29,7 @@ public sealed class GenreEndpointTests(WebApplicationFixture fixture)
             Name = "Noir",
         };
 
-        var createResponse = await fixture.Client.PostAsJsonAsync(TestRouteConstants.Genre.Endpoint, request);
+        var createResponse = await fixture.AuthenticatedClient.PostAsJsonAsync(TestRouteConstants.Genre.Endpoint, request);
         Assert.Equal(HttpStatusCode.Created, createResponse.StatusCode);
 
         Assert.NotNull(createResponse.Headers.Location);
@@ -39,7 +39,7 @@ public sealed class GenreEndpointTests(WebApplicationFixture fixture)
         var idString = locationUri.Substring(TestRouteConstants.Genre.LocationPrefix.Length);
         Assert.True(Guid.TryParse(idString, out var id));
 
-        var fetched = await fixture.Client.GetFromJsonAsync<GenreResponse>($"{TestRouteConstants.Genre.Endpoint}/{id}");
+        var fetched = await fixture.AuthenticatedClient.GetFromJsonAsync<GenreResponse>($"{TestRouteConstants.Genre.Endpoint}/{id}");
         Assert.NotNull(fetched);
         Assert.Equal(request.Name, fetched.Name);
     }
@@ -49,7 +49,7 @@ public sealed class GenreEndpointTests(WebApplicationFixture fixture)
     {
         var request = new CreateGenreRequest { Name = string.Empty };
 
-        var response = await fixture.Client.PostAsJsonAsync(TestRouteConstants.Genre.Endpoint, request);
+        var response = await fixture.AuthenticatedClient.PostAsJsonAsync(TestRouteConstants.Genre.Endpoint, request);
 
         Assert.Equal(HttpStatusCode.BadRequest, response.StatusCode);
     }
@@ -60,10 +60,10 @@ public sealed class GenreEndpointTests(WebApplicationFixture fixture)
         var created = await CreateGenreAsync("Heist");
 
         var update = new UpdateGenreRequest { Name = "Heist Thriller" };
-        var updateResponse = await fixture.Client.PutAsJsonAsync($"{TestRouteConstants.Genre.Endpoint}/{created.Id}", update);
+        var updateResponse = await fixture.AuthenticatedClient.PutAsJsonAsync($"{TestRouteConstants.Genre.Endpoint}/{created.Id}", update);
         Assert.Equal(HttpStatusCode.Accepted, updateResponse.StatusCode);
 
-        var fetched = await fixture.Client.GetFromJsonAsync<GenreResponse>($"{TestRouteConstants.Genre.Endpoint}/{created.Id}");
+        var fetched = await fixture.AuthenticatedClient.GetFromJsonAsync<GenreResponse>($"{TestRouteConstants.Genre.Endpoint}/{created.Id}");
         Assert.NotNull(fetched);
         Assert.Equal("Heist Thriller", fetched.Name);
     }
@@ -73,24 +73,24 @@ public sealed class GenreEndpointTests(WebApplicationFixture fixture)
     {
         var created = await CreateGenreAsync("Disaster");
 
-        var deleteResponse = await fixture.Client.DeleteAsync($"{TestRouteConstants.Genre.Endpoint}/{created.Id}");
+        var deleteResponse = await fixture.AuthenticatedClient.DeleteAsync($"{TestRouteConstants.Genre.Endpoint}/{created.Id}");
         Assert.Equal(HttpStatusCode.NoContent, deleteResponse.StatusCode);
 
-        var getResponse = await fixture.Client.GetAsync($"{TestRouteConstants.Genre.Endpoint}/{created.Id}");
+        var getResponse = await fixture.AuthenticatedClient.GetAsync($"{TestRouteConstants.Genre.Endpoint}/{created.Id}");
         Assert.Equal(HttpStatusCode.NotFound, getResponse.StatusCode);
     }
 
     [Fact]
     public async Task GetGenre_WithUnknownId_Returns404()
     {
-        var response = await fixture.Client.GetAsync($"{TestRouteConstants.Genre.Endpoint}/{Guid.NewGuid()}");
+        var response = await fixture.AuthenticatedClient.GetAsync($"{TestRouteConstants.Genre.Endpoint}/{Guid.NewGuid()}");
 
         Assert.Equal(HttpStatusCode.NotFound, response.StatusCode);
     }
 
     private async Task<GenreResponse> CreateGenreAsync(string name)
     {
-        var createResponse = await fixture.Client.PostAsJsonAsync(TestRouteConstants.Genre.Endpoint, new CreateGenreRequest
+        var createResponse = await fixture.AuthenticatedClient.PostAsJsonAsync(TestRouteConstants.Genre.Endpoint, new CreateGenreRequest
         {
             Name = name,
         });
@@ -100,7 +100,7 @@ public sealed class GenreEndpointTests(WebApplicationFixture fixture)
         var idString = locationUri.Substring(TestRouteConstants.Genre.LocationPrefix.Length);
         var id = Guid.Parse(idString);
 
-        var created = await fixture.Client.GetFromJsonAsync<GenreResponse>($"{TestRouteConstants.Genre.Endpoint}/{id}");
+        var created = await fixture.AuthenticatedClient.GetFromJsonAsync<GenreResponse>($"{TestRouteConstants.Genre.Endpoint}/{id}");
         Assert.NotNull(created);
         return created;
     }

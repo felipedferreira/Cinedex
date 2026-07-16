@@ -1,6 +1,11 @@
+using System.Net.Http.Headers;
+using System.Net.Http.Json;
 using Cinedex.Application.Abstractions;
 using Cinedex.Auth.Identity;
 using Cinedex.Persistence.Postgres;
+using Cinedex.WebService.Contracts.Requests;
+using Cinedex.WebService.Contracts.Responses;
+using Cinedex.WebService.IntegrationTests.Constants;
 using Cinedex.WebService.IntegrationTests.Fakes;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Mvc.Testing;
@@ -26,6 +31,12 @@ public class WebApplicationFixture : WebApplicationFactory<Program>, IAsyncLifet
     /// refresh-token cookie rather than whatever a previous request happened to leave behind.
     /// </summary>
     public HttpClient CookielessClient { get; private set; } = null!;
+
+    /// <summary>
+    /// Gets a client whose default <c>Authorization</c> header carries a bearer token for a
+    /// dedicated fixture user. The catalog is members-only, so catalog tests use this client.
+    /// </summary>
+    public HttpClient AuthenticatedClient { get; private set; } = null!;
 
     internal CapturingEmailSender EmailSender => this.Services.GetRequiredService<CapturingEmailSender>();
 
@@ -53,12 +64,23 @@ public class WebApplicationFixture : WebApplicationFactory<Program>, IAsyncLifet
         await filmDb.Database.MigrateAsync();
 
         await AuthDbInitializer.MigrateAsync(this.Services);
+
+        // Registration needs the seeded roles, so the fixture user is created after migrations.
+        // The 15-minute access-token lifetime comfortably covers a test run.
+        this.AuthenticatedClient = this.CreateClient(new WebApplicationFactoryClientOptions
+        {
+            BaseAddress = new Uri("https://localhost"),
+            HandleCookies = false,
+        });
+        this.AuthenticatedClient.DefaultRequestHeaders.Authorization =
+            new AuthenticationHeaderValue("Bearer", await CreateFixtureUserAccessTokenAsync());
     }
 
     public new async Task DisposeAsync()
     {
         this.Client.Dispose();
         this.CookielessClient.Dispose();
+        this.AuthenticatedClient.Dispose();
         await base.DisposeAsync();
         await _postgresContainer.DisposeAsync();
     }
@@ -80,5 +102,26 @@ public class WebApplicationFixture : WebApplicationFactory<Program>, IAsyncLifet
             services.AddSingleton<CapturingEmailSender>();
             services.AddSingleton<IEmailSender>(sp => sp.GetRequiredService<CapturingEmailSender>());
         });
+    }
+
+    private async Task<string> CreateFixtureUserAccessTokenAsync()
+    {
+        var suffix = Guid.NewGuid().ToString("N");
+        var email = $"fixture-{suffix}@example.com";
+        const string password = "F1xture@Pass!";
+
+        var register = await this.CookielessClient.PostAsJsonAsync(
+            TestRouteConstants.Auth.RegisterEndpoint,
+            new RegisterRequest { Email = email, Username = $"fixture{suffix}", Password = password });
+        register.EnsureSuccessStatusCode();
+
+        var login = await this.CookielessClient.PostAsJsonAsync(
+            TestRouteConstants.Auth.LoginEndpoint,
+            new LoginRequest { Email = email, Password = password });
+        login.EnsureSuccessStatusCode();
+
+        var body = await login.Content.ReadFromJsonAsync<LoginResponse>()
+            ?? throw new InvalidOperationException("Login returned an empty body.");
+        return body.AccessToken;
     }
 }

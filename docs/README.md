@@ -35,5 +35,8 @@ Not yet written. Listed so the gaps are visible rather than forgotten:
   at `/movies-svc/api-docs/v1`.)
 - **Frontend ↔ backend contract** — CORS or reverse proxy, where the access token is stored,
   refresh-on-401 retry semantics.
-- **Domain glossary** — `Title` vs. "Movie", and whether the `movies-svc` / `movies.webservice`
-  naming is intentional legacy.
+- **Domain glossary** — `Title` vs. "Movie". Two naming questions are already decided and
+  just need writing up: the `movies-svc` base path / `movies.webservice` image / `movies`
+  database naming is **intentional legacy and stays** (renaming the base path would be a
+  breaking API change touching the auth cookie path, the reverse proxy, and every client),
+  and the frontend's `cinadex-ui` spelling is **deliberate**, not a typo.

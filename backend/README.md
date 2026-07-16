@@ -14,7 +14,7 @@ junction table. A genre's navigation is one-directional — a movie knows its ge
 genre does not hold a back-reference to movies.
 
 - **CRUD endpoints** under `/movies-svc/genres` (`GET`, `GET /{id}`, `POST`, `PUT /{id}`, `DELETE /{id}`).
-- **Movies reference genres by id** — `CreateMoviesRequest`/`UpdateMoviesRequest` carry a `GenreIds` collection, and movie responses include the linked genres.
+- **Titles reference genres by id** — `CreateTitlesRequest`/`UpdateTitlesRequest` carry a `GenreIds` collection, and title responses include the linked genres.
 - **Seeded data** — the database ships with 17 common genres (Action, Comedy, Drama, …) so movies can be tagged immediately.
 
 See the [contracts README](NuGetLibraries/Cinedex.WebService.Contracts/README.md) for the request/response DTOs.
@@ -404,7 +404,7 @@ backend/
 **Purpose:** Core business logic and domain entities  
 **Dependencies:** None  
 **Responsibilities:**
-- Domain entities — `Movie`, `Genre`, `CrewMember`, `Role`, etc.
+- Domain aggregates — `Title`, `Genre`, `User` (each in its own `*Aggregate/` folder), plus supporting types such as the `TitleType` enum
 - Business rules and invariants
 - No external dependencies (no EF, no web frameworks)
 

@@ -60,6 +60,9 @@ services:
         condition: service_healthy
     environment:
       ASPNETCORE_ENVIRONMENT: Production
+      # The app sits behind the cinadex-ui Nginx proxy; honor its X-Forwarded-* headers so
+      # the request scheme and client address are the originals, not http and the proxy IP.
+      ForwardedHeaders__Enabled: "true"
       Features__ApiDocumentationEnabled: "true"
       ConnectionStrings__DefaultConnection: "${DB_CONNECTION_STRING}"
       Kestrel__Endpoints__Http__Url: "http://0.0.0.0:8080"

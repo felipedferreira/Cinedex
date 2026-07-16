@@ -27,7 +27,7 @@ All routes are relative to the `/movies-svc` base path.
 | `POST /movies-svc/auth/register` | Anonymous | Create a user. `201 Created`. |
 | `POST /movies-svc/auth/login` | Anonymous | Validate credentials; returns an access token + refresh token. |
 | `POST /movies-svc/auth/refresh` | Anonymous | Exchange a refresh token for a rotated pair. |
-| `POST /movies-svc/auth/logout` | **Bearer** | Revoke the refresh token supplied in the body. `204 No Content`. |
+| `POST /movies-svc/auth/logout` | **Bearer** | Revoke the refresh token supplied in the cookie. `204 No Content`. |
 | `POST /movies-svc/auth/password/forgot` | Anonymous | Always `202 Accepted`. |
 | `POST /movies-svc/auth/password/reset` | Anonymous | Reset the password with a valid reset token. `204 No Content`. |
 

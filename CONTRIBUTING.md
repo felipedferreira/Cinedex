@@ -204,17 +204,25 @@ Key rules:
 
 - Write XML documentation for public members
 - Keep README.md up to date
-- Update CHANGELOG.md for significant changes
+- Update CHANGELOG.md for significant changes — **edit only the root `CHANGELOG.md`**.
+  `backend/CHANGELOG.md` is a build-managed copy (the web service serves it as the app's
+  changelog page, and the Docker build can't see the repo root); a local backend build
+  refreshes it, and CI fails if the two files differ
 - Document API endpoints and their behavior
 
 ## Middleware and Exception Handling
 
-### ExceptionHandlingMiddleware
+### Exception handler chain
 
-- Catches all unhandled exceptions
-- Returns RFC 7807 Problem Details responses
-- Includes trace ID for correlation with logs
-- Logs errors with correlation ID for debugging
+Unhandled exceptions are processed by a chain of `IExceptionHandler` implementations under
+`Cinedex.WebService/ExceptionHandlers/` (registration order matters — `DefaultExceptionHandler` last):
+
+- `ValidationExceptionHandler` — `ValidationException` → HTTP 400 with a per-field error map
+- `EntityNotFoundExceptionHandler` — `EntityNotFoundException` → HTTP 404
+- `InvalidCredentialsExceptionHandler` — `InvalidCredentialsException` → HTTP 401
+- `DefaultExceptionHandler` — catch-all → HTTP 500, logs the exception
+
+All error responses are RFC 7807 Problem Details and carry the request's correlation ID.
 
 ### CorrelationIdMiddleware
 
@@ -250,7 +258,7 @@ All commands below run from the `backend/` folder.
 ### Running a Specific Test
 
 ```bash
-dotnet test --filter "ExceptionHandlingMiddlewareTests"
+dotnet test --filter "CreateMovieEndpointTests"
 ```
 
 ### Running with Verbose Output

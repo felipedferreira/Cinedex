@@ -493,10 +493,11 @@ dotnet build
 dotnet run --project src/Presentation/Cinedex.WebService
 ```
 
-The service will be available at:
-- HTTP: http://localhost:5000
-- HTTPS: http://localhost:5001
-- API Docs: http://localhost:5000/api-docs
+The service will be available at (per the default `https-api-docs` launch profile in
+`src/Presentation/Cinedex.WebService/Properties/launchSettings.json`):
+- HTTPS: https://localhost:7201
+- HTTP: http://localhost:5186
+- API Docs: https://localhost:7201/api-docs/v1 (Scalar UI)
 
 ### Run with Docker Compose:
 

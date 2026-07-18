@@ -1,6 +1,6 @@
 # Cinedex Backend
 
-.NET 10 hexagonal (ports & adapters) solution. Warnings are errors (StyleCop + .NET analyzers, configured in `Directory.Build.props`); package versions are centralized in `Directory.Packages.props`. Solution file is `Cinedex.slnx` (XML solution format).
+.NET 10 hexagonal (ports & adapters) solution. Warnings are errors (StyleCop + .NET analyzers, configured in `Directory.Build.props`); package versions are centralized in `Directory.Packages.props` (test-only package versions live in `Directory.Build.props`). Solution file is `Cinedex.slnx` (XML solution format).
 
 ## Commands (from `backend/`)
 
@@ -23,12 +23,14 @@ Dependencies point inward: WebService → Adapters → Application → Domain.
 - `src/Adapters/Cinedex.Persistence.Postgres` — `FilmDbContext`, `catalog` schema (titles, genres), Fluent API configs (domain stays EF-free).
 - `src/Adapters/Cinedex.Auth.Identity` — ASP.NET Core Identity + JWT issuance, `AuthDbContext`, `auth` schema.
 - `src/Adapters/Cinedex.Email.Smtp` — `IEmailSender` port implementation (currently `NoOpEmailSender`).
-- `src/Presentation/Cinedex.WebService` — FastEndpoints (one class per endpoint), exception-handler chain (`ExceptionHandlers/`, registration order matters, `DefaultExceptionHandler` last), health checks, OpenTelemetry → Seq.
+- `src/Presentation/Cinedex.WebService` — FastEndpoints (one class per endpoint), exception-handler chain (`ExceptionHandlers/`, registration order matters, `DefaultExceptionHandler` last), health checks (`/health/live`, `/health/ready`), OpenTelemetry → Seq.
 - `NuGetLibraries/Cinedex.WebService.Contracts` — shared request/response DTOs (the packable API contract).
 
 Handler conventions: use cases expose `HandleAsync(...)`; create handlers return the new `Guid` (presentation builds the `Location` header); update/delete handlers return `Task`; repository create ports return `Task`, not the saved entity.
 
 Routes: base path `/movies-svc`; catalog resources are `titles` and `genres`; auth is `auth/register|login|refresh|logout|password/forgot|password/reset`. All route strings live in `Constants/ApiConstants.cs` — the entity is `Title`, not `Movie`, despite the `/movies-svc` base path.
+
+Scalar API docs and the OpenAPI JSON are served only when `Features:ApiDocumentationEnabled` is true — `false` in `appsettings.json` (production default); Development settings and compose turn it on. If `/api-docs/v1` 404s, check this flag first.
 
 ## EF Core migrations — two contexts, always pass `--context`
 

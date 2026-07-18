@@ -29,4 +29,5 @@ With compose up: UI/proxy at https://localhost:9000 (self-signed cert — `curl 
 
 - .NET SDK 10.0.100 (`backend/global.json`, prerelease allowed), Node 22, Docker.
 - CI (`.github/workflows/build-and-test.yml`): backend job = changelog-sync check + Release build + tests; frontend job = lint + format:check + build + coverage. All checks required to merge to `main`.
-- Branch prefixes: `feature/`, `bugfix/`, `chore/`, `docs/`. Version is bumped in `backend/Directory.Build.props` (Version, FileVersion, InformationalVersion together).
+- Commit messages follow Conventional Commits: `type(scope): summary` (types in use: `feat`, `fix`, `refactor`, `test`, `docs`, `chore`). Branches have no prefix convention — recent ones are short kebab-case descriptions (e.g. `asp-net-identity-auth`).
+- Changelog entries accumulate under `## [Unreleased]` (Keep a Changelog format); a release turns them into a `## [x.y.z] - Title` section with a matching version bump in `backend/Directory.Build.props` (Version, FileVersion, InformationalVersion together).

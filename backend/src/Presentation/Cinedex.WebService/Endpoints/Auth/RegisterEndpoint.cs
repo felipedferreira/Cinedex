@@ -1,10 +1,11 @@
+using Cinedex.Application.Auth.RegisterUser;
 using Cinedex.WebService.Constants;
 using Cinedex.WebService.Contracts.Requests;
 using FastEndpoints;
 
 namespace Cinedex.WebService.Endpoints.Auth;
 
-internal sealed class RegisterEndpoint : Endpoint<RegisterRequest, EmptyResponse>
+internal sealed class RegisterEndpoint(IRegisterUserHandler handler) : Endpoint<RegisterRequest, EmptyResponse>
 {
     public override void Configure()
     {
@@ -16,7 +17,8 @@ internal sealed class RegisterEndpoint : Endpoint<RegisterRequest, EmptyResponse
 
     public override async Task HandleAsync(RegisterRequest request, CancellationToken cancellationToken)
     {
-        // Stub - implementation pending
+        await handler.HandleAsync(request.ToCommand(), cancellationToken);
+
         await Send.ResultAsync(TypedResults.Created());
     }
 }

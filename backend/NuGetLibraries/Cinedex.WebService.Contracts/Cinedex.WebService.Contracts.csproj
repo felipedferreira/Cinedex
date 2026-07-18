@@ -8,8 +8,8 @@
     <Title>Cinedex Web Service Contracts</Title>
     <Authors>Felipe Ferreira</Authors>
     <Description>DTOs and contract classes for the Cinedex Web Service API</Description>
-    <ProjectUrl>https://github.com/felipedferreira/Movies</ProjectUrl>
-    <RepositoryUrl>https://github.com/felipedferreira/Movies</RepositoryUrl>
+    <PackageProjectUrl>https://github.com/felipedferreira/Cinedex</PackageProjectUrl>
+    <RepositoryUrl>https://github.com/felipedferreira/Cinedex</RepositoryUrl>
     <PackageTags>movies;api;contracts;dto</PackageTags>
     <PackageReadmeFile>README.md</PackageReadmeFile>
   </PropertyGroup>

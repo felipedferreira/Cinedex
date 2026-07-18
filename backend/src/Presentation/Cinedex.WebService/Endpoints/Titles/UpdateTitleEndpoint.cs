@@ -11,7 +11,6 @@ internal sealed class UpdateTitleEndpoint(IUpdateTitleHandler handler) : Endpoin
     {
         Put(ApiConstants.Title.RouteById);
         Tags(ApiConstants.Title.Tag);
-        AllowAnonymous();
     }
 
     public override async Task HandleAsync(UpdateTitlesRequest request, CancellationToken cancellationToken)

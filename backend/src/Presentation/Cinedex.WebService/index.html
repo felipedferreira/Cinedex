@@ -8,14 +8,23 @@
     <script type="module" src="/src/main.ts"></script>
 </head>
 <body class="page-home">
-    <nav class="site-nav">
-        <a href="./" class="site-nav__link site-nav__link--active">Home</a>
-        <a href="./changelog.html" class="site-nav__link">Changelog</a>
-    </nav>
+    <header class="site-header">
+        <a href="./" class="brand"><span class="brand__mark">&#9670;</span>Cinadex</a>
+        <nav class="site-nav">
+            <a href="./" class="site-nav__link site-nav__link--active">Home</a>
+            <a href="./changelog.html" class="site-nav__link">Changelog</a>
+            <a href="/movies-svc/api-docs/v1" class="site-nav__link" target="_blank">API Docs</a>
+        </nav>
+    </header>
     <div class="container">
-        <h1>Movies API</h1>
-        <p class="subtitle">Coming Soon</p>
+        <p class="eyebrow">Coming soon</p>
+        <h1>Movies<br><span class="h1-accent">API.</span></h1>
         <p class="description">We're working hard to bring you an amazing movies experience.</p>
+        <div class="poster-strip" aria-hidden="true">
+            <div class="poster"></div>
+            <div class="poster"></div>
+            <div class="poster"></div>
+        </div>
     </div>
 </body>
 </html>

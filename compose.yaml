@@ -4,14 +4,16 @@ services:
     container_name: movies-db
     environment:
       POSTGRES_USER: movies_rw
-      POSTGRES_PASSWORD: P@ssw0rd!Secure#2024
+      # Read from the git-ignored .env; must match the password in DB_CONNECTION_STRING.
+      # Only used when the postgres_data volume is initialized for the first time.
+      POSTGRES_PASSWORD: "${DB_PASSWORD}"
       POSTGRES_DB: movies
     ports:
       - "5432:5432"
     volumes:
       - postgres_data:/var/lib/postgresql/data
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      test: ["CMD-SHELL", "pg_isready -U movies_rw -d movies"]
       interval: 10s
       timeout: 5s
       retries: 5
@@ -49,9 +51,10 @@ services:
       context: ./backend
       dockerfile: src/Presentation/Cinedex.WebService/Dockerfile
     container_name: movies-web
-    ports:
-      - "8080:8080"
-      - "8081:8081"
+    expose:
+      # The API is reached through the HTTPS frontend reverse proxy so Secure auth cookies
+      # are set on an HTTPS response and stay same-origin with the SPA.
+      - "8080"
     depends_on:
       postgres:
         condition: service_healthy
@@ -59,20 +62,17 @@ services:
         condition: service_healthy
     environment:
       ASPNETCORE_ENVIRONMENT: Production
+      # The app sits behind the cinadex-ui Nginx proxy; honor its X-Forwarded-* headers so
+      # the request scheme and client address are the originals, not http and the proxy IP.
+      ForwardedHeaders__Enabled: "true"
       Features__ApiDocumentationEnabled: "true"
       ConnectionStrings__DefaultConnection: "${DB_CONNECTION_STRING}"
-      Kestrel__Endpoints__Http__Url: "http://0:0:0:0:8080"
+      Kestrel__Endpoints__Http__Url: "http://0.0.0.0:8080"
       # OpenTelemetry -> Seq OTLP ingestion (Seq listens on container port 80)
       OTEL_EXPORTER_OTLP_ENDPOINT: "http://seq/ingest/otlp"
       OTEL_EXPORTER_OTLP_PROTOCOL: "http/protobuf"
       OTEL_EXPORTER_OTLP_HEADERS: "X-Seq-ApiKey=${SEQ_API_KEY}"
       OTEL_SERVICE_NAME: "Cinedex.WebService"
-    healthcheck:
-      test: ["CMD-SHELL", "curl -sf http://localhost:8080/movies-svc/health/live || exit 1"]
-      interval: 30s
-      timeout: 5s
-      retries: 3
-      start_period: 15s
 
   cinadex-ui:
     image: cinadex-ui
@@ -80,10 +80,9 @@ services:
       context: ./frontend/cinadex-ui
     container_name: cinadex-ui
     ports:
-      - "127.0.0.1:9000:80"
+      - "127.0.0.1:9000:443"
     depends_on:
-      movies.webservice:
-        condition: service_healthy
+      - movies.webservice
 
 volumes:
   postgres_data:

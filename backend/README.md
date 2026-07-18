@@ -1,6 +1,6 @@
 # Movies Backend
 
-[![Build and Test](https://github.com/felipedferreira/Movies/actions/workflows/build-and-test.yml/badge.svg)](https://github.com/felipedferreira/Movies/actions/workflows/build-and-test.yml)
+[![Build and Test](https://github.com/felipedferreira/Cinedex/actions/workflows/build-and-test.yml/badge.svg)](https://github.com/felipedferreira/Cinedex/actions/workflows/build-and-test.yml)
 
 A clean architecture .NET solution for managing movies, their genres, crew members, and roles — inspired by IMDB. Built with a focus on separation of concerns, testability, and maintainability.
 
@@ -14,10 +14,28 @@ junction table. A genre's navigation is one-directional — a movie knows its ge
 genre does not hold a back-reference to movies.
 
 - **CRUD endpoints** under `/movies-svc/genres` (`GET`, `GET /{id}`, `POST`, `PUT /{id}`, `DELETE /{id}`).
-- **Movies reference genres by id** — `CreateMoviesRequest`/`UpdateMoviesRequest` carry a `GenreIds` collection, and movie responses include the linked genres.
+- **Titles reference genres by id** — `CreateTitlesRequest`/`UpdateTitlesRequest` carry a `GenreIds` collection, and title responses include the linked genres.
 - **Seeded data** — the database ships with 17 common genres (Action, Comedy, Drama, …) so movies can be tagged immediately.
 
 See the [contracts README](NuGetLibraries/Cinedex.WebService.Contracts/README.md) for the request/response DTOs.
+
+## 🔐 Authentication
+
+Authentication is built on **ASP.NET Core Identity**, confined to the
+`Cinedex.Auth.Identity` adapter behind application-layer ports so the domain and
+application layers stay framework-free. Login issues a short-lived JWT access token plus a rotating
+refresh token; protected endpoints are guarded by JWT bearer middleware.
+
+- **Endpoints** under `/movies-svc/auth` — `register`, `login`, `refresh`, `logout`,
+  `password/forgot`, `password/reset`.
+- **Tokens** — 15-minute HS256 access token, 7-day refresh token stored hashed and rotated on use.
+- **Schema** — all Identity tables live in a dedicated `auth` schema with its own migration history.
+
+> ⚠️ `Jwt:SigningKey` in `appsettings.json` is a **dev-only placeholder**. Override it per
+> environment via `Jwt__SigningKey` or User Secrets.
+
+Full details, including known gaps (no roles, no email delivery, no refresh-token reuse detection), are in the
+**[Auth & Security Model](../docs/auth-security-model.md)**.
 
 ## 🗄️ Database
 
@@ -34,9 +52,13 @@ docker compose up            # from the repository root, where compose.yaml live
 
 This starts:
 - **PostgreSQL 17 Alpine** on port `5432`
-- **Movies WebService** on ports `8080` (HTTP) and `8081` (HTTPS)
-- Automatic database initialization
+- **Movies WebService** on Docker-network port `8080` only
+- **Cinedex UI / reverse proxy** on `https://localhost:9000`
+- Browser auth flows should use the HTTPS proxy URL so `Secure` refresh cookies are accepted and same-origin with the SPA.
 - Data persistence via Docker volume
+
+The database is created empty. Apply migrations yourself before the API is usable — see
+[Migrations](#migrations).
 
 #### Option 2: Local PostgreSQL
 Ensure PostgreSQL is installed and running locally. The connection string is **not**
@@ -70,6 +92,7 @@ cp .env.example .env          # from the repository root
 
 | Variable | Purpose |
 |----------|---------|
+| `DB_PASSWORD` | Password for the `movies_rw` Postgres user. Applied only when the `postgres_data` volume is first initialized; must match the password inside `DB_CONNECTION_STRING`. |
 | `DB_CONNECTION_STRING` | Full Postgres connection string for the web service container (host is the `postgres` service name). |
 | `SEQ_ADMIN_PASSWORD` | First-login password for the Seq UI `admin` user. Seq prompts you to choose the permanent UI password on first login. |
 | `SEQ_API_KEY` | Ingestion API-key token the web service sends to Seq over OTLP (`X-Seq-ApiKey`). |
@@ -80,17 +103,48 @@ environment variables or configuration files as needed.
 
 ### Migrations
 
-Run from this folder, specifying the persistence project and the WebService as the startup project:
+> ⚠️ **Migrations are not applied automatically.** Neither `docker compose up` nor
+> `dotnet run` migrates the database — `Program.cs` does not call any initializer. A fresh
+> database has no tables until you run `dotnet ef database update` for **both** contexts below.
+> (`AuthDbInitializer.MigrateAsync` exists but is currently only used by the integration tests.)
+
+The solution has **two `DbContext`s**, backed by two projects and two migration histories in the
+same physical database:
+
+| Context | Project | Schema | Covers |
+|---------|---------|--------|--------|
+| `FilmDbContext` | `src/Adapters/Cinedex.Persistence.Postgres` | `catalog` | Titles, genres |
+| `AuthDbContext` | `src/Adapters/Cinedex.Auth.Identity` | `auth` | Identity users, refresh tokens |
+
+Because more than one context is discoverable, **every `dotnet ef` command must pass `--context`**
+or the tooling fails with "More than one DbContext was found". Run these from this folder
+(`backend/`), with the WebService as the startup project:
 
 ```bash
-# Add a new migration
+# Add a migration to the catalog context
 dotnet ef migrations add <MigrationName> \
+  --context FilmDbContext \
   --project src/Adapters/Cinedex.Persistence.Postgres \
   --startup-project src/Presentation/Cinedex.WebService
 
-# Apply migrations to the database
+# Add a migration to the auth context
+dotnet ef migrations add <MigrationName> \
+  --context AuthDbContext \
+  --project src/Adapters/Cinedex.Auth.Identity \
+  --startup-project src/Presentation/Cinedex.WebService
+```
+
+Applying them — a fresh database needs **both**:
+
+```bash
 dotnet ef database update \
+  --context FilmDbContext \
   --project src/Adapters/Cinedex.Persistence.Postgres \
+  --startup-project src/Presentation/Cinedex.WebService
+
+dotnet ef database update \
+  --context AuthDbContext \
+  --project src/Adapters/Cinedex.Auth.Identity \
   --startup-project src/Presentation/Cinedex.WebService
 ```
 
@@ -101,11 +155,16 @@ container exposed on `localhost:5432` — pass the connection string explicitly 
 
 ```bash
 dotnet ef database update \
+  --context FilmDbContext \
   --project src/Adapters/Cinedex.Persistence.Postgres \
   --startup-project src/Presentation/Cinedex.WebService \
   --connection "<YOUR_CONNECTION_STRING>"
 # e.g. "Host=127.0.0.1;Port=5432;Database=movies;Username=movies_rw;Password=<DB_PASSWORD>"
 ```
+
+Each context keeps its own `__EFMigrationsHistory` table inside its own schema, so the two
+histories never collide. See the [Auth & Security Model](../docs/auth-security-model.md#storage)
+for why auth is isolated in its own schema.
 
 > **Domain models** live in `Cinedex.Domain`. EF entity configurations use **Fluent API** in `Cinedex.Persistence.Postgres`, keeping the domain layer free of any EF dependencies.
 
@@ -114,6 +173,8 @@ dotnet ef database update \
 ## 📚 Documentation
 
 - **[Architecture Guide](README.md)** (this file) - Project structure and design patterns
+- **[Design docs](../docs/README.md)** - Why the system is shaped this way
+  - [Auth & Security Model](../docs/auth-security-model.md) - JWT, refresh rotation, the `auth` schema
 - **[Changelog](../CHANGELOG.md)** - Version history and release notes
 - **[NuGetLibraries](NuGetLibraries/Cinedex.WebService.Contracts/README.md)** - NuGet package documentation
   - Cinedex.WebService.Contracts - API contracts and DTOs
@@ -151,19 +212,22 @@ and a [Seq](https://datalust.co/seq) instance for logs and traces.
    ```
 
 Access the application:
-- **API:** http://localhost:8080
-- **API Documentation:** http://127.0.0.1:8080/movies-svc/api-docs/v1 (Scalar UI)
-- **OpenAPI Spec:** http://127.0.0.1:8080/movies-svc/openapi/v1.json
+- **UI:** https://localhost:9000
+- **API:** https://localhost:9000/movies-svc
+- **API Documentation:** https://localhost:9000/movies-svc/api-docs/v1 (Scalar UI)
+- **OpenAPI Spec:** https://localhost:9000/movies-svc/openapi/v1.json
 - **Seq (logs & traces):** http://localhost:5341 — first login is `admin` with `SEQ_ADMIN_PASSWORD`; after the required password change, use the password you chose
 - **PostgreSQL:** localhost:5432
+
+The local UI/proxy certificate is self-signed, so your browser or `curl` may require an explicit trust/`-k` choice during development.
 
 ### Services
 
 | Service | Image | Port | Purpose |
 |---------|-------|------|---------|
 | `postgres` | postgres:17-alpine | 5432 | PostgreSQL database with persistent storage |
-| `movies.webservice` | movies.webservice | 8080/8081 | ASP.NET Core web API |
-| `cinadex-ui` | cinadex-ui | 9000 | React SPA frontend (Nginx) |
+| `movies.webservice` | movies.webservice | 8080 internal | ASP.NET Core web API |
+| `cinadex-ui` | cinadex-ui | 9000 HTTPS | React SPA frontend and reverse proxy (Nginx) |
 | `seq` | datalust/seq | 5341 | Structured logs + distributed traces (OpenTelemetry/OTLP) |
 
 ### Features
@@ -200,16 +264,16 @@ exception detail so the endpoints don't leak internal information.
 
 ```bash
 # Liveness
-curl -s http://localhost:8080/movies-svc/health/live
+curl -k -s https://localhost:9000/movies-svc/health/live
 # {"status":"Healthy","checks":[]}
 
 # Readiness (includes the Postgres connectivity check)
-curl -s http://localhost:8080/movies-svc/health/ready
+curl -k -s https://localhost:9000/movies-svc/health/ready
 # {"status":"Healthy","checks":[{"name":"postgres","status":"Healthy"}]}
 ```
 
-The Compose container healthcheck polls `/health/live` (see `compose.yaml`); `cinadex-ui` waits for
-the web service to report healthy before starting.
+The public Compose path goes through the HTTPS `cinadex-ui` reverse proxy; use `-k` with curl unless
+you have trusted the local self-signed certificate.
 
 ## 📈 Observability (Seq)
 
@@ -242,7 +306,7 @@ two `.env` values need preparing once.
 
    **Option A — CLI (`seqcli`):**
    ```bash
-   docker run --rm --network movies_default datalust/seqcli apikey create \
+   docker run --rm --network cinedex_default datalust/seqcli apikey create \
      -t "Movies WebService" --token "<your-SEQ_API_KEY>" --permissions "Ingest" \
      -s http://seq --connect-username admin --connect-password "<your-password>"
    ```
@@ -267,9 +331,13 @@ reset only the Seq volume and start it again:
 
 ```bash
 docker compose down
-docker volume rm movies_seq_data
+docker volume rm cinedex_seq_data
 docker compose up -d seq
 ```
+
+> The `cinedex_` prefix on volume and network names comes from the Compose project name,
+> which Docker derives from the repository folder name. If your checkout folder is named
+> differently, adjust the prefix accordingly (`docker volume ls` shows the real names).
 
 This deletes local Seq logs, API keys, and settings, but leaves the PostgreSQL volume alone.
 
@@ -282,25 +350,33 @@ This deletes local Seq logs, API keys, and settings, but leaves the PostgreSQL v
 The solution is organized into layers that enforce separation of concerns and dependency direction. Dependencies flow inward—outer layers depend on inner layers, never the reverse.
 
 ```
-┌─────────────────────────────────────────────────┐
-│         Cinedex.WebService (Presentation)       │
-│              (Web API / Entry Point)            │
-└──────────────────┬──────────────────────────────┘
-                   │
-       ┌───────────┴────────────────┐
-       │                            │
-┌──────▼───────────────┐  ┌─────────▼────────────────────────┐
-│  Cinedex.Application │◄─┤  Cinedex.Persistence.Postgres    │
-│  (Use Cases + Ports) │  │     (Persistence Adapter)        │
-└──────┬───────────────┘  └─────────┬────────────────────────┘
-       │                            │
-       └─────────────┬──────────────┘
-                     │
-           ┌─────────▼──────────┐
-           │   Cinedex.Domain   │
-           │  (Business Logic)  │
-           └────────────────────┘
+┌───────────────────────────────────────────────────────┐
+│            Cinedex.WebService (Presentation)          │
+│                (Web API / Entry Point)                │
+└───────────────────────────┬───────────────────────────┘
+                            │
+      ┌─────────────────────┼─────────────────────┐
+      │                     │                     │
+┌─────▼──────────────┐ ┌────▼───────────┐ ┌───────▼──────┐
+│ Persistence.Postgres│ │  Auth.Identity │ │  Email.Smtp  │
+│  (catalog adapter)  │ │  (auth adapter)│ │(email adapter)│
+└─────┬──────────────┘ └────┬───────────┘ └───────┬──────┘
+      │                     │                     │
+      └─────────────────────┼─────────────────────┘
+                            │
+                ┌───────────▼───────────┐
+                │   Cinedex.Application  │
+                │   (Use Cases + Ports)  │
+                └───────────┬───────────┘
+                            │
+                  ┌─────────▼─────────┐
+                  │   Cinedex.Domain  │
+                  │  (Business Logic) │
+                  └───────────────────┘
 ```
+
+All three adapters implement ports defined in `Cinedex.Application` and depend inward on it; the
+Presentation layer wires them together at startup.
 
 ### Solution Layout
 
@@ -314,7 +390,9 @@ backend/
 │   ├── Presentation/
 │   │   └── Cinedex.WebService/            # driving adapter (HTTP entry point)
 │   ├── Adapters/
-│   │   └── Cinedex.Persistence.Postgres/  # driven adapter (implements ports)
+│   │   ├── Cinedex.Persistence.Postgres/  # driven adapter: catalog persistence
+│   │   ├── Cinedex.Auth.Identity/         # driven adapter: authentication
+│   │   └── Cinedex.Email.Smtp/            # driven adapter: email delivery
 │   ├── Application/                      # use cases + ports (Abstractions/)
 │   └── Domain/                           # entities, no outward dependencies
 └── NuGetLibraries/
@@ -327,7 +405,7 @@ backend/
 **Purpose:** Core business logic and domain entities  
 **Dependencies:** None  
 **Responsibilities:**
-- Domain entities — `Movie`, `Genre`, `CrewMember`, `Role`, etc.
+- Domain aggregates — `Title`, `Genre`, `User` (each in its own `*Aggregate/` folder), plus supporting types such as the `TitleType` enum
 - Business rules and invariants
 - No external dependencies (no EF, no web frameworks)
 
@@ -357,9 +435,29 @@ backend/
 - Adapts PostgreSQL to the repository ports defined in `Cinedex.Application`
 - *Note: Listed under `Adapters/` to reflect that it's an interchangeable persistence adapter*
 
-### 4. **Cinedex.WebService** (Presentation/Entry Point Layer)
+### 4. **Cinedex.Auth.Identity** (Adapter Layer)
+**Purpose:** Implements authentication, backed by ASP.NET Core Identity  
+**Dependencies:** `Cinedex.Application`, `Cinedex.Domain`  
+**Responsibilities:**
+- Implements the authentication ports defined in `Cinedex.Application`:
+  - `IIdentityService` — registration, credential validation, password reset (via `UserManager`)
+  - `ITokenService` — JWT access-token issuance and refresh-token rotation
+- `AuthDbContext` — the Identity user store plus hashed, rotating refresh-token storage in the `auth` schema
+- Maps the framework `ApplicationUser` to the framework-free domain `User` (`UserMappings`)
+- Confines ASP.NET Core Identity, JWT signing, and EF Core so none of them leak into Domain or Application
+- *Note: this adapter does more than persistence — hence the name is `Auth.Identity`, not `Persistence.*`.*
+
+### 5. **Cinedex.Email.Smtp** (Adapter Layer)
+**Purpose:** Sends transactional email (currently only password-reset messages)  
+**Dependencies:** `Cinedex.Application`  
+**Responsibilities:**
+- Implements the `IEmailSender` port defined in `Cinedex.Application`
+- Kept separate from `Auth.Identity` because email delivery is a messaging concern, not authentication — a real SMTP sender has nothing to do with ASP.NET Core Identity
+- *Note: currently a `NoOpEmailSender` placeholder. The planned replacement is a MailKit-based `SmtpEmailSender` — MailKit is the recommended modern SMTP client (the built-in `System.Net.Mail.SmtpClient` is obsolete) and can target any relay via config. A future API-based provider would be a sibling, e.g. `Cinedex.Email.SendGrid`.*
+
+### 6. **Cinedex.WebService** (Presentation/Entry Point Layer)
 **Purpose:** Web API and HTTP request handling  
-**Dependencies:** `Cinedex.Application`, `Cinedex.Persistence.Postgres`  
+**Dependencies:** `Cinedex.Application`, `Cinedex.Persistence.Postgres`, `Cinedex.Auth.Identity`, `Cinedex.Email.Smtp`  
 **Responsibilities:**
 - ASP.NET Core web API endpoints
 - HTTP request/response handling
@@ -375,7 +473,7 @@ The architecture enforces these dependency directions:
 |------|-----|----------|
 | Domain | Anything | ❌ No (Domain has no outward dependencies) |
 | Application | Domain | ✅ Yes |
-| Adapters (Persistence) | Application, Domain | ✅ Yes |
+| Adapters (Persistence, Auth, Email) | Application, Domain | ✅ Yes |
 | WebService | Application, Adapters | ✅ Yes |
 | WebService | Domain | ✅ Yes (transitively) |
 
@@ -400,10 +498,11 @@ dotnet build
 dotnet run --project src/Presentation/Cinedex.WebService
 ```
 
-The service will be available at:
-- HTTP: http://localhost:5000
-- HTTPS: http://localhost:5001
-- API Docs: http://localhost:5000/api-docs
+The service will be available at (per the default `https-api-docs` launch profile in
+`src/Presentation/Cinedex.WebService/Properties/launchSettings.json`):
+- HTTPS: https://localhost:7201
+- HTTP: http://localhost:5186
+- API Docs: https://localhost:7201/api-docs/v1 (Scalar UI)
 
 ### Run with Docker Compose:
 

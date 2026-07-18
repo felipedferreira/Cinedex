@@ -1,6 +1,7 @@
 using Cinedex.WebService.Constants;
 using FastEndpoints;
 using Microsoft.AspNetCore.Diagnostics.HealthChecks;
+using Microsoft.AspNetCore.HttpOverrides;
 using Microsoft.AspNetCore.StaticFiles;
 using Microsoft.Extensions.Diagnostics.HealthChecks;
 using Scalar.AspNetCore;
@@ -20,6 +21,24 @@ public static class RequestPipelineExtensions
     /// <returns>The same <paramref name="app"/> instance so calls can be chained.</returns>
     public static WebApplication ConfigureRequestPipeline(this WebApplication app)
     {
+        // Behind the Compose reverse proxy, TLS terminates at Nginx and the original scheme and
+        // client address arrive as X-Forwarded-Proto / X-Forwarded-For. Without this middleware
+        // the app sees every request as plain HTTP from the proxy's address. Trusting any peer
+        // (clearing KnownIPNetworks/KnownProxies) is gated behind configuration because it is only
+        // safe when nothing untrusted can reach Kestrel directly — in Compose, movies.webservice
+        // publishes no host port, so only compose-network peers can connect.
+        var forwardedHeadersEnabled = app.Configuration.GetValue(ConfigurationConstants.ForwardedHeadersEnabled, false);
+        if (forwardedHeadersEnabled)
+        {
+            var forwardedHeadersOptions = new ForwardedHeadersOptions
+            {
+                ForwardedHeaders = ForwardedHeaders.XForwardedFor | ForwardedHeaders.XForwardedProto,
+            };
+            forwardedHeadersOptions.KnownIPNetworks.Clear();
+            forwardedHeadersOptions.KnownProxies.Clear();
+            app.UseForwardedHeaders(forwardedHeadersOptions);
+        }
+
         // Serve the application under the configured service base path.
         app.UsePathBase(ApiConstants.BasePath);
 
@@ -49,6 +68,10 @@ public static class RequestPipelineExtensions
         {
             ContentTypeProvider = contentTypeProvider,
         });
+
+        // Authentication and authorization must run before endpoint execution.
+        app.UseAuthentication();
+        app.UseAuthorization();
 
         // Map FastEndpoints.
         app.UseFastEndpoints();
@@ -120,14 +143,13 @@ public static class RequestPipelineExtensions
         }
 
         app.MapOpenApi();
-        app.MapScalarApiReference(options =>
+        app.MapScalarApiReference("/api-docs", options =>
         {
             options.TagSorter = TagSorter.Alpha;
             options.EnabledClients = [ScalarClient.HttpClient, ScalarClient.Axios, ScalarClient.Fetch];
             options.EnabledTargets = [ScalarTarget.CSharp, ScalarTarget.JavaScript];
             options.Theme = ScalarTheme.Solarized;
-            options.Favicon = "/favicon.ico";
-            options.EndpointPathPrefix = "/api-docs/{documentName}";
+            options.Favicon = $"{ApiConstants.BasePath}/favicon.ico";
             options.Title = "API Documentation - {documentName}";
         });
 

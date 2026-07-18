@@ -1,11 +1,13 @@
+using Cinedex.Application.Auth.Login;
 using Cinedex.WebService.Constants;
 using Cinedex.WebService.Contracts.Requests;
 using Cinedex.WebService.Contracts.Responses;
+using Cinedex.WebService.Http;
 using FastEndpoints;
 
 namespace Cinedex.WebService.Endpoints.Auth;
 
-internal sealed class LoginEndpoint : Endpoint<LoginRequest, LoginResponse>
+internal sealed class LoginEndpoint(ILoginHandler handler) : Endpoint<LoginRequest, LoginResponse>
 {
     public override void Configure()
     {
@@ -16,13 +18,11 @@ internal sealed class LoginEndpoint : Endpoint<LoginRequest, LoginResponse>
 
     public override async Task HandleAsync(LoginRequest request, CancellationToken cancellationToken)
     {
-        // Stub - implementation pending
-        var response = new LoginResponse
-        {
-            AccessToken = "stub-access-token",
-            ExpiresAtUtc = DateTime.UtcNow.AddHours(1),
-        };
+        var tokens = await handler.HandleAsync(request.ToCommand(), cancellationToken);
 
-        await Send.OkAsync(response, cancellationToken);
+        // The refresh token leaves the service only as an HttpOnly cookie, never in the body.
+        RefreshTokenCookie.Append(HttpContext.Response, tokens.RefreshToken, tokens.RefreshTokenExpiresAtUtc);
+
+        await Send.OkAsync(tokens.ToResponse(), cancellationToken);
     }
 }

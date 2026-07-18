@@ -19,7 +19,7 @@ public sealed class CreateTitleEndpointTests(WebApplicationFixture fixture)
             YearOfRelease = 2010,
         };
 
-        var response = await fixture.Client.PostAsJsonAsync(TestRouteConstants.Title.Endpoint, request);
+        var response = await fixture.AuthenticatedClient.PostAsJsonAsync(TestRouteConstants.Title.Endpoint, request);
 
         Assert.Equal(HttpStatusCode.Created, response.StatusCode);
     }
@@ -34,7 +34,7 @@ public sealed class CreateTitleEndpointTests(WebApplicationFixture fixture)
             YearOfRelease = 2014,
         };
 
-        var response = await fixture.Client.PostAsJsonAsync(TestRouteConstants.Title.Endpoint, request);
+        var response = await fixture.AuthenticatedClient.PostAsJsonAsync(TestRouteConstants.Title.Endpoint, request);
 
         Assert.NotNull(response.Headers.Location);
         Assert.StartsWith(TestRouteConstants.Title.LocationPrefix, response.Headers.Location.ToString());
@@ -50,7 +50,7 @@ public sealed class CreateTitleEndpointTests(WebApplicationFixture fixture)
             YearOfRelease = 2010,
         };
 
-        var response = await fixture.Client.PostAsJsonAsync(TestRouteConstants.Title.Endpoint, request);
+        var response = await fixture.AuthenticatedClient.PostAsJsonAsync(TestRouteConstants.Title.Endpoint, request);
 
         Assert.Equal(HttpStatusCode.BadRequest, response.StatusCode);
     }
@@ -65,7 +65,7 @@ public sealed class CreateTitleEndpointTests(WebApplicationFixture fixture)
             YearOfRelease = 2010,
         };
 
-        var response = await fixture.Client.PostAsJsonAsync(TestRouteConstants.Title.Endpoint, request);
+        var response = await fixture.AuthenticatedClient.PostAsJsonAsync(TestRouteConstants.Title.Endpoint, request);
 
         Assert.Equal(HttpStatusCode.BadRequest, response.StatusCode);
     }
@@ -80,7 +80,7 @@ public sealed class CreateTitleEndpointTests(WebApplicationFixture fixture)
             YearOfRelease = 1887,
         };
 
-        var response = await fixture.Client.PostAsJsonAsync(TestRouteConstants.Title.Endpoint, request);
+        var response = await fixture.AuthenticatedClient.PostAsJsonAsync(TestRouteConstants.Title.Endpoint, request);
 
         Assert.Equal(HttpStatusCode.BadRequest, response.StatusCode);
     }
@@ -95,7 +95,7 @@ public sealed class CreateTitleEndpointTests(WebApplicationFixture fixture)
             YearOfRelease = DateTime.UtcNow.Year + 6,
         };
 
-        var response = await fixture.Client.PostAsJsonAsync(TestRouteConstants.Title.Endpoint, request);
+        var response = await fixture.AuthenticatedClient.PostAsJsonAsync(TestRouteConstants.Title.Endpoint, request);
 
         Assert.Equal(HttpStatusCode.BadRequest, response.StatusCode);
     }

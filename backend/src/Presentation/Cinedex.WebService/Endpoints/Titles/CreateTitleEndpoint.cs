@@ -11,7 +11,6 @@ internal sealed class CreateTitleEndpoint(ICreateTitleHandler handler) : Endpoin
     {
         Post(ApiConstants.Title.Route);
         Tags(ApiConstants.Title.Tag);
-        AllowAnonymous();
     }
 
     public override async Task HandleAsync(CreateTitlesRequest request, CancellationToken cancellationToken)

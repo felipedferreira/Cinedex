@@ -8,10 +8,14 @@
     <script type="module" src="/src/changelog.ts"></script>
 </head>
 <body class="page-changelog">
-    <nav class="site-nav">
-        <a href="./" class="site-nav__link">Home</a>
-        <a href="./changelog.html" class="site-nav__link site-nav__link--active">Changelog</a>
-    </nav>
+    <header class="site-header">
+        <a href="./" class="brand"><span class="brand__mark">&#9670;</span>Cinadex</a>
+        <nav class="site-nav">
+            <a href="./" class="site-nav__link">Home</a>
+            <a href="./changelog.html" class="site-nav__link site-nav__link--active">Changelog</a>
+            <a href="/movies-svc/api-docs/v1" class="site-nav__link" target="_blank">API Docs</a>
+        </nav>
+    </header>
     <main id="changelog" class="changelog" aria-busy="true">Loading changelog…</main>
 </body>
 </html>

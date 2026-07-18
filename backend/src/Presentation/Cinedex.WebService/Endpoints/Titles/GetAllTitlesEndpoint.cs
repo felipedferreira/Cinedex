@@ -11,7 +11,6 @@ internal sealed class GetAllTitlesEndpoint(IListTitlesHandler handler) : Endpoin
     {
         Get(ApiConstants.Title.Route);
         Tags(ApiConstants.Title.Tag);
-        AllowAnonymous();
     }
 
     public override async Task HandleAsync(CancellationToken cancellationToken)

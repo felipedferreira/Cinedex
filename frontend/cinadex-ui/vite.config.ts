@@ -1,13 +1,29 @@
 import { defineConfig } from 'vitest/config';
 import react, { reactCompilerPreset } from '@vitejs/plugin-react';
+import basicSsl from '@vitejs/plugin-basic-ssl';
 import babel from '@rolldown/plugin-babel';
+
+const apiProxyTarget =
+  process.env.VITE_API_PROXY_TARGET ?? 'https://localhost:7201';
 
 // https://vite.dev/config/
 export default defineConfig({
-  plugins: [react(), babel({ presets: [reactCompilerPreset()] })],
+  plugins: [
+    basicSsl({ name: 'Cinedex local development' }),
+    react(),
+    babel({ presets: [reactCompilerPreset()] }),
+  ],
   server: {
     port: 9_000,
+    strictPort: true,
     open: true,
+    proxy: {
+      '/movies-svc': {
+        target: apiProxyTarget,
+        changeOrigin: true,
+        secure: false,
+      },
+    },
   },
   test: {
     globals: true,

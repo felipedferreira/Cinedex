@@ -1,10 +1,11 @@
+using Cinedex.Application.Auth.ForgotPassword;
 using Cinedex.WebService.Constants;
 using Cinedex.WebService.Contracts.Requests;
 using FastEndpoints;
 
 namespace Cinedex.WebService.Endpoints.Auth;
 
-internal sealed class ForgotPasswordEndpoint : Endpoint<ForgotPasswordRequest, EmptyResponse>
+internal sealed class ForgotPasswordEndpoint(IForgotPasswordHandler handler) : Endpoint<ForgotPasswordRequest, EmptyResponse>
 {
     public override void Configure()
     {
@@ -16,7 +17,8 @@ internal sealed class ForgotPasswordEndpoint : Endpoint<ForgotPasswordRequest, E
 
     public override async Task HandleAsync(ForgotPasswordRequest request, CancellationToken cancellationToken)
     {
-        // Stub - implementation pending
+        await handler.HandleAsync(request.ToCommand(), cancellationToken);
+
         await Send.ResultAsync(TypedResults.Accepted((string?)null));
     }
 }

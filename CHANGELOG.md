@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+---
+
+## [0.6.0] - 2026-07-18 Authentication & Authorization
+
 ### Added
 - **Authentication & authorization via ASP.NET Core Identity** - Replaces the previously stubbed auth endpoints with a real implementation. Users can register, log in, refresh their session, log out, and reset their password. Login issues a JWT access token plus a rotating refresh token; protected endpoints are guarded by JWT bearer middleware. Identity is confined to a new persistence adapter behind application-layer ports, so the domain and application layers stay framework-free. See the [Auth & Security Model](https://github.com/felipedferreira/Cinedex/blob/main/docs/auth-security-model.md)
   - **Domain** — `User` aggregate in `Cinedex.Domain/UserAggregate/`, mirroring the existing Genre/Title aggregates
@@ -34,6 +38,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - `DeleteMovieHandler`, `GetMovieByIdHandler`, `ListMoviesHandler`
   - Each feature folder contains command/query record, handler, interface, and optional validator
 - **React + TypeScript + Vite frontend** - Scaffolded `frontend/cinadex-ui` with React 19, TypeScript, Vite, Vitest, ESLint, and Prettier; includes a working `App.tsx` shell and an `App.test.tsx` smoke test
+- **Cinedex-branded landing & changelog pages** - Redesigned the web service's landing and changelog pages (served from `wwwroot`) with Cinedex product branding
 - **`SmokeTests`** - Backend integration test asserting the API returns HTTP 200 on `GET /api/movies`
 - **`CreateMovieEndpointTests`** - Integration tests for `POST /api/movies` covering happy path and FluentValidation error scenarios (missing title, out-of-range year, etc.)
 - **Mono-repo layout** - Restructured the repository for a future standalone frontend:
@@ -78,6 +83,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **API documentation page blank behind the reverse proxy** - Upgraded `Scalar.AspNetCore` 1.2.50 → 2.16.13. The 1.x page embedded the OpenAPI document URL as absolute `/openapi/v1.json`, ignoring the `/movies-svc` path base — through the Nginx proxy the browser fetched the SPA fallback HTML instead of the spec, so `/movies-svc/api-docs/v1` rendered nothing. Scalar 2.x ships relative document URLs and derives the base path in the browser, so the page works both through the proxy and against Kestrel directly. Migration notes: the removed `EndpointPathPrefix` option is replaced by the endpoint-prefix argument to `MapScalarApiReference("/api-docs", ...)` (the URL is unchanged), and the docs favicon path now includes the `/movies-svc` base path
 - **Postgres password no longer committed** - `compose.yaml` hardcoded the database password while every other secret already lived in the git-ignored `.env`; it now reads `${DB_PASSWORD}` from `.env` (the old value remains in git history, so rotate it). The Postgres healthcheck also probes the real `movies_rw` user instead of `postgres`
 - **Reverse-proxy forwarded headers honored** - The web service now applies `X-Forwarded-Proto` / `X-Forwarded-For` from the Nginx proxy when `ForwardedHeaders:Enabled` is set (enabled in Docker Compose), so the app sees the original HTTPS scheme and real client address instead of plain HTTP and the proxy's IP
+- **Reverse-proxy host/port in redirects** - The proxy now forwards the browser-facing host and port via `$http_host`, so redirects target the published address instead of the internal container port
 - **Flaky integration test startup** - Test classes now share one app host and Postgres Testcontainer via the `WebApplicationCollection` xUnit collection fixture; booting multiple `WebApplicationFactory<Program>` hosts in parallel raced on shared `JsonSerializerOptions` state inside FastEndpoints/System.Text.Json
 - **`Microsoft.OpenApi` pinned to 2.7.5** - The transitive 2.0.0 pulled in by `Microsoft.AspNetCore.OpenApi` has a known vulnerability (GHSA-v5pm-xwqc-g5wc)
 - **Docker build** - Corrected path references to resolve NuGet restore failures

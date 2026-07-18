@@ -39,6 +39,7 @@ Access the application:
 - **API Documentation:** https://localhost:9000/movies-svc/api-docs/v1 (Scalar UI)
 - **OpenAPI Spec:** https://localhost:9000/movies-svc/openapi/v1.json
 - **Seq (logs & traces):** http://localhost:5341
+- **Mailpit (dev mail sink):** http://localhost:8025 — captures every email the app sends
 - **PostgreSQL:** localhost:5432
 
 The local UI/proxy uses a self-signed TLS certificate, so your browser may ask you to trust it on first visit.

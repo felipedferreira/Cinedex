@@ -3,11 +3,11 @@
 
   <PropertyGroup>
     <!-- Versioning -->
-    <Version>0.5.0</Version>
+    <Version>0.6.0</Version>
     <!-- FileVersion: File version shown in Windows file properties -->
-    <FileVersion>0.5.0</FileVersion>
+    <FileVersion>0.6.0</FileVersion>
     <!-- InformationalVersion: User-facing product version for logs and documentation -->
-    <InformationalVersion>0.5.0</InformationalVersion>
+    <InformationalVersion>0.6.0</InformationalVersion>
 
     <!-- Target framework -->
     <TargetFramework>net10.0</TargetFramework>

@@ -96,6 +96,8 @@ cp .env.example .env          # from the repository root
 | `DB_CONNECTION_STRING` | Full Postgres connection string for the web service container (host is the `postgres` service name). |
 | `SEQ_ADMIN_PASSWORD` | First-login password for the Seq UI `admin` user. Seq prompts you to choose the permanent UI password on first login. |
 | `SEQ_API_KEY` | Ingestion API-key token the web service sends to Seq over OTLP (`X-Seq-ApiKey`). |
+| `MAILPIT_SMTP_USER` | Username the web service uses to authenticate to the Mailpit dev mail sink (see [Email](#email-mailpit-dev-mail-sink)). Dev-only. |
+| `MAILPIT_SMTP_PASSWORD` | Password paired with `MAILPIT_SMTP_USER`. Dev-only; avoid a `:` (Mailpit splits `user:password` on the first colon). |
 
 For local development outside of Docker, the connection string is supplied via .NET User
 Secrets (see [Option 2](#option-2-local-postgresql) above); other settings can use
@@ -217,6 +219,7 @@ Access the application:
 - **API Documentation:** https://localhost:9000/movies-svc/api-docs/v1 (Scalar UI)
 - **OpenAPI Spec:** https://localhost:9000/movies-svc/openapi/v1.json
 - **Seq (logs & traces):** http://localhost:5341 — first login is `admin` with `SEQ_ADMIN_PASSWORD`; after the required password change, use the password you chose
+- **Mailpit (dev mail sink):** http://localhost:8025 — inbox of every email the app "sends" (see [Email](#-email-mailpit-dev-mail-sink))
 - **PostgreSQL:** localhost:5432
 
 The local UI/proxy certificate is self-signed, so your browser or `curl` may require an explicit trust/`-k` choice during development.
@@ -229,6 +232,7 @@ The local UI/proxy certificate is self-signed, so your browser or `curl` may req
 | `movies.webservice` | movies.webservice | 8080 internal | ASP.NET Core web API |
 | `cinadex-ui` | cinadex-ui | 9000 HTTPS | React SPA frontend and reverse proxy (Nginx) |
 | `seq` | datalust/seq | 5341 | Structured logs + distributed traces (OpenTelemetry/OTLP) |
+| `mailpit` | axllent/mailpit | 8025 UI, 1025 SMTP | Dev mail sink — captures outgoing email in a web UI (see [Email](#-email-mailpit-dev-mail-sink)) |
 
 ### Features
 
@@ -344,6 +348,49 @@ This deletes local Seq logs, API keys, and settings, but leaves the PostgreSQL v
 > **Note:** On Docker Desktop / Windows the Seq port is published on IPv4 loopback
 > (`127.0.0.1:5341`) on purpose — a dual-stack bind makes `localhost` resolve to IPv6 first,
 > which Docker Desktop fails to relay. Use `http://localhost:5341` or `http://127.0.0.1:5341`.
+
+## 📬 Email (Mailpit dev mail sink)
+
+Auth flows such as password reset need to send email. Rather than deliver real mail in
+development, the stack runs [**Mailpit**](https://mailpit.axllent.org/) — a fake SMTP server
+that **captures** every message and displays it in a web UI at **http://localhost:8025**.
+Nothing leaves your machine.
+
+> **Current status:** the web service ships `NoOpEmailSender`, so no mail is sent over SMTP
+> yet — reset emails are only logged (see the `Cinedex.Email.Smtp` adapter). Mailpit is here
+> and ready so that when the planned MailKit-based `SmtpEmailSender` lands it can point at
+> `mailpit:1025` with the credentials below and you'll see messages arrive in the UI.
+
+### How authentication is set up
+
+Mailpit's SMTP server requires a username and password, and **you control both** — they are not
+hard-coded. `MP_SMTP_AUTH_ACCEPT_ANY` is left at its default (`false`), so Mailpit validates
+logins against a password file instead of accepting anything:
+
+- You set `MAILPIT_SMTP_USER` / `MAILPIT_SMTP_PASSWORD` in the root `.env`.
+- On startup, the container writes a `user:password` auth file from those values and points
+  `MP_SMTP_AUTH_FILE` at it — so the credentials live only in your git-ignored `.env`, never in
+  the image or the repo.
+- `MP_SMTP_AUTH_ALLOW_INSECURE=true` is required because the dev connection is plaintext (no
+  STARTTLS); without it Mailpit would reject the login before checking the credentials.
+
+The web service authenticates to **host `mailpit`, port `1025`** with those same values. (From
+your machine the SMTP port is also published on `localhost:1025` if you want to test with an
+external mail client.)
+
+### Fresh-start checklist
+
+1. Ensure `MAILPIT_SMTP_USER` and `MAILPIT_SMTP_PASSWORD` are set in your `.env` (they're in
+   `.env.example`; any dev values work — avoid a `:` in the password, since Mailpit splits
+   `user:password` on the first colon).
+2. `docker compose up --build` — Mailpit starts with the rest of the stack; no volume or
+   first-run provisioning needed (unlike Seq).
+3. Open **http://localhost:8025** to watch captured mail. Messages are held in memory (a rolling
+   buffer of `MP_MAX_MESSAGES`, default 500) and are **not** persisted across `docker compose
+   down`, which is fine for a throwaway dev inbox.
+
+> ⚠️ The insecure-auth and plaintext settings are deliberately relaxed for a local sink and must
+> never be used for an internet-facing mail server.
 
 ## Architecture Overview
 

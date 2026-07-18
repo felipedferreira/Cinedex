@@ -45,6 +45,40 @@ services:
       timeout: 5s
       retries: 5
 
+  # Local dev mail sink: captures every email the web service sends and shows it in a web UI
+  # at http://localhost:8025 — nothing is delivered to real inboxes. SMTP AUTH is validated
+  # against a password file we generate at startup from the MAILPIT_SMTP_* values in .env
+  # (MP_SMTP_AUTH_ACCEPT_ANY stays at its default of false), so no credentials are baked into
+  # the image or committed to git. Point the web service's SMTP client at mailpit:1025.
+  mailpit:
+    image: axllent/mailpit:latest
+    container_name: movies-mailpit
+    environment:
+      # Rolling buffer; the oldest messages are pruned once this many are stored (500 is the
+      # default — set explicitly here for visibility). Use 0 for unlimited retention.
+      MP_MAX_MESSAGES: 500
+      MP_SMTP_AUTH_FILE: /tmp/smtp-auth
+      # The dev SMTP connection is plaintext (no STARTTLS), so allow AUTH over it; without this
+      # Mailpit rejects the login before it ever checks the credentials.
+      MP_SMTP_AUTH_ALLOW_INSECURE: "true"
+      MAILPIT_SMTP_USER: "${MAILPIT_SMTP_USER}"
+      MAILPIT_SMTP_PASSWORD: "${MAILPIT_SMTP_PASSWORD}"
+    # Write the "user:password" auth file from .env before launching Mailpit. The doubled $$
+    # escapes Compose interpolation so the shell inside the container expands the vars at runtime.
+    entrypoint:
+      - /bin/sh
+      - -c
+      - printf '%s:%s' "$$MAILPIT_SMTP_USER" "$$MAILPIT_SMTP_PASSWORD" > /tmp/smtp-auth && exec /mailpit
+    ports:
+      # Loopback-only, like Seq — these are developer tools, not part of the app's public surface.
+      - "127.0.0.1:8025:8025"   # Web UI -> http://localhost:8025
+      - "127.0.0.1:1025:1025"   # SMTP endpoint the web service connects to (host mailpit, port 1025)
+    healthcheck:
+      test: ["CMD", "/mailpit", "readyz"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
   movies.webservice:
     image: movies.webservice
     build:

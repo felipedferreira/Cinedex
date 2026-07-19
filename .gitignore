@@ -409,11 +409,6 @@ FodyWeavers.xsd
 *.sln.iml
 .idea/
 
-##
-## Visual studio for Mac
-##
-.claude/
-
 # globs
 Makefile.in
 *.userprefs
@@ -483,3 +478,9 @@ $RECYCLE.BIN/
 
 # Vim temporary swap files
 *.swp
+
+# Claude Code — personal, per-user settings (never commit)
+.claude/settings.local.json
+
+# Claude Code — skill-development scratch/eval workspaces
+.claude/skills/*-workspace/

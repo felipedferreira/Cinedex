@@ -1,0 +1,42 @@
+{
+  "version": "0.0.1",
+  "configurations": [
+    {
+      "name": "cinadex-ui",
+      "runtimeExecutable": "npm",
+      "runtimeArgs": ["run", "dev", "--prefix", "frontend/cinadex-ui"],
+      "port": 9000,
+      "autoPort": false
+    },
+    {
+      "name": "webservice-api",
+      "runtimeExecutable": "dotnet",
+      "runtimeArgs": [
+        "run",
+        "--project",
+        "backend/src/Presentation/Cinedex.WebService",
+        "--launch-profile",
+        "https-api-docs"
+      ],
+      "port": 7201
+    },
+    {
+      "name": "webservice-static-ui",
+      "runtimeExecutable": "npm",
+      "runtimeArgs": [
+        "run",
+        "dev",
+        "--prefix",
+        "backend/src/Presentation/Cinedex.WebService"
+      ],
+      "port": 5173
+    },
+    {
+      "name": "docker-stack",
+      "runtimeExecutable": "docker",
+      "runtimeArgs": ["compose", "up", "--build"],
+      "port": 9000,
+      "autoPort": false
+    }
+  ]
+}

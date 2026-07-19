@@ -15,12 +15,21 @@ dotnet add package Cinedex.WebService.Contracts
 - **UpdateTitlesRequest**: DTO for updating a title
 - **CreateGenreRequest**: DTO for creating a new genre
 - **UpdateGenreRequest**: DTO for updating a genre
+- **RegisterRequest**: DTO for registering a new user account
+- **LoginRequest**: DTO for logging in with email and password
+- **ForgotPasswordRequest**: DTO for requesting a password-reset email
+- **ResetPasswordRequest**: DTO for resetting a password with a reset token
 
 ### Responses
 - **TitleResponse**: DTO for title response data
+- **TitleDetailsResponse**: DTO for a single title including its linked genres
 - **TitlesResponse**: DTO for titles list response
 - **GenreResponse**: DTO for genre response data
 - **GenresResponse**: DTO for genres list response
+- **LoginResponse**: DTO carrying the JWT access token (the refresh token travels only as an HttpOnly cookie)
+
+### Enums
+- **TitleType**: The kind of catalog title (`Movie`, `TvSeries`, `TvEpisode`, `Short`, `TvSpecial`, `Video`)
 
 ## Endpoint Response Behavior
 

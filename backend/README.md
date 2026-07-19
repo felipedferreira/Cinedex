@@ -2,7 +2,7 @@
 
 [![Build and Test](https://github.com/felipedferreira/Cinedex/actions/workflows/build-and-test.yml/badge.svg)](https://github.com/felipedferreira/Cinedex/actions/workflows/build-and-test.yml)
 
-A clean architecture .NET solution for managing movies, their genres, crew members, and roles — inspired by IMDB. Built with a focus on separation of concerns, testability, and maintainability.
+A hexagonal (ports & adapters) .NET solution for cataloging movie titles and their genres — inspired by IMDB. Built with a focus on separation of concerns, testability, and maintainability.
 
 All `dotnet` commands below are run from this folder (`backend/`). Docker Compose commands run from the repository root, where [compose.yaml](../compose.yaml) lives.
 
@@ -28,13 +28,19 @@ refresh token; protected endpoints are guarded by JWT bearer middleware.
 
 - **Endpoints** under `/movies-svc/auth` — `register`, `login`, `refresh`, `logout`,
   `password/forgot`, `password/reset`.
-- **Tokens** — 15-minute HS256 access token, 7-day refresh token stored hashed and rotated on use.
+- **Tokens** — 15-minute HS256 access token in the response body; 7-day refresh token stored
+  hashed, rotated on use, and delivered only as an `HttpOnly`/`Secure` cookie (never in the body).
+- **Members-only catalog** — every Genre and Title endpoint (reads and writes) requires a bearer
+  token; anonymous catalog requests get `401`.
+- **Roles** — `User`, `Moderator`, and `Administrator` are seeded, registration assigns `User`,
+  and the access token carries role claims. No endpoint restricts by role yet.
 - **Schema** — all Identity tables live in a dedicated `auth` schema with its own migration history.
 
 > ⚠️ `Jwt:SigningKey` in `appsettings.json` is a **dev-only placeholder**. Override it per
 > environment via `Jwt__SigningKey` or User Secrets.
 
-Full details, including known gaps (no roles, no email delivery, no refresh-token reuse detection), are in the
+Full details, including known gaps (no role-restricted endpoints, no email delivery, no
+refresh-token reuse detection), are in the
 **[Auth & Security Model](../docs/auth-security-model.md)**.
 
 ## 🗄️ Database
@@ -200,7 +206,8 @@ dotnet run --project src/Presentation/Cinedex.WebService
 ## 🐳 Docker Compose
 
 The project includes a complete `compose.yaml` with PostgreSQL, the web service, the frontend,
-and a [Seq](https://datalust.co/seq) instance for logs and traces.
+a [Seq](https://datalust.co/seq) instance for logs and traces, and a
+[Mailpit](https://mailpit.axllent.org/) dev mail sink.
 
 ### Getting Started
 
@@ -557,7 +564,7 @@ Run from the repository root. Requires the root `.env` file — see the
 [🐳 Docker Compose](#-docker-compose) section above for full details.
 
 ```bash
-# Start the full stack (PostgreSQL, web service, frontend, Seq)
+# Start the full stack (PostgreSQL, web service, frontend, Seq, Mailpit)
 docker compose up --build
 
 # Run in background

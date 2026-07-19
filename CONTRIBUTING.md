@@ -1,6 +1,6 @@
-# Contributing to Movies
+# Contributing to Cinedex
 
-Thank you for your interest in contributing! This document provides guidelines and instructions for contributing to the Movies project.
+Thank you for your interest in contributing! This document provides guidelines and instructions for contributing to the Cinedex project.
 
 ## Code of Conduct
 
@@ -19,19 +19,24 @@ Be respectful, inclusive, and professional in all interactions.
 
 #### Option A — Docker Compose (full stack)
 
-Create the root `.env` file (one-time; required for the Seq observability stack — see
+Create the root `.env` file (one-time; database, Seq, and Mailpit values — see
 [backend README](backend/README.md#environment-configuration)), then run everything from the
 repository root:
 
 ```bash
-cp .env.example .env       # fill in the Seq values
+cp .env.example .env       # fill in the database, Seq, and Mailpit values
 docker compose up --build
 ```
 
 - **UI:** https://localhost:9000
 - **API:** https://localhost:9000/movies-svc
 - **Seq (logs & traces):** http://localhost:5341
+- **Mailpit (dev mail sink):** http://localhost:8025
 - **PostgreSQL:** localhost:5432
+
+> **Migrations are not applied automatically.** A fresh database needs `dotnet ef database update`
+> for both `FilmDbContext` and `AuthDbContext` — see
+> [Migrations](backend/README.md#migrations).
 
 #### Option B — Local development
 
@@ -72,7 +77,7 @@ docker compose up --build
 
 3. Run tests:
    ```bash
-   npm test
+   npm run test:run    # single pass; plain `npm test` runs watch mode
    ```
 
 ## Development Workflow
@@ -80,14 +85,12 @@ docker compose up --build
 ### 1. Create a Feature Branch
 
 ```bash
-git checkout -b feature/your-feature-name
+git checkout -b your-feature-name
 ```
 
-Branch naming convention:
-- `feature/` - New features
-- `bugfix/` - Bug fixes
-- `chore/` - Maintenance and refactoring
-- `docs/` - Documentation updates
+Branches use short kebab-case descriptions with no prefix convention — recent examples:
+`asp-net-identity-auth`, `smtp-client`. The change *type* is expressed in the commit
+message instead (see below).
 
 ### 2. Make Your Changes
 
@@ -122,8 +125,12 @@ Your IDE should automatically enforce EditorConfig rules (backend) and Prettier/
 ```bash
 git add .
 git commit -m "feat: add new feature description"
-git push origin feature/your-feature-name
+git push origin your-feature-name
 ```
+
+Commit messages follow [Conventional Commits](https://www.conventionalcommits.org/):
+`type(scope): summary`, with an optional scope. Types in use: `feat`, `fix`, `refactor`,
+`test`, `docs`, `chore`.
 
 ### 5. Create a Pull Request
 
@@ -167,9 +174,9 @@ Version numbers are centralized in `backend/Directory.Build.props`:
 
 ```xml
 <PropertyGroup>
-  <Version>0.5.0</Version>
-  <FileVersion>0.5.0</FileVersion>
-  <InformationalVersion>0.5.0</InformationalVersion>
+  <Version>0.6.0</Version>
+  <FileVersion>0.6.0</FileVersion>
+  <InformationalVersion>0.6.0</InformationalVersion>
 </PropertyGroup>
 ```
 
@@ -196,9 +203,11 @@ Key rules:
 
 - Write integration tests for endpoint behavior
 - Use xUnit for testing framework
-- Follow the pattern: `When<Action>_<ExpectedResult>`
+- Follow the pattern: `Action_Condition_Result`
 - Example: `GetMovie_WithUnknownId_ReturnsNotFound`
 - Tests should be isolated and deterministic
+- Integration tests require Docker to be running (Testcontainers spins up a Postgres container)
+- Catalog endpoints are members-only — use the fixture's `AuthenticatedClient` for them
 
 ### Documentation
 
@@ -236,11 +245,9 @@ All error responses are RFC 7807 Problem Details and carry the request's correla
 
 The project has automated CI/CD configured in `.github/workflows/build-and-test.yml`:
 
-- Runs on every push to main
-- Runs on all pull requests
-- Builds the solution
-- Runs all tests
-- Fails if tests don't pass
+- Runs on every push to main and on all pull requests
+- **Backend job** — changelog-sync check (root `CHANGELOG.md` vs `backend/CHANGELOG.md`), Release build, tests
+- **Frontend job** — `lint`, `format:check`, `build`, coverage
 
 Status checks are **required** to merge to main.
 
@@ -258,7 +265,7 @@ All commands below run from the `backend/` folder.
 ### Running a Specific Test
 
 ```bash
-dotnet test --filter "CreateMovieEndpointTests"
+dotnet test --filter "CreateTitleEndpointTests"
 ```
 
 ### Running with Verbose Output

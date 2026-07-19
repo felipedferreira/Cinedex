@@ -1,6 +1,6 @@
 # cinadex-ui
 
-The standalone SPA for the Movies project. In Docker Compose, Nginx serves it and reverse-proxies the backend OpenAPI spec at `https://localhost:9000/movies-svc/openapi/v1.json`.
+The standalone SPA for Cinedex. In Docker Compose, Nginx serves it and reverse-proxies the backend OpenAPI spec at `https://localhost:9000/movies-svc/openapi/v1.json`.
 
 ## 📁 Layout
 

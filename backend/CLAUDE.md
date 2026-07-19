@@ -50,7 +50,7 @@ Use the same shape with `migrations add <Name>`. The connection string resolves 
 
 ## Auth
 
-JWT bearer (15-minute HS256 access token) + rotating 7-day refresh token stored hashed and delivered as a `Secure` cookie. **All catalog endpoints require authentication**; only auth and health endpoints are anonymous. `Jwt:SigningKey` in `appsettings.json` is a dev-only placeholder — override per environment (`Jwt__SigningKey`/User Secrets). Full model and known gaps: `docs/auth-security-model.md`.
+JWT bearer (15-minute HS256 access token) + rotating 7-day refresh token stored hashed and delivered as a `Secure` cookie. **All catalog endpoints require authentication**; only auth and health endpoints are anonymous. Roles (`User`/`Moderator`/`Administrator`, constants in `RoleNames`) are seeded and issued as token claims — registration assigns `User` — but no endpoint restricts by role yet. `Jwt:SigningKey` in `appsettings.json` is a dev-only placeholder — override per environment (`Jwt__SigningKey`/User Secrets). Full model and known gaps: `docs/auth-security-model.md`.
 
 ## Testing
 

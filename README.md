@@ -2,7 +2,7 @@
 
 [![Build and Test](https://github.com/felipedferreira/Cinedex/actions/workflows/build-and-test.yml/badge.svg)](https://github.com/felipedferreira/Cinedex/actions/workflows/build-and-test.yml)
 
-A full-stack portfolio application for managing movies, crew members, and their roles — inspired by IMDB.
+A full-stack portfolio application for cataloging movie titles and their genres — inspired by IMDB — with JWT-based authentication in front of a members-only catalog.
 
 ## 📁 Repository Layout
 
@@ -10,17 +10,18 @@ A full-stack portfolio application for managing movies, crew members, and their 
 Cinedex/
 ├── backend/      # .NET solution (Web API, application core, persistence, tests)
 ├── frontend/     # Standalone SPA consuming the backend's OpenAPI spec
-└── compose.yaml  # Orchestrates PostgreSQL, the web service, the frontend, and Seq
+├── docs/         # Design docs (auth & security model, planned ADRs)
+└── compose.yaml  # Orchestrates PostgreSQL, the web service, the frontend, Seq, and Mailpit
 ```
 
-- **[Backend](backend/README.md)** — clean architecture .NET solution: architecture guide, build/test/migration instructions
+- **[Backend](backend/README.md)** — hexagonal (ports & adapters) .NET solution: architecture guide, build/test/migration instructions
 - **[Frontend](frontend/cinadex-ui/README.md)** — standalone React + TypeScript + Vite SPA (`cinadex-ui`)
 - **[Design docs](docs/README.md)** — why the system is shaped this way (auth & security model, planned ADRs)
 - **[Changelog](CHANGELOG.md)** — version history and release notes
 
 ## 🚀 Quick Start
 
-Create the root `.env` file (needed for the Seq observability stack — see the
+Create the root `.env` file (database, Seq, and Mailpit values — see the
 [backend README](backend/README.md#environment-configuration)), then run everything with
 Docker Compose from the repository root:
 

@@ -8,7 +8,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 ### Added
-- **SMTP email delivery** - Replaced `NoOpEmailSender` with a MailKit-based `SmtpEmailSender` requiring username/password authentication and supporting configurable TLS and HTML/plain-text bodies. Docker Compose now connects the web service to Mailpit so password-reset emails are captured end to end during development.
+- **SMTP email delivery** - Replaced `NoOpEmailSender` with a MailKit-based `SmtpEmailSender` requiring username/password authentication and supporting configurable TLS and HTML/plain-text bodies. Docker Compose now connects the web service to Mailpit so password-reset emails are captured end to end during development. An integration test starts a pinned Mailpit Testcontainer and verifies authenticated delivery through the real adapter.
 
 ---
 

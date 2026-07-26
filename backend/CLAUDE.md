@@ -22,7 +22,7 @@ Dependencies point inward: WebService → Adapters → Application → Domain.
 - `src/Application` — vertical-slice use cases + ports under `Abstractions/`. Each use case folder holds `<Name>Command`/`<Name>Query`, `<Name>Handler`, `I<Name>Handler`, and (for writes) `<Name>Validator` (FluentValidation).
 - `src/Adapters/Cinedex.Persistence.Postgres` — `FilmDbContext`, `catalog` schema (titles, genres), Fluent API configs (domain stays EF-free).
 - `src/Adapters/Cinedex.Auth.Identity` — ASP.NET Core Identity + JWT issuance, `AuthDbContext`, `auth` schema.
-- `src/Adapters/Cinedex.Email.Smtp` — `IEmailSender` port implementation (currently `NoOpEmailSender`).
+- `src/Adapters/Cinedex.Email.Smtp` — MailKit SMTP implementation of the `IEmailSender` port.
 - `src/Presentation/Cinedex.WebService` — FastEndpoints (one class per endpoint), exception-handler chain (`ExceptionHandlers/`, registration order matters, `DefaultExceptionHandler` last), health checks (`/health/live`, `/health/ready`), OpenTelemetry → Seq.
 - `NuGetLibraries/Cinedex.WebService.Contracts` — shared request/response DTOs (the packable API contract).
 
@@ -54,7 +54,9 @@ JWT bearer (15-minute HS256 access token) + rotating 7-day refresh token stored 
 
 ## Testing
 
+- `SmtpEmailSenderTests` starts a pinned Mailpit Testcontainer on random host ports and verifies authenticated HTML/plain-text delivery through the real MailKit adapter and Mailpit API.
+
 - xUnit integration tests in `tests/Cinedex.WebService.IntegrationTests`. `WebApplicationFixture` starts a `postgres:17-alpine` Testcontainer, migrates both contexts, and exposes three clients: `Client` (cookie jar), `CookielessClient` (for tests presenting a specific refresh cookie), and `AuthenticatedClient` (pre-authenticated bearer — use it for catalog endpoints, which are members-only).
 - Test base address is `https://localhost` because `CookieContainer` refuses to send a `Secure` cookie over http.
-- `CapturingEmailSender` replaces `IEmailSender` so password-reset tokens are captured, not sent.
+- Web-service endpoint tests replace `IEmailSender` with `CapturingEmailSender` so password-reset tokens are captured, not sent.
 - Naming: `Action_Condition_Result`, e.g. `GetMovie_WithUnknownId_ReturnsNotFound`.

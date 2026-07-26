@@ -94,6 +94,8 @@ services:
         condition: service_healthy
       seq:
         condition: service_healthy
+      mailpit:
+        condition: service_healthy
     environment:
       ASPNETCORE_ENVIRONMENT: Production
       # The app sits behind the cinadex-ui Nginx proxy; honor its X-Forwarded-* headers so
@@ -107,6 +109,13 @@ services:
       OTEL_EXPORTER_OTLP_PROTOCOL: "http/protobuf"
       OTEL_EXPORTER_OTLP_HEADERS: "X-Seq-ApiKey=${SEQ_API_KEY}"
       OTEL_SERVICE_NAME: "Cinedex.WebService"
+      Smtp__Host: "mailpit"
+      Smtp__Port: "1025"
+      Smtp__Username: "${MAILPIT_SMTP_USER}"
+      Smtp__Password: "${MAILPIT_SMTP_PASSWORD}"
+      Smtp__FromAddress: "no-reply@cinedex.local"
+      Smtp__FromName: "Cinedex"
+      Smtp__SecureSocketOptions: "None"
 
   cinadex-ui:
     image: cinadex-ui

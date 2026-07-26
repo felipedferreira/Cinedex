@@ -23,9 +23,13 @@
     <!-- Dependency Injection -->
     <PackageVersion Include="Microsoft.Extensions.DependencyInjection" Version="10.0.2" />
     <PackageVersion Include="Microsoft.Extensions.DependencyInjection.Abstractions" Version="10.0.2" />
+    <PackageVersion Include="Microsoft.Extensions.Options.ConfigurationExtensions" Version="10.0.2" />
 
     <!-- Logging -->
     <PackageVersion Include="Microsoft.Extensions.Logging.Abstractions" Version="10.0.2" />
+
+    <!-- Email -->
+    <PackageVersion Include="MailKit" Version="4.17.0" />
 
     <!-- Validation -->
     <PackageVersion Include="FluentValidation" Version="11.11.0" />
@@ -43,6 +47,7 @@
     <PackageVersion Include="System.IdentityModel.Tokens.Jwt" Version="8.14.0" />
 
     <!-- Testing -->
+    <PackageVersion Include="Testcontainers" Version="4.4.0" />
     <PackageVersion Include="Testcontainers.PostgreSql" Version="4.4.0" />
 
     <!-- Health Checks -->

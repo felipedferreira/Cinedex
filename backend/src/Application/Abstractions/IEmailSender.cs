@@ -7,10 +7,6 @@ namespace Cinedex.Application.Abstractions;
 /// <see cref="EmailMessage"/> and knows nothing about what the message is for. Composition (subject,
 /// body, links) is an application concern and happens before the message reaches this port.
 /// </summary>
-/// <remarks>
-/// No real mail provider is wired up yet: the <c>Cinedex.Email.Smtp</c> adapter registers a no-op
-/// implementation, so email is not delivered end to end. See <c>docs/auth-security-model.md</c>.
-/// </remarks>
 public interface IEmailSender
 {
     /// <summary>

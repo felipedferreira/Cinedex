@@ -1,9 +1,7 @@
-using System.Net.Sockets;
 using Cinedex.Application.Abstractions;
 using Cinedex.Application.Email;
 using Cinedex.Application.Exceptions;
 using MailKit.Net.Smtp;
-using MailKit.Security;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using MimeKit;

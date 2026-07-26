@@ -51,7 +51,9 @@ services:
   # (MP_SMTP_AUTH_ACCEPT_ANY stays at its default of false), so no credentials are baked into
   # the image or committed to git. Point the web service's SMTP client at mailpit:1025.
   mailpit:
-    image: axllent/mailpit:latest
+    # Pinned to match the tag SmtpEmailSenderTests starts as a Testcontainer, so a Mailpit release
+    # cannot change local dev behaviour without an explicit bump here.
+    image: axllent/mailpit:v1.30.0
     container_name: movies-mailpit
     environment:
       # Rolling buffer; the oldest messages are pruned once this many are stored (500 is the

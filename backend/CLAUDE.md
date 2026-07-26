@@ -22,7 +22,7 @@ Dependencies point inward: WebService → Adapters → Application → Domain.
 - `src/Application` — vertical-slice use cases + ports under `Abstractions/`. Each use case folder holds `<Name>Command`/`<Name>Query`, `<Name>Handler`, `I<Name>Handler`, and (for writes) `<Name>Validator` (FluentValidation).
 - `src/Adapters/Cinedex.Persistence.Postgres` — `FilmDbContext`, `catalog` schema (titles, genres), Fluent API configs (domain stays EF-free).
 - `src/Adapters/Cinedex.Auth.Identity` — ASP.NET Core Identity + JWT issuance, `AuthDbContext`, `auth` schema.
-- `src/Adapters/Cinedex.Email.Smtp` — MailKit SMTP implementation of the `IEmailSender` port.
+- `src/Adapters/Cinedex.Email.Smtp` — MailKit SMTP implementation of the `IEmailSender` port, plus the delivery queue: `ChannelEmailDispatcher` (the `IEmailDispatcher` port) enqueues, and the `EmailDeliveryWorker` background service drains it. Request-path code must depend on `IEmailDispatcher`, never `IEmailSender` — awaiting SMTP inline reopens an account-enumeration timing oracle on `password/forgot`.
 - `src/Presentation/Cinedex.WebService` — FastEndpoints (one class per endpoint), exception-handler chain (`ExceptionHandlers/`, registration order matters, `DefaultExceptionHandler` last), health checks (`/health/live`, `/health/ready`), OpenTelemetry → Seq.
 - `NuGetLibraries/Cinedex.WebService.Contracts` — shared request/response DTOs (the packable API contract).
 
@@ -58,5 +58,5 @@ JWT bearer (15-minute HS256 access token) + rotating 7-day refresh token stored 
 
 - xUnit integration tests in `tests/Cinedex.WebService.IntegrationTests`. `WebApplicationFixture` starts a `postgres:17-alpine` Testcontainer, migrates both contexts, and exposes three clients: `Client` (cookie jar), `CookielessClient` (for tests presenting a specific refresh cookie), and `AuthenticatedClient` (pre-authenticated bearer — use it for catalog endpoints, which are members-only).
 - Test base address is `https://localhost` because `CookieContainer` refuses to send a `Secure` cookie over http.
-- Web-service endpoint tests replace `IEmailSender` with `CapturingEmailSender` so password-reset tokens are captured, not sent.
+- Web-service endpoint tests replace `IEmailSender` with `CapturingEmailSender` so password-reset tokens are captured, not sent. Delivery is queued, so tests must `await fixture.EmailSender.WaitForMessageAsync(email)` rather than read a property synchronously; `BlockDelivery()`/`ResumeDelivery()` gate delivery for tests that assert the response precedes it.
 - Naming: `Action_Condition_Result`, e.g. `GetMovie_WithUnknownId_ReturnsNotFound`.

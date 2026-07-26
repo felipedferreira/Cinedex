@@ -86,7 +86,9 @@ public sealed class SmtpEmailSenderTests : IAsyncLifetime
 
     private static async Task<MailpitMessage> GetMessageAsync(HttpClient httpClient, string subject)
     {
-        for (var attempt = 0; attempt < 20; attempt++)
+        // 50 x 100 ms = 5 s. Generous for a loaded CI runner; the loop returns as soon as the
+        // message appears, so the ceiling costs nothing on the happy path.
+        for (var attempt = 0; attempt < 50; attempt++)
         {
             var messages = await httpClient.GetFromJsonAsync<MailpitMessageList>("api/v1/messages");
             var summary = messages?.Messages.SingleOrDefault(message => message.Subject == subject);

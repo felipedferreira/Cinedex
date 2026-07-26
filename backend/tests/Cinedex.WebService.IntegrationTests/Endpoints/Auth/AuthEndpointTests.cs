@@ -344,6 +344,35 @@ public sealed class AuthEndpointTests(WebApplicationFixture fixture)
     }
 
     [Fact]
+    public async Task ForgotPassword_WhileDeliveryIsStalled_RespondsBeforeTheEmailIsSent()
+    {
+        var email = NewEmail();
+        await RegisterAsync(email, "queueduser", Password);
+
+        fixture.EmailSender.BlockDelivery();
+        try
+        {
+            // If the handler still awaited delivery inline, this request could not complete while the
+            // sender is stalled: the WaitAsync below would time out instead of yielding a 202.
+            var forgot = await fixture.CookielessClient
+                .PostAsJsonAsync(
+                    TestRouteConstants.Auth.ForgotPasswordEndpoint,
+                    new ForgotPasswordRequest { Email = email })
+                .WaitAsync(TimeSpan.FromSeconds(10));
+
+            Assert.Equal(HttpStatusCode.Accepted, forgot.StatusCode);
+        }
+        finally
+        {
+            fixture.EmailSender.ResumeDelivery();
+        }
+
+        // Stalled, not dropped: the message still arrives once the sender is released.
+        var message = await fixture.EmailSender.WaitForMessageAsync(email);
+        Assert.False(string.IsNullOrWhiteSpace(ExtractResetToken(message)));
+    }
+
+    [Fact]
     public async Task ResetPassword_WithValidToken_ChangesPassword()
     {
         var email = NewEmail();
@@ -356,9 +385,10 @@ public sealed class AuthEndpointTests(WebApplicationFixture fixture)
         Assert.Equal(HttpStatusCode.Accepted, forgot.StatusCode);
 
         // The raw token is embedded in the reset link inside the composed email; extract it the way
-        // a real recipient's client would follow the link.
-        var message = fixture.EmailSender.LastMessage;
-        Assert.NotNull(message);
+        // a real recipient's client would follow the link. Delivery is queued and runs after the
+        // response, so wait for the message addressed to this test's unique account rather than
+        // reading whatever happened to be captured last.
+        var message = await fixture.EmailSender.WaitForMessageAsync(email);
         var resetToken = ExtractResetToken(message);
         Assert.False(string.IsNullOrWhiteSpace(resetToken));
 

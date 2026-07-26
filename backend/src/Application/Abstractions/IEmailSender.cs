@@ -7,6 +7,11 @@ namespace Cinedex.Application.Abstractions;
 /// <see cref="EmailMessage"/> and knows nothing about what the message is for. Composition (subject,
 /// body, links) is an application concern and happens before the message reaches this port.
 /// </summary>
+/// <remarks>
+/// This port performs the delivery and so takes as long as the mail provider does. Request-path
+/// callers should depend on <see cref="IEmailDispatcher"/> instead, which queues the message and
+/// returns immediately; a background worker then drains the queue through this port.
+/// </remarks>
 public interface IEmailSender
 {
     /// <summary>

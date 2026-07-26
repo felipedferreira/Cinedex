@@ -9,6 +9,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 - **SMTP email delivery** - Replaced `NoOpEmailSender` with a MailKit-based `SmtpEmailSender` requiring username/password authentication and supporting configurable TLS and HTML/plain-text bodies. Docker Compose now connects the web service to Mailpit so password-reset emails are captured end to end during development. An integration test starts a pinned Mailpit Testcontainer and verifies authenticated delivery through the real adapter.
+  - **Delivery is queued, not inline** — `ForgotPasswordHandler` now hands the reset email to a new `IEmailDispatcher` port that enqueues onto a bounded in-memory `Channel`; an `EmailDeliveryWorker` background service in the email adapter drains it and calls `IEmailSender`. Awaiting SMTP on the request thread made `POST /auth/password/forgot` measurably slower for real accounts than for unknown ones — an account-enumeration timing oracle, despite both returning `202 Accepted`. The queue is capacity-bounded (the endpoint is anonymous and unthrottled), drops with a warning rather than growing without limit, and drains on shutdown so a redeploy does not swallow an in-flight reset email. The residual gap is documented in the [Auth & Security Model](docs/auth-security-model.md).
+  - Successful sends no longer log the recipient address, so the log store cannot be read as a record of who requested a password reset.
+  - Documented how to use the Mailpit web UI to read captured mail — triggering a message, the HTML/Text/Raw/Source tabs, following the reset link, and the REST API — in the [backend README](backend/README.md#viewing-captured-mail). The Mailpit image is now pinned to `v1.30.0` to match the version the integration test starts.
 
 ---
 

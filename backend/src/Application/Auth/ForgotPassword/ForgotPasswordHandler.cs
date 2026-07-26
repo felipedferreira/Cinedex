@@ -1,7 +1,6 @@
 using Cinedex.Application.Abstractions;
 using Cinedex.Application.Configuration;
 using Cinedex.Application.Email;
-using Cinedex.Application.Exceptions;
 using FluentValidation;
 using Microsoft.Extensions.Logging;
 
@@ -9,7 +8,7 @@ namespace Cinedex.Application.Auth.ForgotPassword;
 
 internal sealed class ForgotPasswordHandler(
     IIdentityService identityService,
-    IEmailSender emailSender,
+    IEmailDispatcher emailDispatcher,
     FrontendOptions frontendOptions,
     IValidator<ForgotPasswordCommand> validator,
     ILogger<ForgotPasswordHandler> logger) : IForgotPasswordHandler
@@ -20,23 +19,18 @@ internal sealed class ForgotPasswordHandler(
 
         var resetToken = await identityService.GeneratePasswordResetTokenAsync(command.Email, cancellationToken);
 
-        // Respond identically whether or not the account exists to avoid account enumeration.
+        // Respond identically whether or not the account exists, to avoid account enumeration. That
+        // covers latency as well as the status code: the reset email is queued rather than sent, so
+        // the known-account path no longer waits on an SMTP conversation the unknown path skips.
         if (resetToken is null)
         {
             logger.LogInformation("Password reset requested for unknown email; ignoring.");
             return;
         }
 
-        try
-        {
-            await emailSender.SendAsync(BuildResetEmail(command.Email, resetToken), cancellationToken);
-        }
-        catch (EmailDeliveryException exception)
-        {
-            // Keep the response identical for known and unknown accounts, even during an email
-            // provider outage. The body and address are deliberately excluded from the log.
-            logger.LogError(exception, "Password reset email delivery failed.");
-        }
+        // Enqueue is non-blocking and cannot throw, so neither delivery latency nor delivery failure
+        // can reach the response. EmailDeliveryWorker logs failures instead.
+        emailDispatcher.Enqueue(BuildResetEmail(command.Email, resetToken));
     }
 
     // Composes the password-reset email here, in the application layer, so the transport adapter

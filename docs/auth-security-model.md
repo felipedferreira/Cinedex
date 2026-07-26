@@ -11,10 +11,10 @@ ports. The domain and application layers never reference ASP.NET Core Identity.
 | Layer | Type | Responsibility |
 |-------|------|----------------|
 | Domain | `UserAggregate/User` | Framework-free user aggregate. No password hashes, no tokens. |
-| Application | `IIdentityService`, `ITokenService`, `IEmailSender` | Ports the use cases depend on. |
+| Application | `IIdentityService`, `ITokenService`, `IEmailSender`, `IEmailDispatcher` | Ports the use cases depend on. `IEmailSender` delivers; `IEmailDispatcher` only queues, and is what request-path code uses. |
 | Application | `Auth/{Register,Login,Logout,Refresh,ForgotPassword,ResetPassword}` | One handler slice per use case, each with a FluentValidation validator. |
 | Adapter | `Cinedex.Auth.Identity` | Implements `IIdentityService` and `ITokenService`: ASP.NET Core Identity for accounts, JWT for tokens, EF Core for hashed refresh-token storage. `ApplicationUser : IdentityUser<Guid>` maps to the domain `User`. |
-| Adapter | `Cinedex.Email.Smtp` | Implements `IEmailSender` with MailKit. Email delivery is a messaging concern, not authentication, so it lives in its own adapter. |
+| Adapter | `Cinedex.Email.Smtp` | Implements `IEmailSender` with MailKit, plus `IEmailDispatcher` (`ChannelEmailDispatcher`) and the `EmailDeliveryWorker` background service that drains the queue. Email delivery is a messaging concern, not authentication, so it lives in its own adapter. |
 | Presentation | `Extensions/AuthenticationExtensions` | JWT bearer validation, authorization middleware. |
 | Presentation | `Http/RefreshTokenCookie` | Reads, sets, and clears the HttpOnly refresh-token cookie. Keeps the cookie a transport detail the Application layer never sees. |
 
@@ -197,8 +197,29 @@ the reset email — subject, body, and the reset link built from the token and t
 is an application concern; the `SmtpEmailSender` implementation in the `Cinedex.Email.Smtp` adapter
 is a thin MailKit transport that only delivers. It uses the configured `Smtp` section, requires
 SMTP username/password authentication, and supports plain text and HTML with a plain-text
-alternative. Delivery failures are logged without message content and do not change the
-forgot-password endpoint's `202 Accepted` response, preserving its account-enumeration protection.
+alternative.
+
+Delivery happens **off the request path**. The handler hands the composed message to the
+`IEmailDispatcher` port, which returns immediately; `ChannelEmailDispatcher` writes it to a bounded
+in-memory channel, and `EmailDeliveryWorker` — a `BackgroundService` in the same adapter — drains the
+channel and calls `IEmailSender`. This is what keeps the endpoint's *latency* identical for known and
+unknown accounts. Before it, the known-account path additionally awaited a four-round-trip SMTP
+conversation that the unknown path skipped, so the two were distinguishable from outside despite both
+returning `202 Accepted`. Consequences worth knowing:
+
+- **The queue is in-process and not durable.** A crash, or overflow of the 1,000-message queue, loses
+  queued email; the drop is logged (without the recipient address) and the user must request another
+  reset. A deliberate trade — an unbounded queue behind an anonymous endpoint is a memory-exhaustion
+  vector, and a dropped reset is recoverable where an out-of-memory process is not.
+- **Delivery failures never reach the caller.** `EmailDeliveryException` is caught and logged by
+  `EmailDeliveryWorker`, without the recipient address or body. `202 Accepted` means the request was
+  accepted, not that mail was sent.
+- **Deliveries never observe the request's `CancellationToken`,** which is already cancelled once the
+  response completes. The worker owns a separate token, cancelled only when the shutdown drain window
+  expires.
+- **Shutdown drains the queue.** `StopAsync` completes the channel writer and lets the worker finish
+  the backlog within a five-second window (inside Docker's ten-second default stop grace), so a
+  redeploy does not silently swallow an in-flight reset email.
 
 ## Errors
 
@@ -219,6 +240,20 @@ build on this.
 - **No refresh-token reuse detection.** `ReplacedByTokenHash` records the rotation chain, but
   nothing reads it. Presenting an already-revoked token returns `401` without revoking the rest of
   the chain — so a stolen-then-rotated token cannot be detected as a compromise.
+- **The forgot-password response still carries a small timing signal.** Queueing the reset email
+  removed the large one — the four-round-trip SMTP conversation that only the known-account path
+  performed, which MailKit lets run for up to two minutes against an unresponsive relay. What remains
+  is that a known account additionally runs `UserManager.GeneratePasswordResetTokenAsync` (an
+  AES + HMAC-SHA256 `DataProtectorTokenProvider` operation over already-loaded user state, tens of
+  microseconds) after the `FindByEmailAsync` lookup both paths share. That is one to three orders of
+  magnitude below normal network and pipeline jitter, so exploiting it needs a large sample from a
+  low-noise vantage point rather than a single observation — a narrow residue, not a closed hole.
+  Closing it entirely would require a constant-time response: padding every response to a fixed
+  latency floor, or moving token generation off the request path as well.
+- **No rate limiting anywhere in the service.** `POST /auth/password/forgot` is anonymous and
+  unthrottled, so nothing caps the sample size an attacker can collect against the residual timing
+  signal above, and nothing stops them enqueuing reset emails to a known address in a loop. This is
+  the higher-value next step for this endpoint.
 - **No endpoint yet enforces roles.** The `User`, `Moderator`, and `Administrator` roles are seeded
   and the access token carries them, but no endpoint restricts by role — Genre and Title endpoints
   require authentication, not a particular role, so any logged-in account can edit the catalog.

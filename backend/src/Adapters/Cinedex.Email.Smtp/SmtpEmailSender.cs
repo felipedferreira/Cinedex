@@ -39,10 +39,12 @@ internal sealed class SmtpEmailSender(
             throw new EmailDeliveryException("The email could not be delivered by the SMTP server.", exception);
         }
 
+        // The recipient address is deliberately excluded. A password-reset send logged against an
+        // address turns the log store into a record of who requested a reset — the same enumeration
+        // signal the forgot-password endpoint suppresses. Subject and tags are enough to correlate.
         logger.LogInformation(
-            "Sent email \"{Subject}\" to {Recipient} with tags {Tags}.",
+            "Sent email \"{Subject}\" with tags {Tags}.",
             message.Subject,
-            message.To.Address,
             message.Tags);
     }
 

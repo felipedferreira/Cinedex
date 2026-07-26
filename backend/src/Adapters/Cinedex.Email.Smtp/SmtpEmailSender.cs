@@ -36,13 +36,7 @@ internal sealed class SmtpEmailSender(
             await client.SendAsync(mimeMessage, cancellationToken);
             await client.DisconnectAsync(true, cancellationToken);
         }
-        catch (Exception exception) when (
-            exception is MailKit.Security.AuthenticationException or
-                SmtpCommandException or
-                SmtpProtocolException or
-                SslHandshakeException or
-                IOException or
-                SocketException)
+        catch (Exception exception) when (exception is not OperationCanceledException)
         {
             throw new EmailDeliveryException("The email could not be delivered by the SMTP server.", exception);
         }

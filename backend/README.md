@@ -39,8 +39,8 @@ refresh token; protected endpoints are guarded by JWT bearer middleware.
 > ⚠️ `Jwt:SigningKey` in `appsettings.json` is a **dev-only placeholder**. Override it per
 > environment via `Jwt__SigningKey` or User Secrets.
 
-Full details, including known gaps (no role-restricted endpoints, no email delivery, no
-refresh-token reuse detection), are in the
+Full details, including known gaps (no role-restricted endpoints and no refresh-token reuse
+detection), are in the
 **[Auth & Security Model](../docs/auth-security-model.md)**.
 
 ## 🗄️ Database
@@ -363,10 +363,9 @@ development, the stack runs [**Mailpit**](https://mailpit.axllent.org/) — a fa
 that **captures** every message and displays it in a web UI at **http://localhost:8025**.
 Nothing leaves your machine.
 
-> **Current status:** the web service ships `NoOpEmailSender`, so no mail is sent over SMTP
-> yet — reset emails are only logged (see the `Cinedex.Email.Smtp` adapter). Mailpit is here
-> and ready so that when the planned MailKit-based `SmtpEmailSender` lands it can point at
-> `mailpit:1025` with the credentials below and you'll see messages arrive in the UI.
+The web service uses MailKit through the `Cinedex.Email.Smtp` adapter. Under Docker Compose it
+connects to `mailpit:1025` with the credentials below, and delivered messages appear in the
+Mailpit UI.
 
 ### How authentication is set up
 
@@ -384,6 +383,30 @@ logins against a password file instead of accepting anything:
 The web service authenticates to **host `mailpit`, port `1025`** with those same values. (From
 your machine the SMTP port is also published on `localhost:1025` if you want to test with an
 external mail client.)
+
+The sender is configured through the `Smtp` section:
+
+| Setting | Purpose |
+|---------|---------|
+| `Host` | SMTP server host name. Required. |
+| `Port` | SMTP server port, from 1 through 65535. Required. |
+| `Username` / `Password` | SMTP authentication credentials. Both are required. |
+| `FromAddress` | Sender email address. Required. |
+| `FromName` | Optional sender display name. |
+| `SecureSocketOptions` | MailKit connection security: `None`, `Auto`, `SslOnConnect`, `StartTls`, or `StartTlsWhenAvailable`. |
+
+Configuration is validated when the service starts. Docker Compose supplies every setting and
+uses plaintext only for the local Mailpit sink. For a local `dotnet run`, the public development
+defaults point to `localhost:1025`; store the Mailpit credentials in User Secrets:
+
+```bash
+# from backend/src/Presentation/Cinedex.WebService
+dotnet user-secrets set "Smtp:Username" "cinedex"
+dotnet user-secrets set "Smtp:Password" "<YOUR_MAILPIT_PASSWORD>"
+```
+
+Production deployments must provide their own SMTP host, sender, credentials, and appropriate
+TLS mode through configuration or environment variables such as `Smtp__Host`.
 
 ### Fresh-start checklist
 
@@ -507,7 +530,7 @@ backend/
 **Responsibilities:**
 - Implements the `IEmailSender` port defined in `Cinedex.Application`
 - Kept separate from `Auth.Identity` because email delivery is a messaging concern, not authentication — a real SMTP sender has nothing to do with ASP.NET Core Identity
-- *Note: currently a `NoOpEmailSender` placeholder. The planned replacement is a MailKit-based `SmtpEmailSender` — MailKit is the recommended modern SMTP client (the built-in `System.Net.Mail.SmtpClient` is obsolete) and can target any relay via config. A future API-based provider would be a sibling, e.g. `Cinedex.Email.SendGrid`.*
+- Uses MailKit through `SmtpEmailSender` and can target any SMTP relay through validated configuration. A future API-based provider would be a sibling, e.g. `Cinedex.Email.SendGrid`.
 
 ### 6. **Cinedex.WebService** (Presentation/Entry Point Layer)
 **Purpose:** Web API and HTTP request handling  

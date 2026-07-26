@@ -1,6 +1,7 @@
 using Cinedex.Application.Abstractions;
 using Cinedex.Application.Configuration;
 using Cinedex.Application.Email;
+using Cinedex.Application.Exceptions;
 using FluentValidation;
 using Microsoft.Extensions.Logging;
 
@@ -26,7 +27,16 @@ internal sealed class ForgotPasswordHandler(
             return;
         }
 
-        await emailSender.SendAsync(BuildResetEmail(command.Email, resetToken), cancellationToken);
+        try
+        {
+            await emailSender.SendAsync(BuildResetEmail(command.Email, resetToken), cancellationToken);
+        }
+        catch (EmailDeliveryException exception)
+        {
+            // Keep the response identical for known and unknown accounts, even during an email
+            // provider outage. The body and address are deliberately excluded from the log.
+            logger.LogError(exception, "Password reset email delivery failed.");
+        }
     }
 
     // Composes the password-reset email here, in the application layer, so the transport adapter

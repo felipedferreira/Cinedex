@@ -92,6 +92,13 @@ public class WebApplicationFixture : WebApplicationFactory<Program>, IAsyncLifet
             config.AddInMemoryCollection(new Dictionary<string, string?>
             {
                 ["ConnectionStrings:DefaultConnection"] = _postgresContainer.GetConnectionString(),
+                ["Smtp:Host"] = "localhost",
+                ["Smtp:Port"] = "1025",
+                ["Smtp:Username"] = "cinedex-tests",
+                ["Smtp:Password"] = "cinedex-tests-password",
+                ["Smtp:FromAddress"] = "no-reply@cinedex.test",
+                ["Smtp:FromName"] = "Cinedex Tests",
+                ["Smtp:SecureSocketOptions"] = "None",
             });
         });
 

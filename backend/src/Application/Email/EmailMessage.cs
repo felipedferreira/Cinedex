@@ -15,9 +15,6 @@ public sealed record EmailMessage
     /// <summary>Gets the body. Its concrete type selects the format (HTML, plain text, …).</summary>
     public required EmailBody Body { get; init; }
 
-    /// <summary>Gets the attachments, if any.</summary>
-    public IReadOnlyList<EmailAttachment> Attachments { get; init; } = [];
-
     /// <summary>Gets the classification tags (e.g. "password-reset") for logging and analytics.</summary>
     public IReadOnlyList<string> Tags { get; init; } = [];
 }

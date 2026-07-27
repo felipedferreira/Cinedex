@@ -470,6 +470,8 @@ Expected: FAIL — compile error, `CinedexEmailLayout` and `EmailLayoutContent` 
 
 - [ ] **Step 3: Write minimal implementation**
 
+Two files, not one — `.editorconfig` sets `dotnet_diagnostic.SA1402.severity = error` (one type per file) repo-wide, so `EmailLayoutContent` goes in its own `EmailLayoutContent.cs` with a matching filename (SA1649). Put the record below in that file and the static class in `CinedexEmailLayout.cs`.
+
 Create `backend/src/Application/Email/CinedexEmailLayout.cs`:
 
 ```csharp
@@ -532,7 +534,7 @@ internal static class CinedexEmailLayout
             <p style="margin:0 0 14px;color:#f3ece6;font-size:26px;line-height:1.25">{content.Heading}</p>
             <p style="margin:0 0 26px;color:#c29d97;font-size:15px;line-height:1.65">{content.IntroHtml}</p>
             <table role="presentation" cellpadding="0" cellspacing="0" border="0"><tr>
-            <td style="background-color:#e0776f;border-radius:6px"><a href="{href}" style="display:inline-block;padding:14px 34px;color:#23090b;font-size:15px;text-decoration:none">{content.ButtonLabel}</a></td>
+            <td style="background-color:#e0776f;border-radius:6px;padding:14px 34px"><a href="{href}" style="display:block;color:#23090b;font-size:15px;text-decoration:none">{content.ButtonLabel}</a></td>
             </tr></table>
             {footnote}
             </td></tr>

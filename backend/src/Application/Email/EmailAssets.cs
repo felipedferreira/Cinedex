@@ -2,9 +2,12 @@ using System.Reflection;
 
 namespace Cinedex.Application.Email;
 
-// Binary assets embedded in this assembly and attached to outgoing mail. A missing resource would
-// throw while composing, and EmailDeliveryWorker logs delivery failures without surfacing them, so
-// a rename here would silently stop password-reset email. CinedexEmailLayoutTests is the guard.
+// Binary assets embedded in this assembly and attached to outgoing mail. A missing resource throws
+// while composing, which happens on the request thread before the message is enqueued: the caller
+// gets a 500 while the unknown-email path still answers 202, so a rename here would turn
+// password/forgot into an account-enumeration oracle rather than fail quietly. Lazy<T> caches the
+// thrown exception, so it would stay broken for the life of the process. The EmbeddedResource
+// LogicalName in the csproj and CinedexEmailLayoutTests are the guards.
 internal static class EmailAssets
 {
     /// <summary>The Content-ID the layout markup references as <c>cid:cinedex-logo</c>.</summary>

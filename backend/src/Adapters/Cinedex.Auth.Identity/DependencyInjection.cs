@@ -1,4 +1,5 @@
 using Cinedex.Application.Abstractions;
+using Cinedex.Application.Auth;
 using Cinedex.Auth.Identity.Constants;
 using Cinedex.Auth.Identity.Entities;
 using Cinedex.Auth.Identity.Options;
@@ -48,9 +49,11 @@ public static class DependencyInjection
             .AddEntityFrameworkStores<AuthDbContext>()
             .AddDefaultTokenProviders();
 
-        // Shortens the password-reset token lifespan from the Identity default of 1 day.
+        // Shortens the password-reset token lifespan from the Identity default of 1 day. The value
+        // comes from PasswordResetTokenPolicy, which the reset email also formats its "expires in"
+        // copy from, so the configured expiry and what the recipient is told cannot drift apart.
         services.Configure<DataProtectionTokenProviderOptions>(options =>
-            options.TokenLifespan = TimeSpan.FromHours(1));
+            options.TokenLifespan = PasswordResetTokenPolicy.Lifespan);
 
         services.AddOptions<JwtOptions>()
             .Configure<IConfiguration>((jwtOptions, configuration) =>

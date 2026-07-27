@@ -17,12 +17,15 @@ internal sealed class SmtpEmailSender(
     /// <inheritdoc />
     public async Task SendAsync(EmailMessage message, CancellationToken cancellationToken)
     {
-        var mimeMessage = BuildMimeMessage(message);
-
         using var client = new SmtpClient();
 
         try
         {
+            // Built inside the try so that a MimeKit failure — ContentType.Parse on an inline
+            // image's media type, say — surfaces as the EmailDeliveryException the port documents
+            // rather than as a raw MimeKit exception.
+            var mimeMessage = BuildMimeMessage(message);
+
             await client.ConnectAsync(
                 _options.Host,
                 _options.Port,

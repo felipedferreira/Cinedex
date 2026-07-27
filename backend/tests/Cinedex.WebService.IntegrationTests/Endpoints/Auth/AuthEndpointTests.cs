@@ -5,10 +5,14 @@ using System.Net.Http.Json;
 using System.Security.Claims;
 using System.Text.Json;
 using System.Text.RegularExpressions;
+using Cinedex.Application.Auth;
 using Cinedex.Application.Email;
 using Cinedex.WebService.Contracts.Requests;
 using Cinedex.WebService.Contracts.Responses;
 using Cinedex.WebService.IntegrationTests.Constants;
+using Microsoft.AspNetCore.Identity;
+using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Options;
 using Npgsql;
 
 namespace Cinedex.WebService.IntegrationTests.Auth;
@@ -370,6 +374,39 @@ public sealed class AuthEndpointTests(WebApplicationFixture fixture)
         // Stalled, not dropped: the message still arrives once the sender is released.
         var message = await fixture.EmailSender.WaitForMessageAsync(email);
         Assert.False(string.IsNullOrWhiteSpace(ExtractResetToken(message)));
+    }
+
+    [Fact]
+    public async Task ForgotPassword_WithKnownEmail_SendsTheBrandedEmail()
+    {
+        var email = NewEmail();
+        await RegisterAsync(email, "brandeduser", Password);
+
+        var forgot = await fixture.CookielessClient.PostAsJsonAsync(
+            TestRouteConstants.Auth.ForgotPasswordEndpoint,
+            new ForgotPasswordRequest { Email = email });
+        Assert.Equal(HttpStatusCode.Accepted, forgot.StatusCode);
+
+        // The only test that exercises EmailAssets.Logo() on the real request path: the branded
+        // layout references the logo by cid: and carries the bytes with the message.
+        var message = await fixture.EmailSender.WaitForMessageAsync(email);
+        var html = Assert.IsType<HtmlEmailBody>(message.Body);
+        Assert.Contains("cid:cinedex-logo", html.Content, StringComparison.Ordinal);
+        Assert.Single(html.InlineImages);
+
+        // The expiry copy is formatted from the same policy that configures the token lifespan.
+        var expiryNotice = $"This link expires in {PasswordResetTokenPolicy.LifespanDescription}.";
+        Assert.Contains(expiryNotice, html.Content, StringComparison.Ordinal);
+        Assert.Contains(expiryNotice, html.PlainTextFallback!, StringComparison.Ordinal);
+    }
+
+    [Fact]
+    public void PasswordResetToken_AsConfigured_ExpiresAfterThePolicyLifespan()
+    {
+        var options = fixture.Services
+            .GetRequiredService<IOptions<DataProtectionTokenProviderOptions>>();
+
+        Assert.Equal(PasswordResetTokenPolicy.Lifespan, options.Value.TokenLifespan);
     }
 
     [Fact]

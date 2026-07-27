@@ -39,7 +39,7 @@ internal static class CinedexEmailLayout
             <tr><td align="center" bgcolor="#23090b">
             <table role="presentation" cellpadding="0" cellspacing="0" border="0" width="560" style="width:560px;max-width:560px;font-family:-apple-system,'Segoe UI',Roboto,Helvetica,Arial,sans-serif">
             <tr><td align="center" style="background-color:#4d181b;padding:22px 32px">
-            <img src="cid:{logo.ContentId}" width="160" height="32" alt="Cinedex" style="display:block;border:0;outline:none;text-decoration:none" />
+            <img src="cid:{logo.ContentId}" width="160" height="32" alt="Cinedex" style="display:block;border:0;outline:none;text-decoration:none;color:#f3ece6;font-size:20px" />
             </td></tr>
             <tr><td style="background-color:#c44b43;height:3px;font-size:0;line-height:0">&nbsp;</td></tr>
             <tr><td style="background-color:#2f0e11;padding:36px 32px 30px">

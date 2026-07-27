@@ -46,6 +46,11 @@ internal sealed class ForgotPasswordHandler(
         const string introHtml = "We received a request to reset the password for your Cinedex account. "
             + "Choose a new one below.";
 
+        // Written once, from the same policy the identity adapter configures Identity's token
+        // lifespan from, so the HTML and the plain text cannot drift from each other or from the
+        // expiry the token actually has.
+        var expiryNotice = $"This link expires in {PasswordResetTokenPolicy.LifespanDescription}.";
+
         var plainTextBody = $"""
             Reset your password
 
@@ -54,7 +59,7 @@ internal sealed class ForgotPasswordHandler(
 
             {resetLink}
 
-            This link expires in 1 hour.
+            {expiryNotice}
 
             Didn't request this? Ignore this email - your password won't change.
             """;
@@ -64,7 +69,7 @@ internal sealed class ForgotPasswordHandler(
             IntroHtml: introHtml,
             ButtonLabel: "Reset password",
             ButtonUrl: resetLink,
-            FootnoteHtml: "This link expires in 1 hour.",
+            FootnoteHtml: expiryNotice,
             PlainTextBody: plainTextBody));
 
         return new EmailMessage

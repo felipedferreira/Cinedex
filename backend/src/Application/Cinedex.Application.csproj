@@ -11,4 +11,13 @@
       <ProjectReference Include="..\Domain\Cinedex.Domain.csproj" />
     </ItemGroup>
 
+    <ItemGroup>
+      <EmbeddedResource Include="Email\Assets\cinedex-logo.png"
+                        LogicalName="Cinedex.Application.Email.Assets.cinedex-logo.png" />
+    </ItemGroup>
+
+    <ItemGroup>
+      <InternalsVisibleTo Include="Cinedex.WebService.IntegrationTests" />
+    </ItemGroup>
+
 </Project>

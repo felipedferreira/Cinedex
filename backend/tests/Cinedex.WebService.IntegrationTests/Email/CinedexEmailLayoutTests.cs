@@ -21,4 +21,14 @@ public sealed class CinedexEmailLayoutTests
 
         Assert.Equal("logo", Assert.Single(body.InlineImages).ContentId);
     }
+
+    [Fact]
+    public void EmailAssets_Logo_ResolvesFromTheAssembly()
+    {
+        var logo = EmailAssets.Logo();
+
+        Assert.Equal("cinedex-logo", logo.ContentId);
+        Assert.Equal("image/png", logo.MediaType);
+        Assert.NotEmpty(logo.Content.ToArray());
+    }
 }

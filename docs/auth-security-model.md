@@ -197,12 +197,18 @@ user id and a snapshot of the account's `SecurityStamp`, so a token stops workin
 (or any other stamp-changing property) changes, and **expires one hour after issue**. That lifespan is
 set explicitly in `AddAuthenticationAdapter` via `DataProtectionTokenProviderOptions.TokenLifespan`,
 overriding Identity's one-day default; it applies to every token from the `Default` provider, which
-today means password reset only. Note that the `email` query parameter in the reset link is only a
-lookup convenience — the token alone is the proof of authorization.
+today means password reset only. The value itself lives in `PasswordResetTokenPolicy` in
+`Cinedex.Application`, which the reset email also formats its "expires in" sentence from, so the
+configured expiry and the copy the recipient reads cannot drift apart. Note that the `email` query
+parameter in the reset link is only a lookup convenience — the token alone is the proof of
+authorization. The token is stateless rather than stored, so it is not single-use: it stops working
+once a reset *succeeds* (the `SecurityStamp` changes) or once it expires, but until then the same
+link can be followed again.
 
-`ForgotPasswordHandler` composes
-the reset email — subject, body, and the reset link built from the token and the configured
-`Frontend:BaseUrl` — into an `EmailMessage`, then hands that to the `IEmailSender` port. Composition
+`ForgotPasswordHandler` composes the reset email — subject, the reset link built from the token and
+the configured `Frontend:BaseUrl`, and the branded HTML body that `CinedexEmailLayout` renders
+around them (with the Cinedex logo attached as an inline `cid:` image and a plain-text alternative
+alongside) — into an `EmailMessage`, then hands that to the `IEmailDispatcher` port. Composition
 is an application concern; the `SmtpEmailSender` implementation in the `Cinedex.Email.Smtp` adapter
 is a thin MailKit transport that only delivers. It uses the configured `Smtp` section, requires
 SMTP username/password authentication, and supports plain text and HTML with a plain-text

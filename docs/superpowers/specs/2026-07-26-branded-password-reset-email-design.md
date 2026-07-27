@@ -196,9 +196,12 @@ Mail-client constraints the markup must respect:
 
 Heading "Reset your password", one explanatory sentence, the button, then:
 
-- "This link expires in 1 hour." — accurate as of the `DataProtectionTokenProviderOptions.TokenLifespan`
-  change on this branch. **If that lifespan changes, this copy must change with it**; the two are
-  coupled by convention, not by code.
+- "This link expires in 1 hour." — formatted from `PasswordResetTokenPolicy` in
+  `Cinedex.Application`, which is also what `AddAuthenticationAdapter` sets
+  `DataProtectionTokenProviderOptions.TokenLifespan` from. The copy and the configured expiry are
+  coupled by the compiler, not by convention: change the policy and both move together. The sentence
+  is built once in `ForgotPasswordHandler` and passed to both the HTML footnote and the plain-text
+  body, so those two cannot drift either.
 - "If you didn't request this, you can ignore this email — your password won't change."
 - The raw URL in small muted text, because some clients strip styled buttons.
 
@@ -216,15 +219,30 @@ current code emits it raw, which is malformed HTML; most clients tolerate it, bu
 
 ## Error handling
 
-A missing or renamed embedded resource throws at compose time. Because `EmailDeliveryWorker` catches
-and logs delivery failures without surfacing them, that would **silently stop all password-reset
-emails in production** while the endpoint kept returning `202 Accepted`. The guard is therefore the
-unit test asserting the resource resolves from the assembly, not the exception message. `EmailAssets`
-throws `InvalidOperationException` naming the expected resource path to make the failure obvious in
-logs when it does occur.
+A missing or renamed embedded resource throws at compose time — and compose time is the request
+thread. `ForgotPasswordHandler.BuildResetEmail(...)` is evaluated as the *argument* to
+`IEmailDispatcher.Enqueue(...)`, so a throw from `EmailAssets.Logo()` propagates out of
+`HandleAsync`, through `ForgotPasswordEndpoint`, into `DefaultExceptionHandler`, and the caller gets
+**`500`**. The message is never enqueued, so `EmailDeliveryWorker` never sees it: this is not the
+logged-and-swallowed failure mode that *delivery* failures have.
 
-No new failure mode reaches the request path: composition still happens before `Enqueue`, and
-`Enqueue` remains non-throwing.
+Loud is better than silent here, but the shape of the loudness matters. The unknown-email path
+returns before composing anything (the `resetToken is null` branch) and still answers
+`202 Accepted`. A missing asset would therefore make `POST /auth/password/forgot` answer `202` for
+addresses with no account and `500` for real ones — an account-enumeration oracle on the one
+endpoint whose whole design is to answer identically either way. `Lazy<T>` defaults to
+`ExecutionAndPublication` and caches the thrown exception, so the failure would be stable for the
+life of the process rather than intermittent.
+
+Nothing here says the shipped code is fragile: the `EmbeddedResource` carries an explicit
+`LogicalName`, and the unit test asserting the resource resolves from the assembly fails the build
+if it stops matching. Those two are the guard. `EmailAssets` throws `InvalidOperationException`
+naming the expected resource path so the cause is obvious in the logs if it ever does happen.
+
+Validating the asset at startup — resolving it once during composition-root wiring, so a bad build
+fails to start rather than serving a 500 per real account — would close the gap properly. It is
+**not implemented on this branch**; it is recorded here as the mitigation to reach for if the asset
+set grows or the guard weakens.
 
 ## Testing
 

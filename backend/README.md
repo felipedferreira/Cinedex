@@ -441,14 +441,21 @@ curl -k -X POST https://localhost:9000/movies-svc/auth/password/forgot \
 
 | Tab | Shows |
 |---------|---------|
-| **HTML** | The rendered email — this is what a recipient sees. The reset link is the "Reset it here" anchor. |
+| **HTML** | The rendered email — this is what a recipient sees. The reset link is the **Reset password** button, with the raw URL repeated in small text below it. |
 | **Text** | The plain-text alternative. Easiest place to copy the reset URL from, since it's spelled out in full. |
 | **Raw** | The full MIME source, headers and all — useful for checking `From`, `To`, and the multipart structure. |
 | **Source** | The HTML body's markup, unrendered. |
 
 **4. Follow the link.** The reset URL points at `Frontend:BaseUrl` (`https://localhost:9000` under
-compose) and carries the account's email and a single-use reset token as query parameters. Opening it
-lands you on the SPA's reset-password page with both already filled in.
+compose) and carries the account's email and the reset token as query parameters. **There is no SPA
+page behind it yet** — the UI has no router, so the link lands on the untouched Vite starter page.
+To finish a reset today, copy the token out of the URL and `POST` it to
+`/movies-svc/auth/password/reset` yourself.
+
+The token is stateless (`DataProtectorTokenProvider`), not a stored single-use one: it expires one
+hour after issue, and a *successful* reset invalidates it by changing the account's `SecurityStamp`.
+Until one of those happens the same link keeps working — see the
+[Auth & Security Model](../docs/auth-security-model.md#password-reset).
 
 > **Note:** the message appears a beat *after* the `202 Accepted`, because delivery is queued and
 > handed to a background worker rather than performed during the request. If the inbox looks empty

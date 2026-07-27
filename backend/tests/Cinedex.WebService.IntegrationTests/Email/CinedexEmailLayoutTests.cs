@@ -31,4 +31,41 @@ public sealed class CinedexEmailLayoutTests
         Assert.Equal("image/png", logo.MediaType);
         Assert.NotEmpty(logo.Content.ToArray());
     }
+
+    [Fact]
+    public void Render_EncodesAmpersandsInTheButtonHref()
+    {
+        var body = CinedexEmailLayout.Render(SampleContent());
+
+        Assert.Contains("&amp;token=abc123", body.Content, StringComparison.Ordinal);
+        Assert.DoesNotContain("com&token=", body.Content, StringComparison.Ordinal);
+    }
+
+    [Fact]
+    public void Render_ReferencesTheAttachedLogoByContentId()
+    {
+        var body = CinedexEmailLayout.Render(SampleContent());
+
+        var logo = Assert.Single(body.InlineImages);
+        Assert.Contains($"cid:{logo.ContentId}", body.Content, StringComparison.Ordinal);
+    }
+
+    [Fact]
+    public void Render_KeepsTheRawUrlInThePlainTextFallback()
+    {
+        var body = CinedexEmailLayout.Render(SampleContent());
+
+        Assert.Contains(
+            "https://localhost:9000/reset-password?email=a%40b.com&token=abc123",
+            body.PlainTextFallback!,
+            StringComparison.Ordinal);
+    }
+
+    private static EmailLayoutContent SampleContent() => new(
+        Heading: "Reset your password",
+        IntroHtml: "We received a request to reset the password for your Cinedex account.",
+        ButtonLabel: "Reset password",
+        ButtonUrl: "https://localhost:9000/reset-password?email=a%40b.com&token=abc123",
+        FootnoteHtml: "This link expires in 1 hour.",
+        PlainTextBody: "Reset your password: https://localhost:9000/reset-password?email=a%40b.com&token=abc123");
 }

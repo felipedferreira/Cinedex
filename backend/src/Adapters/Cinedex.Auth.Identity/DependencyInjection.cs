@@ -48,6 +48,10 @@ public static class DependencyInjection
             .AddEntityFrameworkStores<AuthDbContext>()
             .AddDefaultTokenProviders();
 
+        // Shortens the password-reset token lifespan from the Identity default of 1 day.
+        services.Configure<DataProtectionTokenProviderOptions>(options =>
+            options.TokenLifespan = TimeSpan.FromHours(1));
+
         services.AddOptions<JwtOptions>()
             .Configure<IConfiguration>((jwtOptions, configuration) =>
             {

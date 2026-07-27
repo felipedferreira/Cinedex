@@ -13,6 +13,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - Successful sends no longer log the recipient address, so the log store cannot be read as a record of who requested a password reset.
   - Documented how to use the Mailpit web UI to read captured mail — triggering a message, the HTML/Text/Raw/Source tabs, following the reset link, and the REST API — in the [backend README](backend/README.md#viewing-captured-mail). The Mailpit image is now pinned to `v1.30.0` to match the version the integration test starts.
 
+### Security
+- **Password reset links now expire after one hour** - `AddAuthenticationAdapter` sets `DataProtectionTokenProviderOptions.TokenLifespan` explicitly, replacing Identity's one-day default and narrowing the window in which an intercepted or forwarded reset link stays usable. The lifespan applies to every token issued by Identity's `Default` provider, which today means password reset only. Documented in the [Auth & Security Model](docs/auth-security-model.md).
+
 ---
 
 ## [0.6.0] - 2026-07-18 Authentication & Authorization

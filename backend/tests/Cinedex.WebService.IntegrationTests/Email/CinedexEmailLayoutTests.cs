@@ -37,7 +37,10 @@ public sealed class CinedexEmailLayoutTests
     {
         var body = CinedexEmailLayout.Render(SampleContent());
 
-        Assert.Contains("&amp;token=abc123", body.Content, StringComparison.Ordinal);
+        Assert.Contains(
+            "href=\"https://localhost:9000/reset-password?email=a%40b.com&amp;token=abc123\"",
+            body.Content,
+            StringComparison.Ordinal);
         Assert.DoesNotContain("com&token=", body.Content, StringComparison.Ordinal);
     }
 
@@ -59,6 +62,35 @@ public sealed class CinedexEmailLayoutTests
             "https://localhost:9000/reset-password?email=a%40b.com&token=abc123",
             body.PlainTextFallback!,
             StringComparison.Ordinal);
+    }
+
+    [Fact]
+    public void Render_WithFootnote_RendersTheFootnoteText()
+    {
+        var body = CinedexEmailLayout.Render(SampleContent());
+
+        Assert.Contains("This link expires in 1 hour.", body.Content, StringComparison.Ordinal);
+    }
+
+    [Fact]
+    public void Render_WithoutFootnote_OmitsTheFootnoteText()
+    {
+        var content = SampleContent() with { FootnoteHtml = null };
+
+        var body = CinedexEmailLayout.Render(content);
+
+        Assert.DoesNotContain("This link expires in 1 hour.", body.Content, StringComparison.Ordinal);
+    }
+
+    [Fact]
+    public void Render_ProducesTheExpectedStructuralPieces()
+    {
+        var body = CinedexEmailLayout.Render(SampleContent());
+
+        Assert.Contains("background-color:#4d181b", body.Content, StringComparison.Ordinal);
+        Assert.Contains("background-color:#c44b43", body.Content, StringComparison.Ordinal);
+        Assert.Contains("background-color:#e0776f", body.Content, StringComparison.Ordinal);
+        Assert.Contains("width=\"160\" height=\"32\"", body.Content, StringComparison.Ordinal);
     }
 
     private static EmailLayoutContent SampleContent() => new(

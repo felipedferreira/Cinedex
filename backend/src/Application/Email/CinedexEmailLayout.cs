@@ -2,7 +2,7 @@ using System.Net;
 
 namespace Cinedex.Application.Email;
 
-// The "Marquee" shell: header band, crimson rule, body card, filled call to action.
+/// <summary>The "Marquee" shell: header band, crimson rule, body card, filled call to action.</summary>
 //
 // Deliberately 2005-era markup — tables, inline styles, solid hex. Mail clients do not support
 // flexbox or grid, Outlook's Word engine ignores rgba and drops backgrounds on block elements, and
@@ -19,6 +19,8 @@ internal static class CinedexEmailLayout
     {
         var logo = EmailAssets.Logo();
         var href = WebUtility.HtmlEncode(content.ButtonUrl);
+        var heading = WebUtility.HtmlEncode(content.Heading);
+        var buttonLabel = WebUtility.HtmlEncode(content.ButtonLabel);
         var footnote = content.FootnoteHtml is null
             ? string.Empty
             : $"""<p style="margin:24px 0 0;color:#e0776f;font-size:13px">{content.FootnoteHtml}</p>""";
@@ -30,21 +32,21 @@ internal static class CinedexEmailLayout
             <meta charset="utf-8" />
             <meta name="viewport" content="width=device-width,initial-scale=1" />
             <meta name="color-scheme" content="dark" />
-            <title>{content.Heading}</title>
+            <title>{heading}</title>
             </head>
             <body style="margin:0;padding:24px 0;background-color:#23090b">
             <table role="presentation" cellpadding="0" cellspacing="0" border="0" width="100%" style="background-color:#23090b">
-            <tr><td align="center">
+            <tr><td align="center" bgcolor="#23090b">
             <table role="presentation" cellpadding="0" cellspacing="0" border="0" width="560" style="width:560px;max-width:560px;font-family:-apple-system,'Segoe UI',Roboto,Helvetica,Arial,sans-serif">
             <tr><td align="center" style="background-color:#4d181b;padding:22px 32px">
             <img src="cid:{logo.ContentId}" width="160" height="32" alt="Cinedex" style="display:block;border:0;outline:none;text-decoration:none" />
             </td></tr>
             <tr><td style="background-color:#c44b43;height:3px;font-size:0;line-height:0">&nbsp;</td></tr>
             <tr><td style="background-color:#2f0e11;padding:36px 32px 30px">
-            <p style="margin:0 0 14px;color:#f3ece6;font-size:26px;line-height:1.25">{content.Heading}</p>
+            <p style="margin:0 0 14px;color:#f3ece6;font-size:26px;line-height:1.25">{heading}</p>
             <p style="margin:0 0 26px;color:#c29d97;font-size:15px;line-height:1.65">{content.IntroHtml}</p>
             <table role="presentation" cellpadding="0" cellspacing="0" border="0"><tr>
-            <td style="background-color:#e0776f;border-radius:6px"><a href="{href}" style="display:inline-block;padding:14px 34px;color:#23090b;font-size:15px;text-decoration:none">{content.ButtonLabel}</a></td>
+            <td style="background-color:#e0776f;border-radius:6px;padding:14px 34px"><a href="{href}" style="display:block;color:#23090b;font-size:15px;text-decoration:none">{buttonLabel}</a></td>
             </tr></table>
             {footnote}
             </td></tr>

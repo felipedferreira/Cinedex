@@ -13,6 +13,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - Successful sends no longer log the recipient address, so the log store cannot be read as a record of who requested a password reset.
   - Documented how to use the Mailpit web UI to read captured mail — triggering a message, the HTML/Text/Raw/Source tabs, following the reset link, and the REST API — in the [backend README](backend/README.md#viewing-captured-mail). The Mailpit image is now pinned to `v1.30.0` to match the version the integration test starts.
 
+### Changed
+- **Branded password-reset email** - The reset email is now a designed HTML message in the Cinedex crimson palette, with an embedded logo, a call-to-action button, and the one-hour expiry stated inline, replacing the previous single-sentence body. `HtmlEmailBody` gained an `InlineImages` collection and `SmtpEmailSender` maps it to MIME linked resources, so the logo travels with the message and needs no remote fetch — a remote image would have told a web server which recipients opened a reset email. Composition stays in the application layer via a new `CinedexEmailLayout`; the SMTP adapter still only delivers. Design recorded in [the spec](docs/superpowers/specs/2026-07-26-branded-password-reset-email-design.md).
+
 ### Security
 - **Password reset links now expire after one hour** - `AddAuthenticationAdapter` sets `DataProtectionTokenProviderOptions.TokenLifespan` explicitly, replacing Identity's one-day default and narrowing the window in which an intercepted or forwarded reset link stays usable. The lifespan applies to every token issued by Identity's `Default` provider, which today means password reset only. Documented in the [Auth & Security Model](docs/auth-security-model.md).
 

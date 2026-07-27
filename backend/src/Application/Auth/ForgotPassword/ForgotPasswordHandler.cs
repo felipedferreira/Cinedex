@@ -1,7 +1,6 @@
 using Cinedex.Application.Abstractions;
 using Cinedex.Application.Configuration;
 using Cinedex.Application.Email;
-using Cinedex.Application.Exceptions;
 using FluentValidation;
 using Microsoft.Extensions.Logging;
 
@@ -9,7 +8,7 @@ namespace Cinedex.Application.Auth.ForgotPassword;
 
 internal sealed class ForgotPasswordHandler(
     IIdentityService identityService,
-    IEmailSender emailSender,
+    IEmailDispatcher emailDispatcher,
     FrontendOptions frontendOptions,
     IValidator<ForgotPasswordCommand> validator,
     ILogger<ForgotPasswordHandler> logger) : IForgotPasswordHandler
@@ -20,27 +19,23 @@ internal sealed class ForgotPasswordHandler(
 
         var resetToken = await identityService.GeneratePasswordResetTokenAsync(command.Email, cancellationToken);
 
-        // Respond identically whether or not the account exists to avoid account enumeration.
+        // Respond identically whether or not the account exists, to avoid account enumeration. That
+        // covers latency as well as the status code: the reset email is queued rather than sent, so
+        // the known-account path no longer waits on an SMTP conversation the unknown path skips.
         if (resetToken is null)
         {
             logger.LogInformation("Password reset requested for unknown email; ignoring.");
             return;
         }
 
-        try
-        {
-            await emailSender.SendAsync(BuildResetEmail(command.Email, resetToken), cancellationToken);
-        }
-        catch (EmailDeliveryException exception)
-        {
-            // Keep the response identical for known and unknown accounts, even during an email
-            // provider outage. The body and address are deliberately excluded from the log.
-            logger.LogError(exception, "Password reset email delivery failed.");
-        }
+        // Enqueue is non-blocking and cannot throw, so neither delivery latency nor delivery failure
+        // can reach the response. EmailDeliveryWorker logs failures instead.
+        emailDispatcher.Enqueue(BuildResetEmail(command.Email, resetToken));
     }
 
     // Composes the password-reset email here, in the application layer, so the transport adapter
-    // stays a dumb pipe: the reset link and copy are built from the token and the configured SPA URL.
+    // stays a dumb pipe: the reset link is built from the token and the configured SPA URL, and the
+    // branded shell comes from CinedexEmailLayout.
     private EmailMessage BuildResetEmail(string email, string resetToken)
     {
         var resetLink =
@@ -48,14 +43,40 @@ internal sealed class ForgotPasswordHandler(
             $"?email={Uri.EscapeDataString(email)}" +
             $"&token={Uri.EscapeDataString(resetToken)}";
 
+        const string introHtml = "We received a request to reset the password for your Cinedex account. "
+            + "Choose a new one below.";
+
+        // Written once, from the same policy the identity adapter configures Identity's token
+        // lifespan from, so the HTML and the plain text cannot drift from each other or from the
+        // expiry the token actually has.
+        var expiryNotice = $"This link expires in {PasswordResetTokenPolicy.LifespanDescription}.";
+
+        var plainTextBody = $"""
+            Reset your password
+
+            We received a request to reset the password for your Cinedex account.
+            Open this link to choose a new one:
+
+            {resetLink}
+
+            {expiryNotice}
+
+            Didn't request this? Ignore this email - your password won't change.
+            """;
+
+        var body = CinedexEmailLayout.Render(new EmailLayoutContent(
+            Heading: "Reset your password",
+            IntroHtml: introHtml,
+            ButtonLabel: "Reset password",
+            ButtonUrl: resetLink,
+            FootnoteHtml: expiryNotice,
+            PlainTextBody: plainTextBody));
+
         return new EmailMessage
         {
             To = new EmailRecipient(email),
             Subject = "Reset your password",
-            Body = new HtmlEmailBody(
-                $"<p>We received a request to reset your password. " +
-                $"<a href=\"{resetLink}\">Reset it here</a>.</p>",
-                PlainTextFallback: $"Reset your password: {resetLink}"),
+            Body = body,
             Tags = ["password-reset"],
         };
     }

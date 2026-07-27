@@ -26,7 +26,7 @@ Create the root `.env` file (database, Seq, and Mailpit values — see the
 Docker Compose from the repository root:
 
 ```bash
-cp .env.example .env       # one-time; fill in the database and Seq values
+cp .env.example .env       # one-time; fill in the database, Seq, and Mailpit values
 docker compose up --build
 ```
 

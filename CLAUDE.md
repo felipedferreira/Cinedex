@@ -7,15 +7,15 @@ Full-stack movie catalog (IMDB-inspired portfolio app): .NET 10 backend + React 
 - `backend/` — .NET solution (`Cinedex.slnx`), hexagonal architecture. Details in `backend/CLAUDE.md`.
 - `frontend/cinadex-ui/` — React + TypeScript + Vite SPA (folder is spelled `cinadex`, not `cinedex`).
 - `docs/` — design docs (auth & security model); feature specs under `docs/superpowers/specs/`.
-- `compose.yaml` — full stack: Postgres 17, web service, UI + Nginx reverse proxy, Seq (logs/traces).
+- `compose.yaml` — full stack: Postgres 17, web service, UI + Nginx reverse proxy, Seq (logs/traces), Mailpit (dev mail sink).
 
 ## Commands
 
 - Backend (from `backend/`): `dotnet build`, `dotnet test`, `dotnet run --project src/Presentation/Cinedex.WebService`
 - Frontend (from `frontend/cinadex-ui/`): `npm ci`, `npm run dev`, `npm run test:run`, `npm run lint`, `npm run format:check`
-- Full stack (repo root): `docker compose up --build` — requires a root `.env` (`cp .env.example .env`, fill in DB/Seq values) or compose fails.
+- Full stack (repo root): `docker compose up --build` — requires a root `.env` (`cp .env.example .env`, fill in DB/Seq/Mailpit values) or compose fails.
 
-With compose up: UI/proxy at https://localhost:9000 (self-signed cert — `curl -k`), API at https://localhost:9000/movies-svc, Scalar API docs at `/movies-svc/api-docs/v1`, Seq at http://localhost:5341.
+With compose up: UI/proxy at https://localhost:9000 (self-signed cert — `curl -k`), API at https://localhost:9000/movies-svc, Scalar API docs at `/movies-svc/api-docs/v1`, Seq at http://localhost:5341, Mailpit (captured email) at http://localhost:8025.
 
 ## Critical gotchas
 

@@ -102,7 +102,7 @@ cp .env.example .env          # from the repository root
 | `DB_CONNECTION_STRING` | Full Postgres connection string for the web service container (host is the `postgres` service name). |
 | `SEQ_ADMIN_PASSWORD` | First-login password for the Seq UI `admin` user. Seq prompts you to choose the permanent UI password on first login. |
 | `SEQ_API_KEY` | Ingestion API-key token the web service sends to Seq over OTLP (`X-Seq-ApiKey`). |
-| `MAILPIT_SMTP_USER` | Username the web service uses to authenticate to the Mailpit dev mail sink (see [Email](#email-mailpit-dev-mail-sink)). Dev-only. |
+| `MAILPIT_SMTP_USER` | Username the web service uses to authenticate to the Mailpit dev mail sink (see [Email](#-email-mailpit-dev-mail-sink)). Dev-only. |
 | `MAILPIT_SMTP_PASSWORD` | Password paired with `MAILPIT_SMTP_USER`. Dev-only; avoid a `:` (Mailpit splits `user:password` on the first colon). |
 
 For local development outside of Docker, the connection string is supplied via .NET User
@@ -239,7 +239,7 @@ The local UI/proxy certificate is self-signed, so your browser or `curl` may req
 | `movies.webservice` | movies.webservice | 8080 internal | ASP.NET Core web API |
 | `cinadex-ui` | cinadex-ui | 9000 HTTPS | React SPA frontend and reverse proxy (Nginx) |
 | `seq` | datalust/seq | 5341 | Structured logs + distributed traces (OpenTelemetry/OTLP) |
-| `mailpit` | axllent/mailpit | 8025 UI, 1025 SMTP | Dev mail sink — captures outgoing email in a web UI (see [Email](#-email-mailpit-dev-mail-sink)) |
+| `mailpit` | axllent/mailpit:v1.30.0 | 8025 UI, 1025 SMTP | Dev mail sink — captures outgoing email in a web UI (see [Email](#-email-mailpit-dev-mail-sink)) |
 
 ### Features
 
@@ -367,6 +367,10 @@ The web service uses MailKit through the `Cinedex.Email.Smtp` adapter. Under Doc
 connects to `mailpit:1025` with the credentials below, and delivered messages appear in the
 Mailpit UI.
 
+Delivery runs **off the request path**: the endpoint hands the message to a queue and returns, and a
+background worker performs the SMTP conversation. So a message lands in Mailpit a moment *after* the
+API responds, not before — see [Viewing captured mail](#viewing-captured-mail) below.
+
 ### How authentication is set up
 
 Mailpit's SMTP server requires a username and password, and **you control both** — they are not
@@ -407,6 +411,66 @@ dotnet user-secrets set "Smtp:Password" "<YOUR_MAILPIT_PASSWORD>"
 
 Production deployments must provide their own SMTP host, sender, credentials, and appropriate
 TLS mode through configuration or environment variables such as `Smtp__Host`.
+
+### Viewing captured mail
+
+Mailpit's web UI is the inbox for everything the app sends. There's no login — the message list *is*
+the landing page.
+
+**1. Open the inbox.** With the stack up (`docker compose up --build`), browse to
+**http://localhost:8025**. On a fresh start it's empty; that's expected.
+
+**2. Make the app send something.** Password reset is the flow that actually sends mail today.
+Register an account, then ask for a reset (the API is behind the UI proxy on port 9000, and the cert
+is self-signed, hence `-k`):
+
+```bash
+# Register an account (skip if you already have one)
+curl -k -X POST https://localhost:9000/movies-svc/auth/register \
+  -H "Content-Type: application/json" \
+  -d '{"email":"you@example.com","userName":"you","password":"<YOUR_PASSWORD>"}'
+
+# Ask for a password reset — always returns 202, whether or not the account exists
+curl -k -X POST https://localhost:9000/movies-svc/auth/password/forgot \
+  -H "Content-Type: application/json" \
+  -d '{"email":"you@example.com"}'
+```
+
+**3. Read the message.** Refresh the inbox and a **Reset your password** message from
+`Cinedex <no-reply@cinedex.local>` appears. Click it to open the message view, which has four tabs:
+
+| Tab | Shows |
+|---------|---------|
+| **HTML** | The rendered email — this is what a recipient sees. The reset link is the **Reset password** button, with the raw URL repeated in small text below it. |
+| **Text** | The plain-text alternative. Easiest place to copy the reset URL from, since it's spelled out in full. |
+| **Raw** | The full MIME source, headers and all — useful for checking `From`, `To`, and the multipart structure. |
+| **Source** | The HTML body's markup, unrendered. |
+
+**4. Follow the link.** The reset URL points at `Frontend:BaseUrl` (`https://localhost:9000` under
+compose) and carries the account's email and the reset token as query parameters. **There is no SPA
+page behind it yet** — the UI has no router, so the link lands on the untouched Vite starter page.
+To finish a reset today, copy the token out of the URL and `POST` it to
+`/movies-svc/auth/password/reset` yourself.
+
+The token is stateless (`DataProtectorTokenProvider`), not a stored single-use one: it expires one
+hour after issue, and a *successful* reset invalidates it by changing the account's `SecurityStamp`.
+Until one of those happens the same link keeps working — see the
+[Auth & Security Model](../docs/auth-security-model.md#password-reset).
+
+> **Note:** the message appears a beat *after* the `202 Accepted`, because delivery is queued and
+> handed to a background worker rather than performed during the request. If the inbox looks empty
+> for a moment, refresh — that gap is by design, not a failure. (The reason is
+> [account-enumeration protection](../docs/auth-security-model.md#password-reset): waiting for SMTP
+> inline would make the response measurably slower for real accounts than for unknown ones.)
+
+**Handy while developing:** the search box filters by subject, sender, or body text; **Delete all**
+clears the inbox so the next run starts clean. Mailpit also exposes a REST API, which is how
+`SmtpEmailSenderTests` asserts delivery — `GET /api/v1/messages` lists them and
+`GET /api/v1/message/{id}` returns one in full:
+
+```bash
+curl -s http://localhost:8025/api/v1/messages | jq '.messages[] | {ID, Subject, To}'
+```
 
 ### Fresh-start checklist
 
@@ -531,6 +595,7 @@ backend/
 - Implements the `IEmailSender` port defined in `Cinedex.Application`
 - Kept separate from `Auth.Identity` because email delivery is a messaging concern, not authentication — a real SMTP sender has nothing to do with ASP.NET Core Identity
 - Uses MailKit through `SmtpEmailSender` and can target any SMTP relay through validated configuration. A future API-based provider would be a sibling, e.g. `Cinedex.Email.SendGrid`.
+- Also owns delivery scheduling: `ChannelEmailDispatcher` implements the `IEmailDispatcher` port by queueing onto a bounded in-memory channel, and the `EmailDeliveryWorker` background service drains it through `IEmailSender`. This keeps SMTP off the HTTP request path — see [Password reset](../docs/auth-security-model.md#password-reset).
 
 ### 6. **Cinedex.WebService** (Presentation/Entry Point Layer)
 **Purpose:** Web API and HTTP request handling  

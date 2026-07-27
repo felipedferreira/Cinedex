@@ -17,9 +17,7 @@ public static class DependencyInjection
                 options => options.Port is > 0 and <= 65_535,
                 $"{SmtpOptions.SectionName}:Port must be between 1 and 65535.")
             .Validate(
-                options =>
-                    options.FromAddress.Contains('@', StringComparison.Ordinal) &&
-                    MailboxAddress.TryParse(options.FromAddress, out _),
+                IsValidFromAddress,
                 $"{SmtpOptions.SectionName}:FromAddress must be a valid email address.")
             .Validate(
                 options => !string.IsNullOrWhiteSpace(options.Username),
@@ -34,6 +32,19 @@ public static class DependencyInjection
 
         services.AddSingleton<IEmailSender, SmtpEmailSender>();
 
+        // Delivery runs off the request path so POST /auth/password/forgot takes the same time for a
+        // known account as for an unknown one. The concrete dispatcher is registered alongside the
+        // port so EmailDeliveryWorker can reach its internal reader without widening IEmailDispatcher.
+        services.AddSingleton<ChannelEmailDispatcher>();
+        services.AddSingleton<IEmailDispatcher>(sp => sp.GetRequiredService<ChannelEmailDispatcher>());
+        services.AddHostedService<EmailDeliveryWorker>();
+
         return services;
     }
+
+    // The explicit '@' check is not redundant alongside TryParse: MimeKit parses a bare atom such as
+    // "no-reply" into a MailboxAddress quite happily, so TryParse alone accepts a domainless address.
+    private static bool IsValidFromAddress(SmtpOptions options) =>
+        options.FromAddress.Contains('@', StringComparison.Ordinal) &&
+        MailboxAddress.TryParse(options.FromAddress, out _);
 }

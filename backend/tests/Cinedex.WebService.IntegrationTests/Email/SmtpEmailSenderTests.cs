@@ -15,6 +15,7 @@ public sealed class SmtpEmailSenderTests : IAsyncLifetime
     private const ushort MailpitSmtpPort = 1025;
     private const string SmtpUsername = "cinedex-tests";
     private const string SmtpPassword = "cinedex-tests-password";
+    private static readonly byte[] PngHeader = [137, 80, 78, 71, 13, 10, 26, 10];
     private readonly IContainer _mailpitContainer = new ContainerBuilder()
         .WithImage("axllent/mailpit:v1.30.0")
         .WithEnvironment("MP_SMTP_AUTH", $"{SmtpUsername}:{SmtpPassword}")
@@ -84,9 +85,47 @@ public sealed class SmtpEmailSenderTests : IAsyncLifetime
         Assert.True(string.IsNullOrEmpty(plainTextMessage.Html));
     }
 
+    [Fact]
+    public async Task SendAsync_WithInlineImage_DeliversItAsALinkedResource()
+    {
+        using var serviceProvider = BuildServiceProvider();
+        var sender = serviceProvider.GetRequiredService<IEmailSender>();
+        var suffix = Guid.NewGuid().ToString("N");
+        var subject = $"Inline image message {suffix}";
+
+        await sender.SendAsync(
+            new EmailMessage
+            {
+                To = new EmailRecipient($"recipient-{suffix}@example.com", "Cinedex Recipient"),
+                Subject = subject,
+                Body = new HtmlEmailBody(
+                    "<p><img src=\"cid:cinedex-logo\" alt=\"Cinedex\" /></p>",
+                    PlainTextFallback: "Cinedex")
+                {
+                    InlineImages = [new InlineImage("cinedex-logo", "image/png", PngHeader)],
+                },
+                Tags = ["smtp-integration-test"],
+            },
+            CancellationToken.None);
+
+        using var httpClient = new HttpClient
+        {
+            BaseAddress = new Uri(
+                $"http://{_mailpitContainer.Hostname}:{_mailpitContainer.GetMappedPublicPort(MailpitHttpPort)}"),
+        };
+
+        var message = await GetMessageAsync(httpClient, subject);
+
+        var inline = Assert.Single(message.Inline);
+        Assert.Equal("cinedex-logo", inline.ContentID);
+        Assert.Equal("image/png", inline.ContentType);
+    }
+
     private static async Task<MailpitMessage> GetMessageAsync(HttpClient httpClient, string subject)
     {
-        for (var attempt = 0; attempt < 20; attempt++)
+        // 50 x 100 ms = 5 s. Generous for a loaded CI runner; the loop returns as soon as the
+        // message appears, so the ceiling costs nothing on the happy path.
+        for (var attempt = 0; attempt < 50; attempt++)
         {
             var messages = await httpClient.GetFromJsonAsync<MailpitMessageList>("api/v1/messages");
             var summary = messages?.Messages.SingleOrDefault(message => message.Subject == subject);
@@ -134,7 +173,10 @@ public sealed class SmtpEmailSenderTests : IAsyncLifetime
         string Subject,
         string Text,
         string Html,
-        string Username);
+        string Username,
+        IReadOnlyList<MailpitInlinePart> Inline);
 
     private sealed record MailpitAddress(string Address, string Name);
+
+    private sealed record MailpitInlinePart(string ContentID, string ContentType, string FileName);
 }

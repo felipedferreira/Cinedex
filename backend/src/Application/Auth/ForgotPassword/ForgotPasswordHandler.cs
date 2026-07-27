@@ -34,7 +34,8 @@ internal sealed class ForgotPasswordHandler(
     }
 
     // Composes the password-reset email here, in the application layer, so the transport adapter
-    // stays a dumb pipe: the reset link and copy are built from the token and the configured SPA URL.
+    // stays a dumb pipe: the reset link is built from the token and the configured SPA URL, and the
+    // branded shell comes from CinedexEmailLayout.
     private EmailMessage BuildResetEmail(string email, string resetToken)
     {
         var resetLink =
@@ -42,14 +43,35 @@ internal sealed class ForgotPasswordHandler(
             $"?email={Uri.EscapeDataString(email)}" +
             $"&token={Uri.EscapeDataString(resetToken)}";
 
+        const string introHtml = "We received a request to reset the password for your Cinedex account. "
+            + "Choose a new one below.";
+
+        var plainTextBody = $"""
+            Reset your password
+
+            We received a request to reset the password for your Cinedex account.
+            Open this link to choose a new one:
+
+            {resetLink}
+
+            This link expires in 1 hour.
+
+            Didn't request this? Ignore this email - your password won't change.
+            """;
+
+        var body = CinedexEmailLayout.Render(new EmailLayoutContent(
+            Heading: "Reset your password",
+            IntroHtml: introHtml,
+            ButtonLabel: "Reset password",
+            ButtonUrl: resetLink,
+            FootnoteHtml: "This link expires in 1 hour.",
+            PlainTextBody: plainTextBody));
+
         return new EmailMessage
         {
             To = new EmailRecipient(email),
             Subject = "Reset your password",
-            Body = new HtmlEmailBody(
-                $"<p>We received a request to reset your password. " +
-                $"<a href=\"{resetLink}\">Reset it here</a>.</p>",
-                PlainTextFallback: $"Reset your password: {resetLink}"),
+            Body = body,
             Tags = ["password-reset"],
         };
     }

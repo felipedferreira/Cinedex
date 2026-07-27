@@ -68,6 +68,16 @@ internal sealed class SmtpEmailSender(
             case HtmlEmailBody htmlBody:
                 bodyBuilder.HtmlBody = htmlBody.Content;
                 bodyBuilder.TextBody = htmlBody.PlainTextFallback;
+
+                foreach (var image in htmlBody.InlineImages)
+                {
+                    var resource = bodyBuilder.LinkedResources.Add(
+                        image.ContentId,
+                        image.Content.ToArray(),
+                        ContentType.Parse(image.MediaType));
+                    resource.ContentId = image.ContentId;
+                }
+
                 break;
             case PlainTextEmailBody plainTextBody:
                 bodyBuilder.TextBody = plainTextBody.Content;

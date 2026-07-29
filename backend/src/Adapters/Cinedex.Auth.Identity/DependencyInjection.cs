@@ -13,7 +13,7 @@ namespace Cinedex.Auth.Identity;
 
 public static class DependencyInjection
 {
-    public static IServiceCollection AddAuthenticationAdapter(this IServiceCollection services)
+    public static IServiceCollection AddAuthenticationPersistence(this IServiceCollection services)
     {
         services.AddDbContext<AuthDbContext>((sp, options) =>
         {
@@ -27,6 +27,13 @@ public static class DependencyInjection
                         AuthDatabaseConstants.AuthSchema))
                 .UseCamelCaseNamingConvention();
         });
+
+        return services;
+    }
+
+    public static IServiceCollection AddAuthenticationAdapter(this IServiceCollection services)
+    {
+        services.AddAuthenticationPersistence();
 
         services.AddIdentityCore<ApplicationUser>(options =>
             {

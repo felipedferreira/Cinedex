@@ -10,6 +10,7 @@ Operational instructions — how to build, run, test, and migrate — stay in th
 
 | Document | What it covers |
 |---|---|
+| [Auth Execution Plan](superpowers/plans/2026-07-29-auth-execution-plan.md) | 65-issue roadmap organized in 7 waves (dependency depth) and 6 lanes (staffing themes). Includes the interactive swimlane board, execution order algorithm, and critical path corrections. Start with Wave 0: 21 unblocked issues ready to ship today. |
 | [Auth & Security Model](auth-security-model.md) | JWT access tokens, rotating refresh tokens, the `auth` schema, Identity behind ports, and the known gaps. |
 
 ## Elsewhere

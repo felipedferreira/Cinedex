@@ -30,9 +30,8 @@ cp .env.example .env       # one-time; fill in the database, Seq, and Mailpit va
 docker compose up --build
 ```
 
-> **Migrations are not applied automatically.** The database starts empty; run `dotnet ef database
-> update` for both `FilmDbContext` and `AuthDbContext` before using the API. See
-> [Migrations](backend/README.md#migrations).
+The one-shot `movies.databasemigrator` container applies migrations for both database contexts
+before Compose starts the web service. See [Migrations](backend/README.md#migrations).
 
 Access the application:
 - **UI:** https://localhost:9000

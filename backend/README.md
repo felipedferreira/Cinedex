@@ -58,13 +58,13 @@ docker compose up            # from the repository root, where compose.yaml live
 
 This starts:
 - **PostgreSQL 17 Alpine** on port `5432`
+- **Database Migrator** as a one-shot container before the web service starts
 - **Movies WebService** on Docker-network port `8080` only
 - **Cinedex UI / reverse proxy** on `https://localhost:9000`
 - Browser auth flows should use the HTTPS proxy URL so `Secure` refresh cookies are accepted and same-origin with the SPA.
 - Data persistence via Docker volume
 
-The database is created empty. Apply migrations yourself before the API is usable — see
-[Migrations](#migrations).
+The database migrator applies pending migrations for both database contexts before the API starts.
 
 #### Option 2: Local PostgreSQL
 Ensure PostgreSQL is installed and running locally. The connection string is **not**
@@ -88,7 +88,7 @@ dotnet user-secrets list
 Most environment variables are baked into `compose.yaml` and applied to the containers
 automatically. **Secrets are the exception** — the database connection string and the Seq
 observability secrets are read from a git-ignored `.env` file at the repository root, which
-`compose.yaml` interpolates via `${...}`. A `docker compose up` without this file will fail.
+the Compose files interpolate via `${...}`. A `docker compose up` without this file will fail.
 
 Create it once by copying the template and filling in values:
 
@@ -99,7 +99,7 @@ cp .env.example .env          # from the repository root
 | Variable | Purpose |
 |----------|---------|
 | `DB_PASSWORD` | Password for the `movies_rw` Postgres user. Applied only when the `postgres_data` volume is first initialized; must match the password inside `DB_CONNECTION_STRING`. |
-| `DB_CONNECTION_STRING` | Full Postgres connection string for the web service container (host is the `postgres` service name). |
+| `DB_CONNECTION_STRING` | Full Postgres connection string for the database migrator and web service containers (host is the `postgres` service name). |
 | `SEQ_ADMIN_PASSWORD` | First-login password for the Seq UI `admin` user. Seq prompts you to choose the permanent UI password on first login. |
 | `SEQ_API_KEY` | Ingestion API-key token the web service sends to Seq over OTLP (`X-Seq-ApiKey`). |
 | `MAILPIT_SMTP_USER` | Username the web service uses to authenticate to the Mailpit dev mail sink (see [Email](#-email-mailpit-dev-mail-sink)). Dev-only. |
@@ -111,10 +111,15 @@ environment variables or configuration files as needed.
 
 ### Migrations
 
-> ⚠️ **Migrations are not applied automatically.** Neither `docker compose up` nor
-> `dotnet run` migrates the database — `Program.cs` does not call any initializer. A fresh
-> database has no tables until you run `dotnet ef database update` for **both** contexts below.
-> (`AuthDbInitializer.MigrateAsync` exists but is currently only used by the integration tests.)
+Docker Compose runs `Cinedex.DatabaseMigrator` after PostgreSQL becomes healthy. The migrator
+applies pending migrations for both contexts and exits; `movies.webservice` starts only after the
+migrator exits successfully. Local `dotnet run` of the web service still does not apply migrations.
+See the [Database Migrator README](src/Presentation/Cinedex.DatabaseMigrator/README.md) for its
+configuration, local execution, container lifecycle and pipeline usage.
+
+When run directly, the migrator loads `application.json`, then
+`application.{DOTNET_ENVIRONMENT}.json`. In `Development`, it also loads the same .NET User Secrets
+store as the web service. Environment variables and command-line arguments override those sources.
 
 The solution has **two `DbContext`s**, backed by two projects and two migration histories in the
 same physical database:
@@ -205,8 +210,8 @@ dotnet run --project src/Presentation/Cinedex.WebService
 
 ## 🐳 Docker Compose
 
-The project includes a complete `compose.yaml` with PostgreSQL, the web service, the frontend,
-a [Seq](https://datalust.co/seq) instance for logs and traces, and a
+The project uses a single `compose.yaml` containing PostgreSQL, the one-shot database migrator, the
+web service, the frontend, a [Seq](https://datalust.co/seq) instance for logs and traces, and a
 [Mailpit](https://mailpit.axllent.org/) dev mail sink.
 
 ### Getting Started
@@ -236,6 +241,7 @@ The local UI/proxy certificate is self-signed, so your browser or `curl` may req
 | Service | Image | Port | Purpose |
 |---------|-------|------|---------|
 | `postgres` | postgres:17-alpine | 5432 | PostgreSQL database with persistent storage |
+| `movies.databasemigrator` | movies.databasemigrator | None | Applies pending database migrations and exits |
 | `movies.webservice` | movies.webservice | 8080 internal | ASP.NET Core web API |
 | `cinadex-ui` | cinadex-ui | 9000 HTTPS | React SPA frontend and reverse proxy (Nginx) |
 | `seq` | datalust/seq | 5341 | Structured logs + distributed traces (OpenTelemetry/OTLP) |

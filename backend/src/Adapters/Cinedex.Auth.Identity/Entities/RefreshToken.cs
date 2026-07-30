@@ -8,6 +8,11 @@ internal sealed class RefreshToken
 
     public required Guid UserId { get; init; }
 
+    // Identifies the rotation chain a token belongs to: a login mints a new family, and every
+    // rotation copies the incoming token's value onto its replacement. Immutable for the row's
+    // lifetime — that immutability is what makes it safe to read from a stale AsNoTracking() row.
+    public required Guid FamilyId { get; init; }
+
     public required string TokenHash { get; set; }
 
     public required DateTime ExpiresAtUtc { get; init; }

@@ -12,5 +12,7 @@ internal static class AuthDatabaseConstants
         public const string PrimaryKey = "PK_refreshTokens";
         public const string TokenHashIndex = "IX_refreshTokens_tokenHash";
         public const string UserIdIndex = "IX_refreshTokens_userId";
+
+        public const string FamilyIdIndex = "IX_refreshTokens_familyId";
     }
 }

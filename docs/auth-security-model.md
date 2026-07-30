@@ -43,6 +43,7 @@ Anonymous catalog requests receive `401 Unauthorized`
 POST /auth/login
   ├─ access token   JWT, HS256, 15 min   (Jwt:AccessTokenMinutes)   → response body
   └─ refresh token  32 random bytes, base64, 7 days   (Jwt:RefreshTokenDays)   → Set-Cookie only
+       FamilyId = new Guid v7   (a login starts a new token family)
 
 POST /auth/refresh  (refresh token read from the cookie; no request body)
   ├─ look up by SHA-256 hash
@@ -51,8 +52,9 @@ POST /auth/refresh  (refresh token read from the cookie; no request body)
   └─ rotate:
        old.RevokedAtUtc = now
        old.ReplacedByTokenHash = hash(new)
+       new.FamilyId = old.FamilyId   (rotation stays in the same family)
        new token pair issued; the new refresh token is written as a fresh Set-Cookie
-     (both writes committed in one SaveChangesAsync)
+     (both writes committed in one transaction)
 
 POST /auth/logout  (refresh token read from the cookie; no request body)
   └─ RevokedAtUtc = now, and the cookie is cleared.
@@ -129,6 +131,32 @@ and is never persisted in raw form. The database stores only `SHA256(token)` as 
 Rotation on every use means a stolen refresh token has a bounded window: the moment the legitimate
 client refreshes, the stolen token is revoked, and vice versa.
 
+### Token families
+
+Every refresh token carries a `FamilyId`: a Guid v7 minted by `POST /auth/login` and copied unchanged
+onto each replacement by `POST /auth/refresh`. One login therefore produces one family, and the whole
+rotation chain that follows shares a single indexed value. Two logins by the same account are two
+families, so they can be reasoned about — and revoked — independently.
+
+The identifier is already derivable by walking `ReplacedByTokenHash` hash by hash. The point of
+storing it is that the walk collapses into one indexed lookup: a 15-minute access token over a 7-day
+refresh window means a continuously-active session can accumulate several hundred rotations, so
+chain-walking would cost that many sequential round-trips on the refresh path. It is also
+forward-only, which leaves a chain's live tail unreachable from an older token.
+
+`FamilyId` is immutable once written. That is what lets rotation copy it from a non-tracked read
+without re-checking under the row lock: no version of the row holds a different value. Contrast
+`RevokedAtUtc`, which does change, and which the conditional update therefore re-verifies rather than
+trusting the read.
+
+**Nothing reads `FamilyId` yet.** Presenting an already-rotated token still returns a bare `401` and
+leaves the rest of the family valid, and logout still revokes exactly one row. The identifier is
+groundwork; see [Known gaps](#known-gaps).
+
+The value never leaves the server — it is absent from the cookie and from the access-token claims.
+Keep it that way: a Guid v7 embeds its creation timestamp, so exposing it would hand a client the
+wall-clock time its session began.
+
 ## Storage
 
 All Identity and refresh-token tables live in a dedicated **`auth` schema**, set via
@@ -150,6 +178,17 @@ schema alongside users. Three roles are seeded via `HasData` in `RoleConfigurati
 
 Role names live as constants in `RoleNames`; reference them from `[Authorize(Roles = ...)]` rather
 than string literals.
+
+The `refreshTokens` table carries `familyId` (`uuid`, not null) under a non-unique index
+`IX_refreshTokens_familyId`, alongside the unique `IX_refreshTokens_tokenHash` and
+`IX_refreshTokens_userId`. The `AddRefreshTokenFamilyId` migration deletes every pre-existing row
+rather than backfilling one: rows written before the column existed belong to no real family, and any
+value invented for them would be a fiction that a later family-wide revocation would act on —
+reporting a contained compromise while containing nothing. Refresh tokens are ephemeral by design and
+losing one costs a single login, so the migration ends whatever sessions were live when it ran.
+Deleting rather than aborting on existing data also keeps the migration unable to fail:
+`movies.databasemigrator` gates the web service on its exit code, so a migration that could reject a
+populated table would stop the stack from starting.
 
 ### Identity options
 
@@ -249,12 +288,17 @@ correlation id.
 These are deliberate scope cuts, not oversights — but they are load-bearing if you are about to
 build on this.
 
-- **Migrations are not applied at startup.** `AuthDbInitializer.MigrateAsync` exists but is only
-  called from the integration-test fixture. Nothing in `Program.cs` migrates either context. See
-  the [backend README](../backend/README.md#migrations).
-- **No refresh-token reuse detection.** `ReplacedByTokenHash` records the rotation chain, but
-  nothing reads it. Presenting an already-revoked token returns `401` without revoking the rest of
-  the chain — so a stolen-then-rotated token cannot be detected as a compromise.
+- **Migrations are not applied by the web service.** The `Cinedex.DatabaseMigrator` project applies
+  both contexts, and Compose gates the web service on it completing successfully; the integration-test
+  fixture migrates itself. Nothing in `Program.cs` migrates either context, so a `dotnet run` against a
+  fresh database still needs the migrator or an explicit `dotnet ef database update`. See the
+  [backend README](../backend/README.md#migrations).
+- **No refresh-token reuse response.** Every row now carries a `FamilyId` that a login mints and each
+  rotation copies, so an entire session's rotation chain is reachable by one indexed lookup rather
+  than by walking `ReplacedByTokenHash` hash by hash. Nothing reads it yet: presenting an
+  already-revoked token returns a bare `401` and leaves the rest of the family valid, so a
+  stolen-then-rotated token is still not treated as a compromise. The identifier was the
+  prerequisite; the response is the remaining work.
 - **The forgot-password response still carries a small timing signal.** Queueing the reset email
   removed the large one — the four-round-trip SMTP conversation that only the known-account path
   performed, which MailKit lets run for up to two minutes against an unresponsive relay. What remains

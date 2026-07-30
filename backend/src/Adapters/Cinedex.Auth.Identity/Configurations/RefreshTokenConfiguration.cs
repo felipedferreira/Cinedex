@@ -23,6 +23,10 @@ internal sealed class RefreshTokenConfiguration : IEntityTypeConfiguration<Refre
         builder.HasIndex(token => token.UserId)
             .HasDatabaseName(AuthDatabaseConstants.RefreshToken.UserIdIndex);
 
+        // Not unique: a family holds every token in one login's rotation chain.
+        builder.HasIndex(token => token.FamilyId)
+            .HasDatabaseName(AuthDatabaseConstants.RefreshToken.FamilyIdIndex);
+
         builder.HasOne<ApplicationUser>()
             .WithMany()
             .HasForeignKey(token => token.UserId)

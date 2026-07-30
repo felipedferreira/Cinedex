@@ -3,6 +3,8 @@ using System.Net;
 using System.Net.Http.Headers;
 using System.Net.Http.Json;
 using System.Security.Claims;
+using System.Security.Cryptography;
+using System.Text;
 using System.Text.Json;
 using System.Text.RegularExpressions;
 using Cinedex.Application.Auth;
@@ -284,6 +286,128 @@ public sealed class AuthEndpointTests(WebApplicationFixture fixture)
     }
 
     [Fact]
+    public async Task Login_WithValidCredentials_StartsANewTokenFamily()
+    {
+        var email = NewEmail();
+        await RegisterAsync(email, "familyuser", Password);
+
+        var (_, refreshCookie) = await LoginAsync(email, Password);
+
+        var familyId = await GetTokenFamilyIdAsync(refreshCookie);
+        Assert.NotEqual(Guid.Empty, familyId);
+        Assert.Equal(1L, await CountTokensInFamilyAsync(familyId));
+    }
+
+    [Fact]
+    public async Task Refresh_WithCookie_PreservesTheTokenFamily()
+    {
+        var email = NewEmail();
+        await RegisterAsync(email, "familyrotate", Password);
+        var (_, refreshCookie) = await LoginAsync(email, Password);
+        var originalFamilyId = await GetTokenFamilyIdAsync(refreshCookie);
+
+        var response = await PostAsync(TestRouteConstants.Auth.RefreshEndpoint, refreshCookie);
+
+        Assert.Equal(HttpStatusCode.OK, response.StatusCode);
+        var rotated = ReadRefreshCookieValue(response);
+        Assert.False(string.IsNullOrWhiteSpace(rotated));
+        Assert.Equal(originalFamilyId, await GetTokenFamilyIdAsync(rotated!));
+    }
+
+    [Fact]
+    public async Task Refresh_TwiceInSequence_PreservesTheTokenFamilyAcrossTheChain()
+    {
+        var email = NewEmail();
+        await RegisterAsync(email, "familychain", Password);
+        var (_, refreshCookie) = await LoginAsync(email, Password);
+        var originalFamilyId = await GetTokenFamilyIdAsync(refreshCookie);
+
+        var first = await PostAsync(TestRouteConstants.Auth.RefreshEndpoint, refreshCookie);
+        Assert.Equal(HttpStatusCode.OK, first.StatusCode);
+        var firstRotated = ReadRefreshCookieValue(first);
+        Assert.False(string.IsNullOrWhiteSpace(firstRotated));
+
+        var second = await PostAsync(TestRouteConstants.Auth.RefreshEndpoint, firstRotated);
+        Assert.Equal(HttpStatusCode.OK, second.StatusCode);
+        var secondRotated = ReadRefreshCookieValue(second);
+        Assert.False(string.IsNullOrWhiteSpace(secondRotated));
+
+        Assert.Equal(originalFamilyId, await GetTokenFamilyIdAsync(firstRotated!));
+        Assert.Equal(originalFamilyId, await GetTokenFamilyIdAsync(secondRotated!));
+
+        // The revoked ancestors stay in the family, which is what lets a family-wide revocation see
+        // the whole chain rather than only its tail.
+        Assert.Equal(3L, await CountTokensInFamilyAsync(originalFamilyId));
+    }
+
+    [Fact]
+    public async Task Login_TwiceForTheSameUser_StartsSeparateTokenFamilies()
+    {
+        var email = NewEmail();
+        await RegisterAsync(email, "twofamilies", Password);
+
+        var (_, firstCookie) = await LoginAsync(email, Password);
+        var (_, secondCookie) = await LoginAsync(email, Password);
+
+        var firstFamilyId = await GetTokenFamilyIdAsync(firstCookie);
+        var secondFamilyId = await GetTokenFamilyIdAsync(secondCookie);
+
+        // Two devices are two sessions: revoking one must not be able to reach the other.
+        Assert.NotEqual(firstFamilyId, secondFamilyId);
+        Assert.Equal(1L, await CountTokensInFamilyAsync(firstFamilyId));
+        Assert.Equal(1L, await CountTokensInFamilyAsync(secondFamilyId));
+    }
+
+    [Fact]
+    public async Task Refresh_WithSameCookieConcurrently_KeepsTheWinnerInTheSameFamily()
+    {
+        var email = NewEmail();
+        await RegisterAsync(email, "concurrentfamily", Password);
+        var (_, refreshCookie) = await LoginAsync(email, Password);
+        var originalFamilyId = await GetTokenFamilyIdAsync(refreshCookie);
+
+        var responses = await Task.WhenAll(
+            Enumerable.Range(0, 8)
+                .Select(_ => PostAsync(TestRouteConstants.Auth.RefreshEndpoint, refreshCookie)));
+
+        var rotatedCookie = Assert.Single(
+            responses.Select(ReadRefreshCookieValue),
+            value => !string.IsNullOrWhiteSpace(value));
+
+        // Every caller read the same pre-rotation row before one of them won the conditional update.
+        // The family is immutable, so the winner's copy of it is still correct — and the seven losers
+        // must not have left rows behind.
+        Assert.Equal(originalFamilyId, await GetTokenFamilyIdAsync(rotatedCookie!));
+        Assert.Equal(2L, await CountTokensInFamilyAsync(originalFamilyId));
+    }
+
+    [Fact]
+    public async Task AuthDatabase_RefreshTokenFamilyIndex_ExistsAndIsNotUnique()
+    {
+        await using var connection = new NpgsqlConnection(fixture.ConnectionString);
+        await connection.OpenAsync();
+
+        await using var command = new NpgsqlCommand(
+            """
+            SELECT i.indisunique
+            FROM pg_class AS t
+            JOIN pg_namespace AS n ON n.oid = t.relnamespace
+            JOIN pg_index AS i ON i.indrelid = t.oid
+            JOIN pg_class AS ix ON ix.oid = i.indexrelid
+            WHERE n.nspname = 'auth'
+              AND t.relname = 'refreshTokens'
+              AND ix.relname = 'IX_refreshTokens_familyId';
+            """,
+            connection);
+
+        var isUnique = await command.ExecuteScalarAsync();
+
+        // A non-null scalar proves the index exists under that exact name; false proves a family may
+        // hold many tokens.
+        Assert.False(Assert.IsType<bool>(isUnique));
+    }
+
+    [Fact]
     public async Task Refresh_WithoutCookie_Returns401()
     {
         var response = await PostAsync(TestRouteConstants.Auth.RefreshEndpoint, refreshCookie: null);
@@ -463,6 +587,17 @@ public sealed class AuthEndpointTests(WebApplicationFixture fixture)
 
     private static string NewEmail() => $"user-{Guid.NewGuid():N}@example.com";
 
+    // Recomputed here rather than referenced from the adapter, which is internal: pinning the hash in
+    // the test means a change to how tokens are keyed breaks a test rather than silently decoupling
+    // the cookie from its row.
+    //
+    // The value must be unescaped first. Set-Cookie carries the token URL-encoded and the server
+    // hashes what request.Cookies decoded, so hashing the wire form would never match a stored row —
+    // a base64 32-byte token always ends in '=', which travels as %3D.
+    private static string HashRefreshToken(string refreshCookieValue) =>
+        Convert.ToHexString(
+            SHA256.HashData(Encoding.UTF8.GetBytes(Uri.UnescapeDataString(refreshCookieValue))));
+
     // Pulls the raw reset token out of the composed email's reset link, the way a recipient's mail
     // client would when they click through.
     private static string ExtractResetToken(EmailMessage message)
@@ -552,6 +687,43 @@ public sealed class AuthEndpointTests(WebApplicationFixture fixture)
             """,
             connection);
         command.Parameters.AddWithValue("email", email.ToUpperInvariant());
+
+        return (long)(await command.ExecuteScalarAsync() ?? 0L);
+    }
+
+    private async Task<Guid> GetTokenFamilyIdAsync(string rawRefreshToken)
+    {
+        await using var connection = new NpgsqlConnection(fixture.ConnectionString);
+        await connection.OpenAsync();
+
+        await using var command = new NpgsqlCommand(
+            """
+            SELECT "familyId"
+            FROM auth."refreshTokens"
+            WHERE "tokenHash" = @tokenHash;
+            """,
+            connection);
+        command.Parameters.AddWithValue("tokenHash", HashRefreshToken(rawRefreshToken));
+
+        var familyId = await command.ExecuteScalarAsync();
+
+        Assert.NotNull(familyId);
+        return Assert.IsType<Guid>(familyId);
+    }
+
+    private async Task<long> CountTokensInFamilyAsync(Guid familyId)
+    {
+        await using var connection = new NpgsqlConnection(fixture.ConnectionString);
+        await connection.OpenAsync();
+
+        await using var command = new NpgsqlCommand(
+            """
+            SELECT COUNT(*)
+            FROM auth."refreshTokens"
+            WHERE "familyId" = @familyId;
+            """,
+            connection);
+        command.Parameters.AddWithValue("familyId", familyId);
 
         return (long)(await command.ExecuteScalarAsync() ?? 0L);
     }

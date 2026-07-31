@@ -29,7 +29,9 @@ internal sealed class JwtTokenService(
         var roles = await userManager.GetRolesAsync(applicationUser);
 
         var rawRefreshToken = GenerateRefreshToken();
-        var refreshEntity = CreateRefreshTokenEntity(user.Id, rawRefreshToken);
+
+        // A login starts a new session, so it starts a new token family.
+        var refreshEntity = CreateRefreshTokenEntity(user.Id, Guid.CreateVersion7(), rawRefreshToken);
 
         dbContext.RefreshTokens.Add(refreshEntity);
         await dbContext.SaveChangesAsync(cancellationToken);
@@ -63,7 +65,13 @@ internal sealed class JwtTokenService(
         var domainUser = applicationUser.ToDomainUser();
         var roles = await userManager.GetRolesAsync(applicationUser);
         var rawRefreshToken = GenerateRefreshToken();
-        var refreshEntity = CreateRefreshTokenEntity(domainUser.Id, rawRefreshToken);
+
+        // Rotation continues the incoming token's family rather than starting one. Reading it from
+        // the non-tracked row above is safe even though a concurrent refresh may already have
+        // revoked that row: FamilyId is init-only and never mutated, so no version of the row holds
+        // a different value. RevokedAtUtc does change, which is why the update below re-checks it
+        // instead of trusting this read — and why a loser of that race throws before persisting.
+        var refreshEntity = CreateRefreshTokenEntity(domainUser.Id, existing.FamilyId, rawRefreshToken);
 
         // Rotate with a conditional update so concurrent refreshes cannot both win the same token.
         var revokedCount = await dbContext.RefreshTokens
@@ -111,8 +119,10 @@ internal sealed class JwtTokenService(
     private static string HashToken(string token) =>
         Convert.ToHexString(SHA256.HashData(Encoding.UTF8.GetBytes(token)));
 
-    // Builds the persistence-side entity, which stores only the hash of the raw token.
-    private RefreshToken CreateRefreshTokenEntity(Guid userId, string rawRefreshToken)
+    // Builds the persistence-side entity, which stores only the hash of the raw token. The family is
+    // supplied by the caller because that is the one respect in which the two call sites differ: a
+    // login starts a new family, a rotation continues the incoming token's.
+    private RefreshToken CreateRefreshTokenEntity(Guid userId, Guid familyId, string rawRefreshToken)
     {
         var now = DateTime.UtcNow;
 
@@ -120,6 +130,7 @@ internal sealed class JwtTokenService(
         {
             Id = Guid.CreateVersion7(),
             UserId = userId,
+            FamilyId = familyId,
             TokenHash = HashToken(rawRefreshToken),
             ExpiresAtUtc = now.AddDays(_options.RefreshTokenDays),
             CreatedAtUtc = now,

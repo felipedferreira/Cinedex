@@ -14,6 +14,7 @@ Cinedex/
 └── compose.yaml  # Orchestrates PostgreSQL, the web service, the frontend, Seq, and Mailpit
 ```
 
+- **[Getting Started](docs/getting-started.md)** — new here? Clone-to-running-app in 5 minutes via Docker Compose
 - **[Backend](backend/README.md)** — hexagonal (ports & adapters) .NET solution: architecture guide, build/test/migration instructions
 - **[Frontend](frontend/cinadex-ui/README.md)** — standalone React + TypeScript + Vite SPA (`cinadex-ui`)
 - **[Design docs](docs/README.md)** — why the system is shaped this way (auth & security model, planned ADRs)
@@ -21,28 +22,14 @@ Cinedex/
 
 ## 🚀 Quick Start
 
-Create the root `.env` file (database, Seq, and Mailpit values — see the
-[backend README](backend/README.md#environment-configuration)), then run everything with
-Docker Compose from the repository root:
-
 ```bash
-cp .env.example .env       # one-time; fill in the database, Seq, and Mailpit values
+git clone https://github.com/felipedferreira/Cinedex.git
+cd Cinedex
+cp .env.example .env       # fill in the database, Seq, and Mailpit values
 docker compose up --build
 ```
 
-The one-shot `movies.databasemigrator` container applies migrations for both database contexts
-before Compose starts the web service. See [Migrations](backend/README.md#migrations).
+Then open **https://localhost:9000** (self-signed cert — trust it or use `curl -k`).
 
-Access the application:
-- **UI:** https://localhost:9000
-- **API:** https://localhost:9000/movies-svc
-- **API Documentation:** https://localhost:9000/movies-svc/api-docs/v1 (Scalar UI)
-- **OpenAPI Spec:** https://localhost:9000/movies-svc/openapi/v1.json
-- **Seq (logs & traces):** http://localhost:5341
-- **Mailpit (dev mail sink):** http://localhost:8025 — captures every email the app sends
-- **PostgreSQL:** localhost:5432
-
-The local UI/proxy uses a self-signed TLS certificate, so your browser may ask you to trust it on first visit.
-
-For local development without Docker, and for first-run Seq setup, see the
-[backend README](backend/README.md).
+There's one manual step before logs show up in Seq — full walkthrough, access points, and
+troubleshooting in **[docs/getting-started.md](docs/getting-started.md)**.

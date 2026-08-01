@@ -19,24 +19,16 @@ Be respectful, inclusive, and professional in all interactions.
 
 #### Option A — Docker Compose (full stack)
 
-Create the root `.env` file (one-time; database, Seq, and Mailpit values — see
-[backend README](backend/README.md#environment-configuration)), then run everything from the
-repository root:
+Full walkthrough — `.env` setup, first-run Seq setup, access points, and troubleshooting — is in
+**[docs/getting-started.md](docs/getting-started.md)**. Short version:
 
 ```bash
 cp .env.example .env       # fill in the database, Seq, and Mailpit values
 docker compose up --build
 ```
 
-- **UI:** https://localhost:9000
-- **API:** https://localhost:9000/movies-svc
-- **Seq (logs & traces):** http://localhost:5341
-- **Mailpit (dev mail sink):** http://localhost:8025
-- **PostgreSQL:** localhost:5432
-
-> **Migrations are not applied automatically.** A fresh database needs `dotnet ef database update`
-> for both `FilmDbContext` and `AuthDbContext` — see
-> [Migrations](backend/README.md#migrations).
+The one-shot database migrator applies pending migrations for both `FilmDbContext` and
+`AuthDbContext` automatically — nothing else to run by hand for a fresh database.
 
 #### Option B — Local development
 

@@ -202,6 +202,34 @@ internal sealed class RefreshTokenCleanupWorker(
                 .Select(token => token.Id)
                 .Take(this._options.BatchSize);
 
+            // ExecuteDeleteAsync rather than loading the rows and calling RemoveRange, which is the
+            // more usual way to delete through EF. The trade, deliberately taken:
+            //
+            //   What we give up. ExecuteDelete bypasses the whole SaveChanges pipeline — no change
+            //   tracking, no interceptors, no concurrency-token checks, no domain events, and no
+            //   EF-side cascade (the database's FK rules still apply). It also reports only a row
+            //   count, never which rows went. In a codebase that audits or soft-deletes through a
+            //   SaveChanges interceptor, using it would silently skip that, with no compile error to
+            //   warn you. None of that machinery exists here today, and this sweep needs nothing
+            //   from the rows it removes: it logs counts only, on purpose, so the log store never
+            //   becomes a record of who was signed in.
+            //
+            //   What we get. RemoveRange would first materialise every row — eight columns for up to
+            //   BatchSize × MaxBatchesPerRun rows per sweep — purely to throw them away. Worse, the
+            //   scope here is per sweep, so one DbContext serves every batch: the change tracker
+            //   would still hold each previous batch's entities, and DetectChanges is O(tracked), so
+            //   each successive SaveChanges would slow down while memory grew, unless we added
+            //   ChangeTracker.Clear() calls purely to work around the approach. SaveChanges would
+            //   also wrap each batch in a transaction spanning BatchSize individual DELETE
+            //   statements, holding the same row locks far longer than the one set-based statement
+            //   below — the opposite of what a job that must not block issuance or rotation wants.
+            //
+            // The rule this follows: RemoveRange expresses "these objects are gone from my model",
+            // ExecuteDelete expresses "these rows are gone from the table". Retention is storage
+            // housekeeping, not a domain operation, so it is the second kind.
+            //
+            // Revisit this if AuthDbContext ever gains a SaveChanges interceptor, a soft-delete
+            // convention, or a concurrency token on RefreshToken — this call would bypass all three.
             var batchDeleted = await dbContext.RefreshTokens
                 .Where(token => batchIds.Contains(token.Id))
                 .ExecuteDeleteAsync(cancellationToken);

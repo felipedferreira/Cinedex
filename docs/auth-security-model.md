@@ -253,6 +253,17 @@ Operational notes:
   drain rate proportionally.
 - **Each batch is its own transaction.** Row locks are held for one statement, never across a sweep,
   which is what keeps cleanup off the back of concurrent issuance and rotation.
+- **Deletes go through `ExecuteDelete`, not `RemoveRange`.** The usual EF route — load the entities,
+  `RemoveRange`, `SaveChanges` — would materialise up to 10,000 rows per sweep only to discard them,
+  accumulate every batch in one sweep-scoped change tracker (making each successive `SaveChanges`
+  slower as `DetectChanges` is O(tracked)), and wrap each batch in a transaction spanning
+  `BatchSize` individual `DELETE` statements rather than one set-based statement — holding the same
+  locks far longer. The cost of `ExecuteDelete` is that it bypasses the `SaveChanges` pipeline
+  entirely: no interceptors, no concurrency checks, no domain events, and a row count rather than
+  the rows themselves. That is safe here only because `AuthDbContext` has none of that machinery.
+  **If it ever gains a `SaveChanges` interceptor, a soft-delete convention, or a concurrency token
+  on `RefreshToken`, this decision has to be revisited** — the sweep would bypass all three silently,
+  with no compile error to catch it.
 - **A sweep runs at startup**, not after the first interval, so a redeployed worker starts reclaiming
   immediately.
 - **Single replica assumed.** Compose runs one `movies.schedulerworker`. Two would race on

@@ -1,4 +1,6 @@
+using Cinedex.Observability.OpenTelemetry.Extensions;
 using Cinedex.WebService.Extensions;
+using OpenTelemetry.Trace;
 
 namespace Cinedex.WebService;
 
@@ -8,8 +10,14 @@ public class Program
     {
         var builder = WebApplication.CreateBuilder(args);
 
+        builder.AddObservability(
+            defaultServiceName: "Cinedex.WebService",
+            configureTracing: tracing => tracing
+                .AddAspNetCoreInstrumentation()
+                .AddHttpClientInstrumentation()
+                .AddSource("Npgsql")); // EF Core/Npgsql emit DB spans on this ActivitySource
+
         builder
-            .AddObservability()
             .ConfigureWebServer()
             .AddPresentationServices();
 

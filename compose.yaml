@@ -79,9 +79,16 @@ services:
     depends_on:
       postgres:
         condition: service_healthy
+      seq:
+        condition: service_healthy
     environment:
       DOTNET_ENVIRONMENT: Production
       ConnectionStrings__DefaultConnection: "${DB_CONNECTION_STRING}"
+      # OpenTelemetry -> Seq OTLP ingestion (Seq listens on container port 80)
+      OTEL_EXPORTER_OTLP_ENDPOINT: "http://seq/ingest/otlp"
+      OTEL_EXPORTER_OTLP_PROTOCOL: "http/protobuf"
+      OTEL_EXPORTER_OTLP_HEADERS: "X-Seq-ApiKey=${SEQ_API_KEY}"
+      OTEL_SERVICE_NAME: "Cinedex.DatabaseMigrator"
     restart: "no"
 
   movies.webservice:
@@ -123,6 +130,29 @@ services:
       Smtp__FromAddress: "no-reply@cinedex.local"
       Smtp__FromName: "Cinedex"
       Smtp__SecureSocketOptions: "None"
+
+  # Long-running background worker for scheduled jobs. No ports: it serves no traffic.
+  movies.schedulerworker:
+    image: movies.schedulerworker
+    build:
+      context: ./backend
+      dockerfile: src/Presentation/Cinedex.SchedulerWorker/Dockerfile
+    container_name: movies-scheduler-worker
+    depends_on:
+      postgres:
+        condition: service_healthy
+      movies.databasemigrator:
+        condition: service_completed_successfully
+      seq:
+        condition: service_healthy
+    environment:
+      DOTNET_ENVIRONMENT: Production
+      ConnectionStrings__DefaultConnection: "${DB_CONNECTION_STRING}"
+      # OpenTelemetry -> Seq OTLP ingestion (Seq listens on container port 80)
+      OTEL_EXPORTER_OTLP_ENDPOINT: "http://seq/ingest/otlp"
+      OTEL_EXPORTER_OTLP_PROTOCOL: "http/protobuf"
+      OTEL_EXPORTER_OTLP_HEADERS: "X-Seq-ApiKey=${SEQ_API_KEY}"
+      OTEL_SERVICE_NAME: "Cinedex.SchedulerWorker"
 
   cinadex-ui:
     image: cinadex-ui

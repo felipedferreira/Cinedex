@@ -14,6 +14,7 @@
     <File Path="..\LICENSE" />
   </Folder>
   <Folder Name="/nuget-libraries/">
+    <Project Path="NuGetLibraries\Cinedex.Observability.OpenTelemetry\Cinedex.Observability.OpenTelemetry.csproj" />
     <Project Path="NuGetLibraries\Cinedex.WebService.Contracts\Cinedex.WebService.Contracts.csproj" />
   </Folder>
   <Folder Name="/src/" />

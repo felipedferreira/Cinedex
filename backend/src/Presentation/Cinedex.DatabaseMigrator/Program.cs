@@ -1,4 +1,5 @@
 using Cinedex.Auth.Identity;
+using Cinedex.Observability.OpenTelemetry.Extensions;
 using Cinedex.Persistence.Postgres;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
@@ -10,36 +11,37 @@ public sealed class Program
 {
     public static async Task<int> Main(string[] args)
     {
-        using IHost host = Host.CreateDefaultBuilder(args)
-            .ConfigureAppConfiguration((context, configuration) =>
-            {
-                configuration
-                    .SetBasePath(AppContext.BaseDirectory)
-                    .AddJsonFile("application.json", optional: false, reloadOnChange: false)
-                    .AddJsonFile(
-                        $"application.{context.HostingEnvironment.EnvironmentName}.json",
-                        optional: true,
-                        reloadOnChange: false);
+        HostApplicationBuilder builder = Host.CreateApplicationBuilder(args);
 
-                if (context.HostingEnvironment.IsDevelopment())
-                {
-                    configuration.AddUserSecrets<Program>(optional: true);
-                }
+        builder.Configuration
+            .SetBasePath(AppContext.BaseDirectory)
+            .AddJsonFile("application.json", optional: false, reloadOnChange: false)
+            .AddJsonFile(
+                $"application.{builder.Environment.EnvironmentName}.json",
+                optional: true,
+                reloadOnChange: false);
 
-                // Re-add high-precedence sources after the migrator-specific JSON files.
-                configuration
-                    .AddEnvironmentVariables()
-                    .AddCommandLine(args);
-            })
-            .ConfigureServices(services =>
-            {
-                services
-                    .AddPersistenceAdapter()
-                    .AddAuthenticationPersistence();
+        if (builder.Environment.IsDevelopment())
+        {
+            builder.Configuration.AddUserSecrets<Program>(optional: true);
+        }
 
-                services.AddHostedService<DatabaseMigrationHostedService>();
-            })
-            .Build();
+        // Re-add high-precedence sources after the migrator-specific JSON files.
+        builder.Configuration
+            .AddEnvironmentVariables()
+            .AddCommandLine(args);
+
+        builder.AddObservability(
+            defaultServiceName: "Cinedex.DatabaseMigrator",
+            configureTracing: tracing => tracing.AddSource("Npgsql"));
+
+        builder.Services
+            .AddPersistenceAdapter()
+            .AddAuthenticationPersistence();
+
+        builder.Services.AddHostedService<DatabaseMigrationHostedService>();
+
+        using IHost host = builder.Build();
 
         try
         {

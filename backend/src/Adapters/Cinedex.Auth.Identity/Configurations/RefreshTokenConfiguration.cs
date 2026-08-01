@@ -27,6 +27,15 @@ internal sealed class RefreshTokenConfiguration : IEntityTypeConfiguration<Refre
         builder.HasIndex(token => token.FamilyId)
             .HasDatabaseName(AuthDatabaseConstants.RefreshToken.FamilyIdIndex);
 
+        // Serves the retention sweep's two predicates. RevokedAtUtc leads because it is what
+        // separates them — IS NULL for expired-and-never-revoked rows, a range for revoked ones —
+        // with ExpiresAtUtc narrowing within it. One composite rather than two indexes: this table
+        // takes a write on every rotation, so each extra index is a tax on the hot auth path.
+        // A partial index cannot help here; Postgres requires an IMMUTABLE predicate and the
+        // interesting filter is against now().
+        builder.HasIndex(token => new { token.RevokedAtUtc, token.ExpiresAtUtc })
+            .HasDatabaseName(AuthDatabaseConstants.RefreshToken.RetentionIndex);
+
         builder.HasOne<ApplicationUser>()
             .WithMany()
             .HasForeignKey(token => token.UserId)

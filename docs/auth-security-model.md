@@ -153,6 +153,10 @@ trusting the read.
 leaves the rest of the family valid, and logout still revokes exactly one row. The identifier is
 groundwork; see [Known gaps](#known-gaps).
 
+The revoked ancestors stay in the family until the retention sweep reaps them; see
+[Refresh-token retention](#refresh-token-retention) for how long that is and why revoked rows
+outlive expired ones.
+
 The value never leaves the server — it is absent from the cookie and from the access-token claims.
 Keep it that way: a Guid v7 embeds its creation timestamp, so exposing it would hand a client the
 wall-clock time its session began.
@@ -190,6 +194,75 @@ Deleting rather than aborting on existing data also keeps the migration unable t
 `movies.databasemigrator` gates the web service on its exit code, so a migration that could reject a
 populated table would stop the stack from starting.
 
+### Refresh-token retention
+
+Nothing on the request path ever deletes a refresh token: a rotation revokes its predecessor and
+inserts a replacement, so the table only grows. `Cinedex.SchedulerWorker` runs a
+`RefreshTokenCleanupWorker` that sweeps it on an interval, deleting in bounded batches.
+
+Two retention windows, because the two kinds of dead row are dead for different reasons:
+
+| Category | Deleted when | Default |
+|---|---|---|
+| Expired, never revoked | `expiresAtUtc` is older than `ExpiredRetention` | 1 day past expiry |
+| Revoked | `revokedAtUtc` is older than `ReuseDetectionWindow` (and the row has expired) | 14 days past revocation |
+
+Neither window shortens a session. A token that has not yet expired is never touched by either
+category, no matter how long it has sat unused — closing the browser with a still-valid refresh
+cookie does not put that row at risk. Both windows only ever apply *after* the row is already dead
+by its own rules (expired past `Jwt:RefreshTokenDays`, or revoked by a logout or rotation); the
+question they answer is how much longer, past that point, the corpse is kept around.
+
+The two buffers exist for opposite reasons, and are not interchangeable:
+
+- **`ExpiredRetention` (1 day) is not a security boundary.** An expired-and-never-revoked row is
+  inert the instant it expires — rotation already rejects it before checking anything else, so no
+  code path treats it specially. The day of retention is pure operational slack: room for clock skew
+  between the scheduler worker's host and the web service's, and so the row is still queryable for a
+  day if someone needs to check when a session actually ended. It is safe to shrink this toward zero.
+- **`ReuseDetectionWindow` (14 days) is a security boundary.** A revoked row is the *only* evidence
+  that a token was rotated, and — once the family-wide reuse response below is built — the only
+  trigger that lets it recognise a stolen, already-rotated token being replayed. Delete it too soon
+  and that evidence is gone before it can ever be used. The window has to outlast the period an
+  attacker could plausibly still be replaying the token it replaced, which is bounded by the token's
+  own lifetime (`Jwt:RefreshTokenDays`, 7 days by default) — hence double that as margin. Shrinking
+  this window narrows how long reuse stays detectable; it is not a space-saving knob the way
+  `ExpiredRetention` is.
+
+**Revoked rows are kept deliberately, and the second window is the reason.** A revoked row is the
+only thing that makes replaying an already-rotated token distinguishable from presenting an unknown
+one — delete it and the future family-wide reuse response loses its trigger. `ReuseDetectionWindow`
+must therefore stay comfortably above `Jwt:RefreshTokenDays`; nothing enforces that coupling,
+because the scheduler worker does not bind the `Jwt` section at all.
+
+Neither predicate can touch a row the service still depends on. Rotation rejects an expired token
+before reading anything else and its conditional update requires `revokedAtUtc IS NULL`, so category
+one is unreachable by every code path and category two is excluded by construction. A live session's
+tail is unrevoked *and* unexpired, so it matches neither.
+
+Both sweeps are served by the composite index `IX_refreshTokens_revokedAtUtc_expiresAtUtc`.
+`revokedAtUtc` leads because it separates the two categories, and each sweep takes its ordering from
+the index rather than sorting. Note the write-path cost this introduces: rotation updates
+`revokedAtUtc`, which was previously in no index, so rotations are no longer HOT updates and now
+maintain an index entry.
+
+Operational notes:
+
+- **Work per sweep is capped** at `BatchSize × MaxBatchesPerRun` (10,000 rows by default). A backlog
+  drains across successive sweeps rather than in one long transaction. Raising `Interval` lowers the
+  drain rate proportionally.
+- **Each batch is its own transaction.** Row locks are held for one statement, never across a sweep,
+  which is what keeps cleanup off the back of concurrent issuance and rotation.
+- **A sweep runs at startup**, not after the first interval, so a redeployed worker starts reclaiming
+  immediately.
+- **Single replica assumed.** Compose runs one `movies.schedulerworker`. Two would race on
+  overlapping batches — no corruption, since `DELETE` is idempotent and locking is per row, just
+  duplicated work and double-counted log totals. If the worker is ever scaled out, wrap the sweep in
+  a `pg_try_advisory_lock`.
+- **Failures are swallowed and retried** on the next interval. An escaping exception would trip
+  `BackgroundServiceExceptionBehavior.StopHost` and take the worker process down.
+- The sweep logs counts and elapsed time only — never a token hash, user id, or family id.
+
 ### Identity options
 
 Configured in `DependencyInjection.AddAuthenticationAdapter`:
@@ -217,6 +290,18 @@ presentation layer (token validation) — the signing key must match on both sid
 | `Jwt:SigningKey` | dev placeholder | **See below.** Minimum 32 bytes for HS256. |
 | `Jwt:AccessTokenMinutes` | `15` | |
 | `Jwt:RefreshTokenDays` | `7` | |
+
+The `RefreshTokenCleanup` section is bound to `RefreshTokenCleanupOptions` and read only by
+`Cinedex.SchedulerWorker`; the web service neither binds nor needs it. All values are validated at
+startup via `ValidateOnStart`, so a bad one fails the worker at boot rather than at the first sweep.
+
+| Key | Default | Notes |
+|---|---|---|
+| `RefreshTokenCleanup:Interval` | `00:10:00` | Time between sweeps. Raising it lowers the drain rate proportionally. |
+| `RefreshTokenCleanup:ExpiredRetention` | `1.00:00:00` | How long an expired, never-revoked row is kept past expiry. |
+| `RefreshTokenCleanup:ReuseDetectionWindow` | `14.00:00:00` | How long a revoked row is kept past revocation. **Keep well above `Jwt:RefreshTokenDays`.** |
+| `RefreshTokenCleanup:BatchSize` | `500` | Rows per delete statement; bounds how long one statement holds row locks. |
+| `RefreshTokenCleanup:MaxBatchesPerRun` | `20` | Batches per sweep; bounds total work per tick. |
 
 > ⚠️ **The `Jwt:SigningKey` in `appsettings.json` is a committed, dev-only placeholder.** It is
 > public and must never be used outside local development. Override it per environment via the
@@ -298,7 +383,9 @@ build on this.
   than by walking `ReplacedByTokenHash` hash by hash. Nothing reads it yet: presenting an
   already-revoked token returns a bare `401` and leaves the rest of the family valid, so a
   stolen-then-rotated token is still not treated as a compromise. The identifier was the
-  prerequisite; the response is the remaining work.
+  prerequisite; the response is the remaining work. The retention sweep keeps revoked rows for
+  `RefreshTokenCleanup:ReuseDetectionWindow` precisely so the trigger will still be there when that
+  response is built — see [Refresh-token retention](#refresh-token-retention).
 - **The forgot-password response still carries a small timing signal.** Queueing the reset email
   removed the large one — the four-round-trip SMTP conversation that only the known-account path
   performed, which MailKit lets run for up to two minutes against an unresponsive relay. What remains

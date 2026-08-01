@@ -14,5 +14,7 @@ internal static class AuthDatabaseConstants
         public const string UserIdIndex = "IX_refreshTokens_userId";
 
         public const string FamilyIdIndex = "IX_refreshTokens_familyId";
+
+        public const string RetentionIndex = "IX_refreshTokens_revokedAtUtc_expiresAtUtc";
     }
 }

@@ -34,6 +34,7 @@ public sealed class Program
             configureTracing: tracing => tracing.AddSource("Npgsql"));
 
         builder.Services.AddAuthenticationPersistence();
+        builder.Services.AddRefreshTokenCleanup();
 
         using IHost host = builder.Build();
 

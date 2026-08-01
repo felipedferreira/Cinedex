@@ -7,5 +7,12 @@
   },
   "ConnectionStrings": {
     "DefaultConnection": "<SECRETS>"
+  },
+  "RefreshTokenCleanup": {
+    "Interval": "00:10:00",
+    "ExpiredRetention": "1.00:00:00",
+    "ReuseDetectionWindow": "14.00:00:00",
+    "BatchSize": 500,
+    "MaxBatchesPerRun": 20
   }
 }

@@ -25,6 +25,7 @@
   <ItemGroup>
     <ProjectReference Include="..\..\Adapters\Cinedex.Auth.Identity\Cinedex.Auth.Identity.csproj" />
     <ProjectReference Include="..\..\Adapters\Cinedex.Persistence.Postgres\Cinedex.Persistence.Postgres.csproj" />
+    <ProjectReference Include="..\..\..\NuGetLibraries\Cinedex.Observability.OpenTelemetry\Cinedex.Observability.OpenTelemetry.csproj" />
   </ItemGroup>
 
   <ItemGroup>

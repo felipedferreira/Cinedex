@@ -85,29 +85,13 @@ dotnet user-secrets list
 
 ### Environment Configuration
 
-Most environment variables are baked into `compose.yaml` and applied to the containers
-automatically. **Secrets are the exception** — the database connection string and the Seq
-observability secrets are read from a git-ignored `.env` file at the repository root, which
-the Compose files interpolate via `${...}`. A `docker compose up` without this file will fail.
-
-Create it once by copying the template and filling in values:
-
-```bash
-cp .env.example .env          # from the repository root
-```
-
-| Variable | Purpose |
-|----------|---------|
-| `DB_PASSWORD` | Password for the `movies_rw` Postgres user. Applied only when the `postgres_data` volume is first initialized; must match the password inside `DB_CONNECTION_STRING`. |
-| `DB_CONNECTION_STRING` | Full Postgres connection string for the database migrator and web service containers (host is the `postgres` service name). |
-| `SEQ_ADMIN_PASSWORD` | First-login password for the Seq UI `admin` user. Seq prompts you to choose the permanent UI password on first login. |
-| `SEQ_API_KEY` | Ingestion API-key token the web service sends to Seq over OTLP (`X-Seq-ApiKey`). |
-| `MAILPIT_SMTP_USER` | Username the web service uses to authenticate to the Mailpit dev mail sink (see [Email](#-email-mailpit-dev-mail-sink)). Dev-only. |
-| `MAILPIT_SMTP_PASSWORD` | Password paired with `MAILPIT_SMTP_USER`. Dev-only; avoid a `:` (Mailpit splits `user:password` on the first colon). |
+Most environment variables are baked into `compose.yaml` automatically. **Secrets are the
+exception** — the database connection string and the Seq/Mailpit credentials are read from a
+git-ignored `.env` file at the repository root; `docker compose up` fails without it. Full
+variable reference and first-run setup: **[docs/getting-started.md](../docs/getting-started.md)**.
 
 For local development outside of Docker, the connection string is supplied via .NET User
-Secrets (see [Option 2](#option-2-local-postgresql) above); other settings can use
-environment variables or configuration files as needed.
+Secrets instead (see [Option 2](#option-2-local-postgresql) above).
 
 ### Migrations
 
@@ -214,27 +198,9 @@ The project uses a single `compose.yaml` containing PostgreSQL, the one-shot dat
 web service, the frontend, a [Seq](https://datalust.co/seq) instance for logs and traces, and a
 [Mailpit](https://mailpit.axllent.org/) dev mail sink.
 
-### Getting Started
-
-1. Create the root `.env` file (one-time — see [Environment Configuration](#environment-configuration)):
-   ```bash
-   cp .env.example .env       # then fill in the database and Seq values
-   ```
-2. Start the services from the repository root:
-   ```bash
-   docker compose up --build
-   ```
-
-Access the application:
-- **UI:** https://localhost:9000
-- **API:** https://localhost:9000/movies-svc
-- **API Documentation:** https://localhost:9000/movies-svc/api-docs/v1 (Scalar UI)
-- **OpenAPI Spec:** https://localhost:9000/movies-svc/openapi/v1.json
-- **Seq (logs & traces):** http://localhost:5341 — first login is `admin` with `SEQ_ADMIN_PASSWORD`; after the required password change, use the password you chose
-- **Mailpit (dev mail sink):** http://localhost:8025 — inbox of every email the app "sends" (see [Email](#-email-mailpit-dev-mail-sink))
-- **PostgreSQL:** localhost:5432
-
-The local UI/proxy certificate is self-signed, so your browser or `curl` may require an explicit trust/`-k` choice during development.
+**First time running the stack?** Start with **[docs/getting-started.md](../docs/getting-started.md)**
+— `.env` setup, first-run Seq configuration, access points, a try-it-out walkthrough, and
+troubleshooting all live there.
 
 ### Services
 
@@ -247,25 +213,8 @@ The local UI/proxy certificate is self-signed, so your browser or `curl` may req
 | `seq` | datalust/seq | 5341 | Structured logs + distributed traces (OpenTelemetry/OTLP) |
 | `mailpit` | axllent/mailpit:v1.30.0 | 8025 UI, 1025 SMTP | Dev mail sink — captures outgoing email in a web UI (see [Email](#-email-mailpit-dev-mail-sink)) |
 
-### Features
-
-- ✅ **Health Checks:** Postgres and Seq must report healthy before the web service starts, which in turn must be healthy before the UI starts; the web service also exposes its own liveness/readiness endpoints (see [Health Checks](#-health-checks))
-- ✅ **Data Persistence:** PostgreSQL and Seq data persist via named volumes (`postgres_data`, `seq_data`)
-- ✅ **Observability:** Logs and traces shipped to Seq via OpenTelemetry (see [below](#-observability-seq))
-- ✅ **Service Dependencies:** Web service automatically waits for its dependencies
-- ✅ **API Documentation:** Scalar UI available at `/movies-svc/api-docs/v1`
-- ✅ **Feature Flags:** Configurable via environment variables
-
-### Stopping Services
-
-```bash
-docker compose down
-```
-
-To also remove persistent data (PostgreSQL **and** Seq volumes):
-```bash
-docker compose down -v
-```
+Postgres and Seq data persist across restarts via the `postgres_data` and `seq_data` named
+volumes; `docker compose down -v` removes both for a clean slate.
 
 ## 🩺 Health Checks
 
@@ -304,63 +253,10 @@ queries (the `Npgsql` activity source). Every request's `CorrelationId` is attac
 events and to the trace as a `correlation_id` tag, so you can pivot between logs and traces for
 the same request.
 
-### First-run setup
-
-Seq refuses to start without an admin credential and won't auto-provision an ingestion key, so
-two `.env` values need preparing once.
-
-1. **Choose the first-login admin password.** Put it in `SEQ_ADMIN_PASSWORD`. Compose passes it
-   to Seq as `SEQ_FIRSTRUN_ADMINPASSWORD`, which Seq only reads when the `seq_data` volume is
-   empty. On first login, Seq will require you to choose the permanent UI password. After that,
-   the saved password lives in the `seq_data` volume, and changing `.env` will not update it.
-
-2. **Choose an ingestion token** and set it as `SEQ_API_KEY` (any sufficiently random string).
-
-3. **Start the stack** (`docker compose up --build`), then register the API key in Seq so its
-   token matches `SEQ_API_KEY`. The web service sends this token on every OTLP request via the
-   `X-Seq-ApiKey` header, so the token stored in Seq **must equal** the `SEQ_API_KEY` in your
-   `.env` — don't let Seq auto-generate one. Use either the CLI or the UI:
-
-   **Option A — CLI (`seqcli`):**
-   ```bash
-   docker run --rm --network cinedex_default datalust/seqcli apikey create \
-     -t "Movies WebService" --token "<your-SEQ_API_KEY>" --permissions "Ingest" \
-     -s http://seq --connect-username admin --connect-password "<your-password>"
-   ```
-
-   **Option B — Seq UI** (http://localhost:5341 → **Settings → API Keys**):
-   1. Click **ADD API KEY**.
-   2. **Title:** anything descriptive, e.g. `Movies WebService`.
-   3. **Token:** type your `SEQ_API_KEY` value here instead of generating a random one, so it
-      matches `.env`.
-   4. **Permissions:** ensure **Ingest** is selected (all the web service needs to write events).
-   5. Save.
-
-   > Requiring authentication for ingestion is optional — by default Seq accepts all events, so
-   > logs flow even without a key. Registering the key with the matching token still ensures
-   > ingestion is attributed to it and keeps working if you later enable
-   > *Require authentication for HTTP/S ingestion*.
-
-   Restart the web service afterwards so it picks up the key: `docker compose up -d movies.webservice`.
-
-If you already started Seq with the wrong first-run settings or forgot the saved UI password,
-reset only the Seq volume and start it again:
-
-```bash
-docker compose down
-docker volume rm cinedex_seq_data
-docker compose up -d seq
-```
-
-> The `cinedex_` prefix on volume and network names comes from the Compose project name,
-> which Docker derives from the repository folder name. If your checkout folder is named
-> differently, adjust the prefix accordingly (`docker volume ls` shows the real names).
-
-This deletes local Seq logs, API keys, and settings, but leaves the PostgreSQL volume alone.
-
-> **Note:** On Docker Desktop / Windows the Seq port is published on IPv4 loopback
-> (`127.0.0.1:5341`) on purpose — a dual-stack bind makes `localhost` resolve to IPv6 first,
-> which Docker Desktop fails to relay. Use `http://localhost:5341` or `http://127.0.0.1:5341`.
+Seq needs a one-time API key registration before it starts accepting logs, plus how to reset a
+forgotten admin password — see
+**[First-run setup: Seq](../docs/getting-started.md#3-one-time-setup-seq)** in the Getting
+Started guide.
 
 ## 📬 Email (Mailpit dev mail sink)
 
@@ -478,19 +374,9 @@ clears the inbox so the next run starts clean. Mailpit also exposes a REST API, 
 curl -s http://localhost:8025/api/v1/messages | jq '.messages[] | {ID, Subject, To}'
 ```
 
-### Fresh-start checklist
-
-1. Ensure `MAILPIT_SMTP_USER` and `MAILPIT_SMTP_PASSWORD` are set in your `.env` (they're in
-   `.env.example`; any dev values work — avoid a `:` in the password, since Mailpit splits
-   `user:password` on the first colon).
-2. `docker compose up --build` — Mailpit starts with the rest of the stack; no volume or
-   first-run provisioning needed (unlike Seq).
-3. Open **http://localhost:8025** to watch captured mail. Messages are held in memory (a rolling
-   buffer of `MP_MAX_MESSAGES`, default 500) and are **not** persisted across `docker compose
-   down`, which is fine for a throwaway dev inbox.
-
 > ⚠️ The insecure-auth and plaintext settings are deliberately relaxed for a local sink and must
-> never be used for an internet-facing mail server.
+> never be used for an internet-facing mail server. Messages are held in memory (a rolling
+> buffer of `MP_MAX_MESSAGES`, default 500) and are **not** persisted across `docker compose down`.
 
 ## Architecture Overview
 

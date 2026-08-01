@@ -4,7 +4,14 @@ Design documentation that describes *why* the system is shaped the way it is. It
 repository (rather than the GitHub wiki) so it is versioned with the code, reviewed in the same
 pull request as the change it describes, and impossible to update out of band.
 
-Operational instructions — how to build, run, test, and migrate — stay in the READMEs.
+Deep operational instructions — architecture, testing, migrations — stay in the READMEs. The
+one exception is **Getting Started**, kept here because it's the front door for anyone new to
+the repo.
+
+## New here?
+
+**[Getting Started](getting-started.md)** — clone to a running stack in 5 minutes via Docker
+Compose, plus the one manual setup step (Seq), a "try it out" walkthrough, and troubleshooting.
 
 ## Contents
 
@@ -17,8 +24,8 @@ Operational instructions — how to build, run, test, and migrate — stay in th
 
 | Document | What it covers |
 |---|---|
-| [Root README](../README.md) | Repository layout, Docker Compose quick start. |
-| [Backend README](../backend/README.md) | Architecture guide, migrations, health checks, observability, coverage. |
+| [Root README](../README.md) | Repository layout, quick start teaser. |
+| [Backend README](../backend/README.md) | Architecture guide, migrations, health checks, observability reference, coverage. |
 | [Frontend README](../frontend/cinadex-ui/README.md) | `cinadex-ui` stack, scripts, linting, testing. |
 | [Contracts README](../backend/NuGetLibraries/Cinedex.WebService.Contracts/README.md) | Shared request/response DTOs. |
 | [CONTRIBUTING](../CONTRIBUTING.md) | Workflow, code standards, PR checklist. |

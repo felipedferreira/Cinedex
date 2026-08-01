@@ -1,12 +1,15 @@
-using Cinedex.WebService.Constants;
+using Cinedex.Observability.OpenTelemetry.Constants;
+using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Hosting;
+using Microsoft.Extensions.Logging;
 using OpenTelemetry.Logs;
 using OpenTelemetry.Resources;
 using OpenTelemetry.Trace;
 
-namespace Cinedex.WebService.Extensions;
+namespace Cinedex.Observability.OpenTelemetry.Extensions;
 
 /// <summary>
-/// Extension methods that wire up OpenTelemetry logging and tracing.
+/// Extension methods that wire up OpenTelemetry logging and tracing for any Cinedex host.
 /// </summary>
 public static class ObservabilityExtensions
 {
@@ -17,24 +20,39 @@ public static class ObservabilityExtensions
     /// endpoint is configured (local <c>dotnet run</c>, integration tests) the exporters are
     /// omitted so nothing tries to reach a Seq that isn't there.
     /// </summary>
-    /// <param name="builder">The web application builder to configure.</param>
+    /// <param name="builder">
+    /// The host builder to configure. Both <c>HostApplicationBuilder</c> (console hosts) and
+    /// <c>WebApplicationBuilder</c> implement <see cref="IHostApplicationBuilder"/>.
+    /// </param>
+    /// <param name="defaultServiceName">
+    /// Service name to report when OTEL_SERVICE_NAME is not set. Defaults to the host's
+    /// application name.
+    /// </param>
+    /// <param name="configureTracing">
+    /// Host-specific tracing instrumentation, e.g. <c>AddAspNetCoreInstrumentation()</c> for a
+    /// web host or <c>AddSource("Npgsql")</c> for a host that talks to the database.
+    /// </param>
     /// <returns>The same <paramref name="builder"/> instance so calls can be chained.</returns>
-    public static WebApplicationBuilder AddObservability(this WebApplicationBuilder builder)
+    public static IHostApplicationBuilder AddObservability(
+        this IHostApplicationBuilder builder,
+        string? defaultServiceName = null,
+        Action<TracerProviderBuilder>? configureTracing = null)
     {
+        ArgumentNullException.ThrowIfNull(builder);
+
         var otlpEndpointConfigured =
             !string.IsNullOrWhiteSpace(builder.Configuration[ConfigurationConstants.OtlpEndpoint]);
 
-        var serviceName = builder.Configuration[ConfigurationConstants.OtelServiceName] ?? "Cinedex.WebService";
+        var serviceName = builder.Configuration[ConfigurationConstants.OtelServiceName]
+            ?? defaultServiceName
+            ?? builder.Environment.ApplicationName;
 
         builder.Services
             .AddOpenTelemetry()
             .ConfigureResource(resource => resource.AddService(serviceName))
             .WithTracing(tracing =>
             {
-                tracing
-                    .AddAspNetCoreInstrumentation()
-                    .AddHttpClientInstrumentation()
-                    .AddSource("Npgsql"); // EF Core/Npgsql emit DB spans on this ActivitySource
+                configureTracing?.Invoke(tracing);
 
                 if (otlpEndpointConfigured)
                 {

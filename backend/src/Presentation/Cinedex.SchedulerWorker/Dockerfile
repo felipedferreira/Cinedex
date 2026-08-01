@@ -1,3 +1,5 @@
+# Cinedex.Auth.Identity carries a FrameworkReference to Microsoft.AspNetCore.App, so this
+# worker needs the aspnet image even though it serves no HTTP traffic.
 FROM mcr.microsoft.com/dotnet/aspnet:10.0 AS base
 USER $APP_UID
 WORKDIR /app
@@ -7,22 +9,21 @@ ARG BUILD_CONFIGURATION=Release
 WORKDIR /src
 COPY ["Directory.Build.props", "Directory.Build.props"]
 COPY ["Directory.Packages.props", "Directory.Packages.props"]
-COPY ["src/Presentation/Cinedex.DatabaseMigrator/Cinedex.DatabaseMigrator.csproj", "src/Presentation/Cinedex.DatabaseMigrator/"]
+COPY ["src/Presentation/Cinedex.SchedulerWorker/Cinedex.SchedulerWorker.csproj", "src/Presentation/Cinedex.SchedulerWorker/"]
 COPY ["src/Application/Cinedex.Application.csproj", "src/Application/"]
 COPY ["src/Domain/Cinedex.Domain.csproj", "src/Domain/"]
 COPY ["src/Adapters/Cinedex.Auth.Identity/Cinedex.Auth.Identity.csproj", "src/Adapters/Cinedex.Auth.Identity/"]
-COPY ["src/Adapters/Cinedex.Persistence.Postgres/Cinedex.Persistence.Postgres.csproj", "src/Adapters/Cinedex.Persistence.Postgres/"]
 COPY ["NuGetLibraries/Cinedex.Observability.OpenTelemetry/Cinedex.Observability.OpenTelemetry.csproj", "NuGetLibraries/Cinedex.Observability.OpenTelemetry/"]
-RUN dotnet restore "src/Presentation/Cinedex.DatabaseMigrator/Cinedex.DatabaseMigrator.csproj"
+RUN dotnet restore "src/Presentation/Cinedex.SchedulerWorker/Cinedex.SchedulerWorker.csproj"
 COPY . .
-WORKDIR "/src/src/Presentation/Cinedex.DatabaseMigrator"
-RUN dotnet build "./Cinedex.DatabaseMigrator.csproj" -c $BUILD_CONFIGURATION -o /app/build
+WORKDIR "/src/src/Presentation/Cinedex.SchedulerWorker"
+RUN dotnet build "./Cinedex.SchedulerWorker.csproj" -c $BUILD_CONFIGURATION -o /app/build
 
 FROM build AS publish
 ARG BUILD_CONFIGURATION=Release
-RUN dotnet publish "./Cinedex.DatabaseMigrator.csproj" -c $BUILD_CONFIGURATION -o /app/publish /p:UseAppHost=false
+RUN dotnet publish "./Cinedex.SchedulerWorker.csproj" -c $BUILD_CONFIGURATION -o /app/publish /p:UseAppHost=false
 
 FROM base AS final
 WORKDIR /app
 COPY --from=publish /app/publish .
-ENTRYPOINT ["dotnet", "Cinedex.DatabaseMigrator.dll"]
+ENTRYPOINT ["dotnet", "Cinedex.SchedulerWorker.dll"]

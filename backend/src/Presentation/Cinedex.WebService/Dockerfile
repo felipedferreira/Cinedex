@@ -24,6 +24,7 @@ COPY ["src/Domain/Cinedex.Domain.csproj", "src/Domain/"]
 COPY ["src/Adapters/Cinedex.Auth.Identity/Cinedex.Auth.Identity.csproj", "src/Adapters/Cinedex.Auth.Identity/"]
 COPY ["src/Adapters/Cinedex.Email.Smtp/Cinedex.Email.Smtp.csproj", "src/Adapters/Cinedex.Email.Smtp/"]
 COPY ["src/Adapters/Cinedex.Persistence.Postgres/Cinedex.Persistence.Postgres.csproj", "src/Adapters/Cinedex.Persistence.Postgres/"]
+COPY ["NuGetLibraries/Cinedex.Observability.OpenTelemetry/Cinedex.Observability.OpenTelemetry.csproj", "NuGetLibraries/Cinedex.Observability.OpenTelemetry/"]
 COPY ["NuGetLibraries/Cinedex.WebService.Contracts/Cinedex.WebService.Contracts.csproj", "NuGetLibraries/Cinedex.WebService.Contracts/"]
 RUN dotnet restore "src/Presentation/Cinedex.WebService/Cinedex.WebService.csproj"
 COPY . .

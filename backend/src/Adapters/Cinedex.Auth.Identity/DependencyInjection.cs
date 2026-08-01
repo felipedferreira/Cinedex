@@ -31,6 +31,47 @@ public static class DependencyInjection
         return services;
     }
 
+    /// <summary>
+    /// Registers the background sweep that deletes refresh-token rows past their retention windows.
+    /// </summary>
+    /// <remarks>
+    /// Deliberately separate from <see cref="AddAuthenticationAdapter"/> rather than folded into it.
+    /// The web service has no business deleting rows on a timer, and — because the integration-test
+    /// host runs real hosted services — registering this alongside the rest of the auth adapter
+    /// would have the sweep running underneath tests that assert exact refresh-token row counts.
+    /// Only <c>Cinedex.SchedulerWorker</c> calls this.
+    /// </remarks>
+    /// <param name="services">The service collection to add the sweep to.</param>
+    /// <returns>The same <paramref name="services"/> instance so calls can be chained.</returns>
+    public static IServiceCollection AddRefreshTokenCleanup(this IServiceCollection services)
+    {
+        services.AddOptions<RefreshTokenCleanupOptions>()
+            .BindConfiguration(RefreshTokenCleanupOptions.SectionName)
+            .Validate(
+                options => options.Interval > TimeSpan.Zero,
+                $"{RefreshTokenCleanupOptions.SectionName}:Interval must be greater than zero.")
+            .Validate(
+                options => options.ExpiredRetention >= TimeSpan.Zero,
+                $"{RefreshTokenCleanupOptions.SectionName}:ExpiredRetention must not be negative.")
+            .Validate(
+                options => options.ReuseDetectionWindow > TimeSpan.Zero,
+                $"{RefreshTokenCleanupOptions.SectionName}:ReuseDetectionWindow must be greater than zero.")
+            .Validate(
+                options => options.ReuseDetectionWindow >= options.ExpiredRetention,
+                $"{RefreshTokenCleanupOptions.SectionName}:ReuseDetectionWindow must be at least as long as ExpiredRetention.")
+            .Validate(
+                options => options.BatchSize is > 0 and <= 10_000,
+                $"{RefreshTokenCleanupOptions.SectionName}:BatchSize must be between 1 and 10000.")
+            .Validate(
+                options => options.MaxBatchesPerRun > 0,
+                $"{RefreshTokenCleanupOptions.SectionName}:MaxBatchesPerRun must be greater than zero.")
+            .ValidateOnStart();
+
+        services.AddHostedService<RefreshTokenCleanupWorker>();
+
+        return services;
+    }
+
     public static IServiceCollection AddAuthenticationAdapter(this IServiceCollection services)
     {
         services.AddAuthenticationPersistence();

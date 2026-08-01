@@ -2,7 +2,8 @@
   "Logging": {
     "LogLevel": {
       "Default": "Information",
-      "Microsoft.EntityFrameworkCore": "Information"
+      "Microsoft.EntityFrameworkCore": "Information",
+      "Cinedex": "Debug"
     }
   },
   "ConnectionStrings": {

@@ -53,6 +53,17 @@ internal sealed class RefreshTokenCleanupWorker(
     /// <inheritdoc />
     protected override async Task ExecuteAsync(CancellationToken stoppingToken)
     {
+        // The effective policy, once, at startup. Without this the first troubleshooting question —
+        // "it is not deleting anything, is that a bug or is retention just longer than I think?" —
+        // cannot be answered from the logs at all.
+        logger.LogDebug(
+            "Refresh-token cleanup started. Sweeping every {Interval}, deleting unrevoked tokens {ExpiredRetention} past expiry and revoked tokens {ReuseDetectionWindow} past revocation, at most {BatchSize} row(s) per batch and {MaxBatchesPerRun} batch(es) per sweep.",
+            this._options.Interval,
+            this._options.ExpiredRetention,
+            this._options.ReuseDetectionWindow,
+            this._options.BatchSize,
+            this._options.MaxBatchesPerRun);
+
         using var timer = new PeriodicTimer(this._options.Interval);
 
         try
@@ -72,6 +83,8 @@ internal sealed class RefreshTokenCleanupWorker(
             // Shutdown. Nothing needs draining: every batch is its own committed transaction, so
             // stopping mid-sweep just leaves the remainder for the next process to pick up.
         }
+
+        logger.LogInformation("Refresh-token cleanup stopped.");
     }
 
     private async Task SweepAsync(CancellationToken cancellationToken)
@@ -80,14 +93,22 @@ internal sealed class RefreshTokenCleanupWorker(
         {
             var startedAt = Stopwatch.GetTimestamp();
             var now = DateTime.UtcNow;
+            var expiredCutoff = now - this._options.ExpiredRetention;
+            var revokedCutoff = now - this._options.ReuseDetectionWindow;
+
+            // The cutoffs the predicates will actually use — the fastest way to see why a given row
+            // survived a sweep.
+            logger.LogDebug(
+                "Refresh-token cleanup sweep starting. Deleting unrevoked tokens that expired before {ExpiredCutoff:o}, and revoked tokens revoked before {RevokedCutoff:o}.",
+                expiredCutoff,
+                revokedCutoff);
 
             await using AsyncServiceScope scope = scopeFactory.CreateAsyncScope();
             var dbContext = scope.ServiceProvider.GetRequiredService<AuthDbContext>();
 
             // Expired and never revoked. Unreachable by every code path: rotation rejects an expired
             // token outright, and family-wide revocation only ever targets unexpired live tails.
-            var expiredCutoff = now - this._options.ExpiredRetention;
-            var (expiredDeleted, remainingBudget) = await this.DeleteBatchesAsync(
+            var (expiredDeleted, budgetAfterExpired) = await this.DeleteBatchesAsync(
                 dbContext.RefreshTokens
                     .Where(token => token.RevokedAtUtc == null && token.ExpiresAtUtc < expiredCutoff)
                     .OrderBy(token => token.ExpiresAtUtc),
@@ -95,30 +116,51 @@ internal sealed class RefreshTokenCleanupWorker(
                 this._options.MaxBatchesPerRun,
                 cancellationToken);
 
+            logger.LogDebug(
+                "Refresh-token cleanup deleted {DeletedCount} expired token(s) across {BatchCount} batch(es).",
+                expiredDeleted,
+                this._options.MaxBatchesPerRun - budgetAfterExpired);
+
             // Revoked long enough ago that replaying the token can no longer be meaningful. The
             // ExpiresAtUtc clause is belt-and-braces: with the default windows a revoked row is
             // necessarily expired, but that stops holding if Jwt:RefreshTokenDays is raised past the
             // reuse-detection window, and the invariant should be enforced rather than assumed.
-            var revokedCutoff = now - this._options.ReuseDetectionWindow;
-            var (revokedDeleted, _) = await this.DeleteBatchesAsync(
+            var (revokedDeleted, remainingBudget) = await this.DeleteBatchesAsync(
                 dbContext.RefreshTokens
                     .Where(token => token.RevokedAtUtc != null
                         && token.RevokedAtUtc < revokedCutoff
                         && token.ExpiresAtUtc < now)
                     .OrderBy(token => token.RevokedAtUtc),
                 dbContext,
-                remainingBudget,
+                budgetAfterExpired,
                 cancellationToken);
 
-            if (expiredDeleted + revokedDeleted > 0)
+            logger.LogDebug(
+                "Refresh-token cleanup deleted {DeletedCount} revoked token(s) across {BatchCount} batch(es).",
+                revokedDeleted,
+                budgetAfterExpired - remainingBudget);
+
+            // Emitted on every sweep, including empty ones. A job that logs only when it finds work
+            // is indistinguishable from a job that is not running at all — which is precisely the
+            // question this line exists to answer. Counts and timing only: a token hash or user id
+            // here would turn the log store into a record of who was signed in when.
+            logger.LogInformation(
+                "Refresh-token cleanup swept {DeletedCount} token(s) in {ElapsedMilliseconds} ms ({ExpiredCount} expired, {RevokedCount} revoked) using {BatchCount} of {MaxBatchesPerRun} available batch(es).",
+                expiredDeleted + revokedDeleted,
+                (long)Stopwatch.GetElapsedTime(startedAt).TotalMilliseconds,
+                expiredDeleted,
+                revokedDeleted,
+                this._options.MaxBatchesPerRun - remainingBudget,
+                this._options.MaxBatchesPerRun);
+
+            if (remainingBudget == 0)
             {
-                // Counts and timing only — a token hash or user id here would turn the log store into
-                // a record of who was signed in when.
-                logger.LogInformation(
-                    "Refresh-token cleanup deleted {ExpiredCount} expired and {RevokedCount} revoked token(s) in {ElapsedMilliseconds} ms.",
-                    expiredDeleted,
-                    revokedDeleted,
-                    (long)Stopwatch.GetElapsedTime(startedAt).TotalMilliseconds);
+                // The sweep stopped because it ran out of budget rather than out of rows, so a
+                // backlog is probably still waiting. Harmless once (the next sweep continues), but
+                // sustained repetition means the drain rate is below the accrual rate.
+                logger.LogWarning(
+                    "Refresh-token cleanup used its entire budget of {MaxBatchesPerRun} batch(es); rows are likely still pending and will drain on later sweeps. If this repeats every sweep, raise RefreshTokenCleanup:BatchSize or MaxBatchesPerRun, or shorten Interval.",
+                    this._options.MaxBatchesPerRun);
             }
         }
         catch (OperationCanceledException)

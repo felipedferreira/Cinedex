@@ -406,6 +406,10 @@ FodyWeavers.xsd
 *.msp
 
 # JetBrains Rider
+# .idea/ is per-user IDE state and stays out of the repo. Shared run configurations live in
+# backend/.run/ instead — that is what Rider's "Store as project file" option writes — and are
+# deliberately tracked so every Rider user gets the Docker Compose profile on clone. Do not
+# add .run/ here.
 *.sln.iml
 .idea/
 

@@ -1,5 +1,8 @@
 <Solution>
   <Folder Name="/etc/">
+    <Project Path="docker-compose\docker-compose.dcproj">
+      <Build />
+    </Project>
     <File Path="..\compose.yaml" />
     <File Path="README.md" />
     <File Path="..\.gitignore" />

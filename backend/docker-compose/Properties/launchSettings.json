@@ -1,0 +1,19 @@
+{
+  "profiles": {
+    "Docker Compose": {
+      "commandName": "DockerCompose",
+      "commandVersion": "1.0",
+      "serviceActions": {
+        "postgres": "StartWithoutDebugging",
+        "seq": "StartWithoutDebugging",
+        "mailpit": "StartWithoutDebugging",
+        "movies.databasemigrator": "StartWithoutDebugging",
+        "movies.webservice": "StartWithoutDebugging",
+        "movies.schedulerworker": "StartWithoutDebugging",
+        "cinadex-ui": "StartWithoutDebugging"
+      },
+      "launchBrowser": true,
+      "launchUrl": "https://localhost:9000/movies-svc/api-docs/v1"
+    }
+  }
+}

@@ -1,0 +1,20 @@
+<Project Sdk="Microsoft.Docker.Sdk">
+  <PropertyGroup Label="Globals">
+    <ProjectVersion>2.1</ProjectVersion>
+    <ProjectGuid>2E379A85-E6D8-492C-A0AA-D58C3D2B863D</ProjectGuid>
+    <DockerTargetOS>Linux</DockerTargetOS>
+    <!--
+      Points at the repo-root compose.yaml. Visual Studio appends the extension itself and
+      probes both .yml and .yaml, so the existing file name needs no change.
+    -->
+    <DockerComposeBaseFilePath>..\..\compose</DockerComposeBaseFilePath>
+    <!--
+      Visual Studio always passes `-p` to docker compose. Without this it would derive the
+      project name from this folder and create a second, empty set of volumes
+      (docker-compose_postgres_data) instead of reusing cinedex_postgres_data, leaving the
+      app pointed at an empty database while the real one sat untouched. Pinned to the name
+      the CLI and Rider already use.
+    -->
+    <DockerComposeProjectName>cinedex</DockerComposeProjectName>
+  </PropertyGroup>
+</Project>

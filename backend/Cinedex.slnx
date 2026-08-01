@@ -14,25 +14,26 @@
     <File Path="..\LICENSE" />
   </Folder>
   <Folder Name="/nuget-libraries/">
-    <Project Path="NuGetLibraries\Cinedex.WebService.Contracts\Cinedex.WebService.Contracts.csproj" Type="C#" />
+    <Project Path="NuGetLibraries\Cinedex.WebService.Contracts\Cinedex.WebService.Contracts.csproj" />
   </Folder>
   <Folder Name="/src/" />
   <Folder Name="/src/1 - Presentation/">
     <Project Path="src/Presentation/Cinedex.DatabaseMigrator/Cinedex.DatabaseMigrator.csproj" />
-    <Project Path="src\Presentation\Cinedex.WebService\Cinedex.WebService.csproj" Type="C#" />
+    <Project Path="src/Presentation/Cinedex.SchedulerWorker/Cinedex.SchedulerWorker.csproj" />
+    <Project Path="src\Presentation\Cinedex.WebService\Cinedex.WebService.csproj" />
   </Folder>
   <Folder Name="/src/2 - Adapters/">
-    <Project Path="src\Adapters\Cinedex.Auth.Identity\Cinedex.Auth.Identity.csproj" Type="C#" />
-    <Project Path="src\Adapters\Cinedex.Email.Smtp\Cinedex.Email.Smtp.csproj" Type="C#" />
-    <Project Path="src\Adapters\Cinedex.Persistence.Postgres\Cinedex.Persistence.Postgres.csproj" Type="C#" />
+    <Project Path="src\Adapters\Cinedex.Auth.Identity\Cinedex.Auth.Identity.csproj" />
+    <Project Path="src\Adapters\Cinedex.Email.Smtp\Cinedex.Email.Smtp.csproj" />
+    <Project Path="src\Adapters\Cinedex.Persistence.Postgres\Cinedex.Persistence.Postgres.csproj" />
   </Folder>
   <Folder Name="/src/3 - Application/">
-    <Project Path="src\Application\Cinedex.Application.csproj" Type="C#" />
+    <Project Path="src\Application\Cinedex.Application.csproj" />
   </Folder>
   <Folder Name="/src/4 - Domain/">
-    <Project Path="src\Domain\Cinedex.Domain.csproj" Type="C#" />
+    <Project Path="src\Domain\Cinedex.Domain.csproj" />
   </Folder>
   <Folder Name="/tests/">
-    <Project Path="tests\Cinedex.WebService.IntegrationTests\Cinedex.WebService.IntegrationTests.csproj" Type="C#" />
+    <Project Path="tests\Cinedex.WebService.IntegrationTests\Cinedex.WebService.IntegrationTests.csproj" />
   </Folder>
 </Solution>

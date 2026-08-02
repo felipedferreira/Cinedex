@@ -2,6 +2,7 @@ using Cinedex.Application.Abstractions;
 using Cinedex.Application.Auth;
 using Cinedex.Auth.Identity.Constants;
 using Cinedex.Auth.Identity.Options;
+using Cinedex.Auth.Identity.Persistence.Query;
 using Cinedex.Auth.Identity.Persistence.Repository;
 using Cinedex.Auth.Identity.Services;
 using Microsoft.AspNetCore.Identity;
@@ -14,9 +15,16 @@ namespace Cinedex.Auth.Identity;
 public static class DependencyInjection
 {
     /// <summary>
-    /// Registers the auth persistence layer: <see cref="AuthDbContext"/> and the refresh-token
-    /// repository that sits on it.
+    /// Registers the auth persistence layer: the read-write and read-only contexts, and the
+    /// refresh-token repository and queries that sit on them.
     /// </summary>
+    /// <remarks>
+    /// The two contexts map the same model but resolve their connection strings separately, so the
+    /// read side can be pointed at a PostgreSQL role holding only <c>SELECT</c>.
+    /// <c>ConnectionStrings:ReadOnlyConnection</c> is optional and falls back to
+    /// <c>ConnectionStrings:DefaultConnection</c>, so nothing has to change to keep working as it
+    /// does today; setting it is how an environment opts into the privilege split.
+    /// </remarks>
     /// <param name="services">The service collection to add the persistence layer to.</param>
     /// <returns>The same <paramref name="services"/> instance so calls can be chained.</returns>
     public static IServiceCollection AddAuthenticationPersistence(this IServiceCollection services)
@@ -34,7 +42,29 @@ public static class DependencyInjection
                 .UseCamelCaseNamingConvention();
         });
 
+        services.AddDbContext<AuthReadOnlyDbContext>((sp, options) =>
+        {
+            var configuration = sp.GetRequiredService<IConfiguration>();
+
+            // Whitespace counts as absent, not as a connection string. Compose passes
+            // ${DB_READONLY_CONNECTION_STRING:-}, which is an empty string when the variable is
+            // unset — a plain null check would hand that straight to Npgsql instead of falling back.
+            var readOnlyConnectionString =
+                configuration.GetConnectionString(AuthDatabaseConstants.ReadOnlyConnectionName);
+            var connectionString = string.IsNullOrWhiteSpace(readOnlyConnectionString)
+                ? configuration.GetConnectionString(AuthDatabaseConstants.DefaultConnectionName)
+                : readOnlyConnectionString;
+
+            // No MigrationsHistoryTable here: AuthDbContext owns the schema and this context has no
+            // migrations of its own. It must never be the target of dotnet ef migrations add.
+            options
+                .UseNpgsql(connectionString)
+                .UseQueryTrackingBehavior(QueryTrackingBehavior.NoTracking)
+                .UseCamelCaseNamingConvention();
+        });
+
         services.AddScoped<IRefreshTokenRepository, RefreshTokenRepository>();
+        services.AddScoped<IRefreshTokenQueries, RefreshTokenQueries>();
 
         return services;
     }

@@ -3,14 +3,22 @@ using Microsoft.EntityFrameworkCore.Storage;
 namespace Cinedex.Auth.Identity.Persistence.Repository;
 
 /// <summary>
-/// All persistence for <c>auth."refreshTokens"</c>: every write, and every read, over
-/// <see cref="AuthDbContext"/>.
+/// Every write against <c>auth."refreshTokens"</c>, over the read-write connection
+/// (<see cref="AuthDbContext"/>).
 /// </summary>
 /// <remarks>
+/// <para>
+/// The write half of the refresh-token CQRS split. It also owns the reads taken <i>inside</i> the
+/// rotation transaction: those are part of a write, not queries, and must run on the connection that
+/// holds the transaction and the family's advisory lock. Reads that are correct outside a transaction
+/// belong on <see cref="Query.IRefreshTokenQueries"/> instead.
+/// </para>
+/// <para>
 /// Implementations must take the scoped <see cref="AuthDbContext"/>, never an
-/// <c>IDbContextFactory</c>. Callers open transactions on that same scoped context and expect
-/// these statements to enlist in them; a factory would hand out a second connection and silently
-/// put the writes outside the caller's transaction.
+/// <c>IDbContextFactory</c>. Callers open transactions on that same scoped context and expect these
+/// statements to enlist in them; a factory would hand out a second connection and silently put the
+/// writes outside the caller's transaction.
+/// </para>
 /// </remarks>
 internal interface IRefreshTokenRepository
 {
@@ -31,13 +39,12 @@ internal interface IRefreshTokenRepository
     Task AcquireFamilyLockAsync(Guid familyId, CancellationToken cancellationToken);
 
     /// <summary>
-    /// Finds the token with the supplied hash.
+    /// Finds the token with the supplied hash, on the write connection.
     /// </summary>
     /// <remarks>
-    /// Called both as a preflight lookup before a transaction opens and again as the authoritative
-    /// re-read once the family's advisory lock is held via <see cref="AcquireFamilyLockAsync"/> —
-    /// the second call is what makes rotation and reuse detection correct against a value that
-    /// could have changed while the first call's caller waited for the lock.
+    /// Use this rather than <see cref="Query.IRefreshTokenQueries.FindByTokenHashAsync"/> whenever
+    /// the answer has to be authoritative for a decision taken under
+    /// <see cref="AcquireFamilyLockAsync"/>.
     /// </remarks>
     /// <param name="tokenHash">The hex-encoded SHA-256 hash of the raw refresh token.</param>
     /// <param name="cancellationToken">A token to observe while waiting for the task to complete.</param>

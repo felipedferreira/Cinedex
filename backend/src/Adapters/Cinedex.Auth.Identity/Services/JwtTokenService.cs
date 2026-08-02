@@ -6,6 +6,7 @@ using Cinedex.Application.Abstractions;
 using Cinedex.Application.Auth;
 using Cinedex.Application.Exceptions;
 using Cinedex.Auth.Identity.Options;
+using Cinedex.Auth.Identity.Persistence.Query;
 using Cinedex.Auth.Identity.Persistence.Repository;
 using Cinedex.Domain.UserAggregate;
 using Microsoft.AspNetCore.Identity;
@@ -18,6 +19,7 @@ namespace Cinedex.Auth.Identity.Services;
 
 internal sealed class JwtTokenService(
     IRefreshTokenRepository refreshTokens,
+    IRefreshTokenQueries refreshTokenQueries,
     UserManager<ApplicationUser> userManager,
     IOptions<JwtOptions> options,
     ILogger<JwtTokenService> logger) : ITokenService
@@ -46,7 +48,9 @@ internal sealed class JwtTokenService(
         var tokenHash = HashToken(refreshToken);
         var now = DateTime.UtcNow;
 
-        var preflight = await refreshTokens.FindByTokenHashAsync(tokenHash, cancellationToken);
+        // The one refresh-token read that is correct outside a transaction, so the only one that goes
+        // through the read-only connection.
+        var preflight = await refreshTokenQueries.FindByTokenHashAsync(tokenHash, cancellationToken);
 
         if (preflight is null || preflight.ExpiresAtUtc <= now)
         {
@@ -58,7 +62,8 @@ internal sealed class JwtTokenService(
 
         // The preflight read above avoids opening a transaction for unknown and expired tokens. A
         // family may have changed while this request waited for its advisory lock, so only this
-        // second read is authoritative for rotation and reuse detection.
+        // second read is authoritative for rotation and reuse detection — which is why it goes
+        // through the repository, on the connection holding the lock, rather than the queries.
         var existing = await refreshTokens.FindByTokenHashAsync(tokenHash, cancellationToken);
         now = DateTime.UtcNow;
 

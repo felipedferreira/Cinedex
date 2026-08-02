@@ -1,0 +1,43 @@
+<component name="ProjectRunConfigurationManager">
+  <!--
+    The fast inner loop: Postgres and Mailpit as containers, the three .NET hosts as local
+    processes, migrations applied automatically by the migrator resource. Needs Docker running.
+
+    Complements the "Docker Compose" configuration rather than replacing it — that one is still the
+    prod-like path (built images, the Nginx/HTTPS proxy on 9000, Seq, the SPA). Run one or the other:
+    both publish Postgres on 5432, so the second to start fails to bind. Their volumes are separate,
+    so neither can corrupt the other's data.
+
+    Requires one User Secret. From backend/aspire/Cinedex.AppHost:
+      dotnet user-secrets set "Parameters:postgres-password" "<password>"
+
+    This is a "LaunchSettings" configuration, not a "DotNetProject" one, so that it honours the
+    "https" profile in aspire/Cinedex.AppHost/Properties/launchSettings.json — that profile is what
+    pins the dashboard and OTLP endpoints. It is the same thing as
+    `dotnet run --project aspire/Cinedex.AppHost --launch-profile https`.
+
+    The dashboard is served over HTTPS with the ASP.NET Core developer certificate. If the browser
+    refuses to open it, run `dotnet dev-certs https --trust` once, or switch LAUNCH_PROFILE_NAME to
+    "http" (that profile sets ASPIRE_ALLOW_UNSECURED_TRANSPORT).
+  -->
+  <configuration default="false" name="Aspire AppHost" type="LaunchSettings" factoryName=".NET Launch Settings Profile">
+    <option name="LAUNCH_PROFILE_PROJECT_FILE_PATH" value="$PROJECT_DIR$/aspire/Cinedex.AppHost/Cinedex.AppHost.csproj" />
+    <option name="LAUNCH_PROFILE_TFM" value="net10.0" />
+    <option name="LAUNCH_PROFILE_NAME" value="https" />
+    <option name="USE_MONO" value="0" />
+    <option name="RUNTIME_ARGUMENTS" value="" />
+    <option name="GENERATE_APPLICATIONHOST_CONFIG" value="1" />
+    <option name="SHOW_IIS_EXPRESS_OUTPUT" value="0" />
+    <option name="SEND_DEBUG_REQUEST" value="1" />
+    <option name="ADDITIONAL_IIS_EXPRESS_ARGUMENTS" value="" />
+    <!--
+      Set to 1 if you want breakpoints in the web service and the scheduler worker to bind when you
+      debug the AppHost: they run as child processes of it, not of the IDE.
+    -->
+    <option name="AUTO_ATTACH_CHILDREN" value="0" />
+    <option name="MIXED_MODE_DEBUG" value="0" />
+    <method v="2">
+      <option name="Build" />
+    </method>
+  </configuration>
+</component>

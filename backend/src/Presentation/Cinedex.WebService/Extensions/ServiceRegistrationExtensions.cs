@@ -51,11 +51,33 @@ public static class ServiceRegistrationExtensions
                     "Connection string '{0}' is not configured.",
                     ConfigurationConstants.DefaultConnection));
 
+        // The read-only check resolves ConnectionStrings:ReadOnlyConnection lazily, through the built
+        // IServiceProvider, rather than eagerly like DefaultConnection above. A WebApplicationFactory
+        // test host layers its configuration overrides on only once the host finishes building; an
+        // eager read here would run before that and silently miss them. Real deployments are
+        // unaffected — environment variables are visible eagerly there — but resolving this the same
+        // way AddAuthenticationPersistence resolves it for AuthReadOnlyDbContext keeps the two
+        // consistent and keeps this testable. The fallback mirrors that same method: unset, empty or
+        // whitespace means "use the default connection", so the check is always registered — matching
+        // AuthReadOnlyDbContext, which always exists whether or not the key is set.
         builder.Services
             .AddHealthChecks()
             .AddNpgSql(
                 connectionString: connectionString,
                 name: "postgres",
+                tags: [HealthCheckConstants.ReadyTag])
+            .AddNpgSql(
+                connectionStringFactory: sp =>
+                {
+                    var configuration = sp.GetRequiredService<IConfiguration>();
+                    var readOnlyConnectionString =
+                        configuration.GetConnectionString(ConfigurationConstants.ReadOnlyConnection);
+
+                    return string.IsNullOrWhiteSpace(readOnlyConnectionString)
+                        ? configuration.GetConnectionString(ConfigurationConstants.DefaultConnection) ?? connectionString
+                        : readOnlyConnectionString;
+                },
+                name: "postgres-readonly",
                 tags: [HealthCheckConstants.ReadyTag]);
 
         // Register exception handlers in chain order — DefaultExceptionHandler must be last (catch-all)

@@ -1,0 +1,51 @@
+<!--
+    Aspire 13.x single-SDK project format: Aspire.AppHost.Sdk imports Microsoft.NET.Sdk itself, so
+    there is no separate <Sdk> element. `IsAspireHost` was folded into the SDK in Aspire 9.2 and the
+    Aspire.Hosting.AppHost package reference is implicit, so neither appears here.
+
+    The SDK version is pinned inline because central package management (Directory.Packages.props)
+    governs PackageReference only — not MSBuild project SDKs. Keep it in step with the
+    Aspire.Hosting.* versions in Directory.Packages.props.
+-->
+<Project Sdk="Aspire.AppHost.Sdk/13.4.6">
+
+    <PropertyGroup>
+        <OutputType>Exe</OutputType>
+        <UserSecretsId>d495b855-492c-48a7-8aac-c06f37c0cd56</UserSecretsId>
+    </PropertyGroup>
+
+    <ItemGroup>
+        <PackageReference Include="Aspire.Hosting.AppHost" />
+        <PackageReference Include="Aspire.Hosting.PostgreSQL" />
+    </ItemGroup>
+
+    <!--
+        Without this the settings files stay behind in the project folder: the Aspire SDK chains
+        Microsoft.NET.Sdk, not the Web SDK, so appsettings.json is only a None item and nothing copies
+        it next to the executable. The flag in it (Features:EnableDatabaseMigrationsSvc) would then
+        never be read. Same shape the SchedulerWorker and DatabaseMigrator use for application.json.
+        `Update` rather than `Include` so the Development file, which is git-ignored and usually
+        absent, is simply skipped instead of failing the build.
+    -->
+    <ItemGroup>
+        <None Update="appsettings.json">
+            <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+            <CopyToPublishDirectory>PreserveNewest</CopyToPublishDirectory>
+        </None>
+        <None Update="appsettings.Development.json">
+            <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+            <CopyToPublishDirectory>PreserveNewest</CopyToPublishDirectory>
+        </None>
+    </ItemGroup>
+
+    <!--
+        The three hosts the AppHost launches. The Aspire SDK turns each of these into a
+        Projects.<Name> class (dots become underscores) that AppHost.cs references.
+    -->
+    <ItemGroup>
+        <ProjectReference Include="..\..\src\Presentation\Cinedex.DatabaseMigrator\Cinedex.DatabaseMigrator.csproj" />
+        <ProjectReference Include="..\..\src\Presentation\Cinedex.SchedulerWorker\Cinedex.SchedulerWorker.csproj" />
+        <ProjectReference Include="..\..\src\Presentation\Cinedex.WebService\Cinedex.WebService.csproj" />
+    </ItemGroup>
+
+</Project>

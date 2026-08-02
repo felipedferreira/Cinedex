@@ -406,6 +406,10 @@ FodyWeavers.xsd
 *.msp
 
 # JetBrains Rider
+# .idea/ is per-user IDE state and stays out of the repo. Shared run configurations live in
+# backend/.run/ instead — that is what Rider's "Store as project file" option writes — and are
+# deliberately tracked so every Rider user gets the Docker Compose profile on clone. Do not
+# add .run/ here.
 *.sln.iml
 .idea/
 
@@ -478,6 +482,11 @@ $RECYCLE.BIN/
 
 # Vim temporary swap files
 *.swp
+
+# Aspire AppHost — per-developer overrides (e.g. Features:EnableDatabaseMigrationsSvc).
+# Deliberately scoped to this one path: the web service's appsettings.Development.json IS tracked.
+# Copy appsettings.Development.json.example alongside it to get started.
+/backend/aspire/Cinedex.AppHost/appsettings.Development.json
 
 # Claude Code — personal, per-user settings (never commit)
 .claude/settings.local.json

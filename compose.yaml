@@ -1,3 +1,9 @@
+# Pinned so the project name — and therefore container and volume names like
+# cinedex_postgres_data — is the same for everyone regardless of what the clone directory is
+# called. Compose otherwise derives it from the directory name, which would give a teammate who
+# cloned into a differently-named folder their own separate set of volumes.
+name: cinedex
+
 services:
   postgres:
     image: postgres:17-alpine

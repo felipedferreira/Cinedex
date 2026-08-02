@@ -1,0 +1,29 @@
+// Per-developer AppHost settings. Copy this file to `appsettings.Development.json` (same folder) and
+// edit it — that name is git-ignored for this project, so your copy is never committed.
+//
+// Only read when the AppHost runs in Development, which the launch profiles set. `dotnet run` and the
+// Rider "Aspire AppHost" configuration both go through a profile. Running the built .exe directly
+// does not, and falls back to Production, where this file and User Secrets are both ignored.
+//
+// This is the file-based alternative to User Secrets. If you set the same key in both, User Secrets
+// wins: the host adds them after appsettings.Development.json. To use secrets instead, run this from
+// this folder and delete your local file:
+//
+//   dotnet user-secrets set "Features:EnableDatabaseMigrationsSvc" "false"
+//
+// Note that `dotnet user-secrets list` here will also show the Postgres password Aspire generated on
+// first run. Leave it alone — deleting it just makes Aspire generate a new one, which will not match
+// the password already baked into the `cinedex-aspire-pgdata` volume.
+{
+  "Features": {
+    // false skips the migrator entirely: the stack starts faster, but nothing applies migrations, so
+    // the schema must already be current. Turn it back on for one run after pulling a new migration
+    // or when starting against an empty database.
+    "EnableDatabaseMigrationsSvc": false,
+
+    // false skips the Mailpit container entirely: nothing listens for outgoing SMTP, so
+    // password-reset emails silently fail to send (logged, not fatal) instead of showing up at
+    // http://localhost:8025. Turn it back on when you need to see or click a reset email.
+    "EnableMailpitSvc": false
+  }
+}

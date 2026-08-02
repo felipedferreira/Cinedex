@@ -1,0 +1,36 @@
+<Project Sdk="Microsoft.Docker.Sdk">
+  <PropertyGroup Label="Globals">
+    <ProjectVersion>2.1</ProjectVersion>
+    <ProjectGuid>2E379A85-E6D8-492C-A0AA-D58C3D2B863D</ProjectGuid>
+    <DockerTargetOS>Linux</DockerTargetOS>
+    <!--
+      Points at the repo-root compose.yaml. Visual Studio appends the extension itself and
+      probes both .yml and .yaml, so the existing file name needs no change.
+    -->
+    <DockerComposeBaseFilePath>..\..\compose</DockerComposeBaseFilePath>
+    <!--
+      Visual Studio always passes `-p` to docker compose. Without this it would derive the
+      project name from this folder and create a second, empty set of volumes
+      (docker-compose_postgres_data) instead of reusing cinedex_postgres_data, leaving the
+      app pointed at an empty database while the real one sat untouched. Pinned to the name
+      the CLI and Rider already use.
+    -->
+    <DockerComposeProjectName>cinedex</DockerComposeProjectName>
+    <!--
+      Open the default browser on the Scalar API docs after the stack is up, matching the
+      "Launch Web Browser" before-launch task on the Rider run configuration.
+
+      DockerServiceName must name a service Visual Studio actually models, which means one backed
+      by a project in the solution — it creates obj/Docker/<service>/ only for those. Naming the
+      cinadex-ui proxy here, even though it is what publishes port 9000, resolves to nothing and
+      the browser launch is skipped without an error.
+
+      The URL is therefore absolute rather than templated with {Scheme}/{ServicePort}: those
+      tokens would resolve against movies.webservice, which only declares `expose: 8080` and
+      publishes no host port, whereas the page is served through the proxy on 9000.
+    -->
+    <DockerLaunchAction>LaunchBrowser</DockerLaunchAction>
+    <DockerServiceName>movies.webservice</DockerServiceName>
+    <DockerServiceUrl>https://localhost:9000/movies-svc/api-docs/v1</DockerServiceUrl>
+  </PropertyGroup>
+</Project>

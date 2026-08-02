@@ -9,6 +9,7 @@ dotnet build          # also runs the embedded Vite build (see below)
 dotnet test           # integration tests — REQUIRES Docker running (Testcontainers Postgres)
 dotnet test --filter "GenreEndpointTests"
 dotnet run --project src/Presentation/Cinedex.WebService   # https://localhost:7201
+dotnet run --project aspire/Cinedex.AppHost                # whole stack via Aspire (needs Docker)
 .\coverage.ps1 -Open  # HTML coverage report (needs dotnet-reportgenerator-globaltool installed once)
 ```
 
@@ -25,6 +26,27 @@ Dependencies point inward: WebService → Adapters → Application → Domain.
 - `src/Adapters/Cinedex.Email.Smtp` — MailKit SMTP implementation of the `IEmailSender` port, plus the delivery queue: `ChannelEmailDispatcher` (the `IEmailDispatcher` port) enqueues, and the `EmailDeliveryWorker` background service drains it. Request-path code must depend on `IEmailDispatcher`, never `IEmailSender` — awaiting SMTP inline reopens an account-enumeration timing oracle on `password/forgot`.
 - `src/Presentation/Cinedex.WebService` — FastEndpoints (one class per endpoint), exception-handler chain (`ExceptionHandlers/`, registration order matters, `DefaultExceptionHandler` last), health checks (`/health/live`, `/health/ready`), OpenTelemetry → Seq.
 - `NuGetLibraries/Cinedex.WebService.Contracts` — shared request/response DTOs (the packable API contract).
+- `aspire/Cinedex.AppHost` — Aspire orchestration for local dev (Postgres + Mailpit containers, the three hosts as processes). **No ServiceDefaults project on purpose**: `AddObservability` already consumes the `OTEL_EXPORTER_OTLP_*` variables the AppHost injects, and health endpoints already exist, so the only things ServiceDefaults would add are service discovery and HTTP resilience — neither of which this codebase uses. The `Aspire.AppHost.Sdk` version is pinned inline in the csproj because central package management does not cover MSBuild SDKs; keep it in step with the `Aspire.Hosting.*` versions in `Directory.Packages.props`.
+
+The web service runs under its `aspire` launch profile (`Properties/launchSettings.json`), which is HTTP-only on port 5187. **Do not remove that profile or point the AppHost at `launchProfileName: null`.** Visual Studio launches Aspire project resources itself and reads a web project's URLs from its launch profile; without one, Kestrel binds 5000/5001 while Aspire's proxy forwards elsewhere, and the resource hangs at `Running (Unhealthy)`. `dotnet run` does not show this — there the orchestrator injects the port itself.
+
+## AppHost per-developer config
+
+Committed defaults are in `aspire/Cinedex.AppHost/appsettings.json`. Override them **without editing a tracked file** via either channel — User Secrets win, because the host adds them after `appsettings.Development.json`:
+
+```bash
+# from aspire/Cinedex.AppHost/
+dotnet user-secrets set "Features:EnableDatabaseMigrationsSvc" "false"
+# or: cp appsettings.Development.json.example appsettings.Development.json   (git-ignored)
+```
+
+Both channels only apply in **Development**, which the launch profiles in `Properties/launchSettings.json` set. `dotnet run` and the Rider configuration both go through a profile, so they pick the overrides up; running `bin/…/Cinedex.AppHost.exe` directly does not — it defaults to Production, where the host skips user secrets, so you get the committed defaults and Aspire regenerates the Postgres password instead of reading the one matching the data volume.
+
+`Features:EnableDatabaseMigrationsSvc` (default `true`) controls whether the migrator runs. Set it to `false` and the resource is **omitted from the graph entirely** — the web service and scheduler worker then wait on Postgres directly instead of on the migrator. Faster startup, but nothing applies migrations, so turn it back on for one run after pulling a new migration or when starting against an empty database. Note `dotnet user-secrets list` here also shows the Postgres password Aspire generated on first run — deleting it makes Aspire generate a new one that won't match the `cinedex-aspire-pgdata` volume.
+
+`Features:EnableMailpitSvc` (default `true`), same pattern, controls whether the Mailpit container runs. `false` omits it from the graph; the web service still boots (`Smtp__Username`/`Smtp__Password` are set unconditionally so `SmtpOptions.ValidateOnStart` passes, and `Smtp__Host`/`Smtp__Port` fall back to the web service's own `appsettings.Development.json` default of `localhost:1025`) but outgoing email has nowhere to land — `EmailDeliveryWorker` logs the failure and moves on rather than crashing. Turn it back on to actually read a password-reset email at `http://localhost:8025`.
+
+The `.gitignore` rule for `appsettings.Development.json` is scoped to this one project path on purpose — the web service's `appsettings.Development.json` is tracked.
 
 Handler conventions: use cases expose `HandleAsync(...)`; create handlers return the new `Guid` (presentation builds the `Location` header); update/delete handlers return `Task`; repository create ports return `Task`, not the saved entity.
 
@@ -34,7 +56,7 @@ Scalar API docs and the OpenAPI JSON are served only when `Features:ApiDocumenta
 
 ## EF Core migrations — two contexts, always pass `--context`
 
-Two DbContexts share one database with separate schemas and `__EFMigrationsHistory` tables. Every `dotnet ef` command MUST pass `--context`, or it fails with "More than one DbContext was found". **Nothing applies migrations automatically** (only the integration-test fixture migrates itself); a fresh database needs both:
+Two DbContexts share one database with separate schemas and `__EFMigrationsHistory` tables. Every `dotnet ef` command MUST pass `--context`, or it fails with "More than one DbContext was found". **Nothing applies migrations automatically** — except the integration-test fixture, which migrates itself, and the Aspire AppHost, which runs `Cinedex.DatabaseMigrator` to completion before starting anything else. Everywhere else a fresh database needs both:
 
 ```bash
 dotnet ef database update --context FilmDbContext \

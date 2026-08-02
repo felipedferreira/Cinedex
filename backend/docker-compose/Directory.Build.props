@@ -1,0 +1,20 @@
+<Project>
+
+  <!--
+    Deliberately empty, and deliberately does NOT import ..\Directory.Build.props.
+
+    MSBuild walks upward for the nearest Directory.Build.props and stops at the first one it
+    finds, so this file exists purely to stop docker-compose.dcproj inheriting the solution-wide
+    .NET settings. A Docker Compose project is not a .NET project: it has no target framework,
+    compiles nothing, and references no packages. Inheriting TargetFramework=net10.0 makes
+    `dotnet restore` fail the whole solution with NU1105 ("Invalid target framework 'net10.0'"),
+    which breaks CI, and the StyleCop PackageReference would be dragged in for no reason.
+
+    Central package management is switched off here for the same reason.
+  -->
+
+  <PropertyGroup>
+    <ManagePackageVersionsCentrally>false</ManagePackageVersionsCentrally>
+  </PropertyGroup>
+
+</Project>

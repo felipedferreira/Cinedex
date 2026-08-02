@@ -7,6 +7,16 @@
       "composeLaunchUrl": "https://localhost:9000/movies-svc/api-docs/v1",
       "dockerComposeFile": "../../../../compose.yaml"
     },
+    "aspire": {
+      "//": "Used by aspire/Cinedex.AppHost, not meant to be launched on its own. Must stay HTTP-only: an https endpoint here would make Aspire's health probe fail on any machine that has not run 'dotnet dev-certs https --trust', and it is what keeps UseHttpsRedirection from answering that probe with a 307. Serving http only also matches how the service runs under compose, behind the Nginx proxy. The profile has to exist because Visual Studio launches Aspire project resources itself and takes their URLs from the launch profile - with no profile Kestrel falls back to 5000/5001 and Aspire's proxy forwards into nothing.",
+      "commandName": "Project",
+      "dotnetRunMessages": true,
+      "launchBrowser": false,
+      "applicationUrl": "http://localhost:5187",
+      "environmentVariables": {
+        "ASPNETCORE_ENVIRONMENT": "Development"
+      }
+    },
     "https-api-docs": {
       "commandName": "Project",
       "dotnetRunMessages": true,

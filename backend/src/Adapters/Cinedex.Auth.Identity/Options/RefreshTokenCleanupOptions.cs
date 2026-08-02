@@ -19,7 +19,7 @@ internal sealed class RefreshTokenCleanupOptions
     public TimeSpan ExpiredRetention { get; set; } = TimeSpan.FromDays(1);
 
     // How long a revoked row is kept past its revocation. This IS a security boundary: the revoked
-    // row is the only evidence that lets a future reuse response recognise a replayed, already-
+    // row is the only evidence that lets the reuse response recognise a replayed, already-
     // rotated token as a compromise rather than as an unknown token. It must comfortably exceed
     // Jwt:RefreshTokenDays, or a token stolen early in its life could stop being recognisable as
     // reuse before an attacker even had a chance to replay it. Shortening this narrows that

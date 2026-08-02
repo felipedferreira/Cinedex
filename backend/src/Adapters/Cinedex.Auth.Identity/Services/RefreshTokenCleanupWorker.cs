@@ -34,7 +34,7 @@ namespace Cinedex.Auth.Identity.Services;
 /// </para>
 /// <para>
 /// <b>Revoked.</b> A revoked row is the <i>only</i> evidence the system has that a token was
-/// rotated — and, once a family-wide reuse response is built, the only trigger for recognising that
+/// rotated — and the family-wide reuse response's only trigger for recognising that
 /// a stolen, already-rotated token is being replayed rather than presenting an unknown one. Deleting
 /// it too soon destroys that evidence before it can ever be used. So a revoked row must outlive the
 /// window in which an attacker could plausibly replay the token it replaced, which is bounded by the

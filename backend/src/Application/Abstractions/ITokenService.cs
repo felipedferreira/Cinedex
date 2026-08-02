@@ -30,7 +30,9 @@ public interface ITokenService
     /// <returns>A task producing the rotated <see cref="AuthTokensDto"/>.</returns>
     /// <remarks>
     /// Rotation revokes the presented token and persists its replacement in a single transaction, so
-    /// a successful refresh always invalidates the token that was presented.
+    /// a successful refresh always invalidates the token that was presented. Presenting a known,
+    /// unexpired token that already has a replacement is treated as evidence of reuse: every active
+    /// token in that rotation family is revoked before this method reports invalid credentials.
     /// </remarks>
     /// <exception cref="Cinedex.Application.Exceptions.InvalidCredentialsException">
     /// The refresh token is unknown, already revoked, or expired, or the account it was issued for

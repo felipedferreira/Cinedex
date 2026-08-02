@@ -6,6 +6,17 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <!--
+      Aspire (orchestration AppHost only — no service references these).
+      Keep in step with the Aspire.AppHost.Sdk version pinned inline in
+      aspire/Cinedex.AppHost/Cinedex.AppHost.csproj; central package management does not
+      govern MSBuild project SDKs, so the two version numbers are maintained together.
+      Aspire.Hosting.AppHost is referenced implicitly by the SDK, but it still needs a
+      PackageVersion entry here or restore fails with NU1010.
+    -->
+    <PackageVersion Include="Aspire.Hosting.AppHost" Version="13.4.6" />
+    <PackageVersion Include="Aspire.Hosting.PostgreSQL" Version="13.4.6" />
+
     <!-- ASP.NET Core -->
     <PackageVersion Include="FastEndpoints" Version="8.1.0" />
     <PackageVersion Include="Microsoft.AspNetCore.OpenApi" Version="10.0.2" />

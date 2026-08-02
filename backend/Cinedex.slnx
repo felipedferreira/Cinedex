@@ -16,6 +16,9 @@
     <File Path="..\CONTRIBUTING.md" />
     <File Path="..\LICENSE" />
   </Folder>
+  <Folder Name="/aspire/">
+    <Project Path="aspire\Cinedex.AppHost\Cinedex.AppHost.csproj" />
+  </Folder>
   <Folder Name="/nuget-libraries/">
     <Project Path="NuGetLibraries\Cinedex.Observability.OpenTelemetry\Cinedex.Observability.OpenTelemetry.csproj" />
     <Project Path="NuGetLibraries\Cinedex.WebService.Contracts\Cinedex.WebService.Contracts.csproj" />

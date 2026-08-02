@@ -1,0 +1,235 @@
+using Microsoft.Extensions.Configuration;
+
+namespace Cinedex.AppHost;
+
+/// <summary>
+/// Builds each resource in <see cref="AppHost.Main"/>'s resource graph. Split out of that method so
+/// it stays a short list of "add this resource, wire it to that one" statements instead of the
+/// container/project configuration for five different resources in a single method body.
+/// </summary>
+/// <remarks>
+/// Per-developer configuration (User Secrets, <c>appsettings.Development.json</c>, the required
+/// Postgres password, and what each <c>Features:*</c> flag does) is documented on
+/// <see cref="AppHost"/>, not here — that's the type a developer actually opens first. The fixed
+/// strings each method reads or sets live in <see cref="AppHostConstants"/>.
+/// </remarks>
+internal static class AppHostBuilderExtensions
+{
+    /// <summary>Adds the Postgres server and the <c>movies</c> database on it.</summary>
+    /// <param name="builder">Distributed application builder.</param>
+    /// <returns>The <c>movies</c> database resource, referenced by every consumer of the connection string.</returns>
+    /// <exception cref="InvalidOperationException">The Postgres password is not configured.</exception>
+    public static IResourceBuilder<PostgresDatabaseResource> AddCinedexPostgres(
+        this IDistributedApplicationBuilder builder)
+    {
+        // Supplied by the developer, never committed and never generated. Aspire resolves this from
+        // Parameters:postgres-password, which is the same key its own generated password used, so an
+        // existing secrets file keeps working.
+        //
+        // Checked up front because the failure is otherwise silent: Aspire leaves the unresolved
+        // parameter to the dashboard, starts the containers that do not depend on it (Mailpit comes
+        // up, Postgres does not) and writes nothing to the console explaining why.
+        if (string.IsNullOrWhiteSpace(builder.Configuration[AppHostConstants.PostgresPasswordKey]))
+        {
+            throw new InvalidOperationException(
+                $"'{AppHostConstants.PostgresPasswordKey}' is not configured, so Postgres cannot " +
+                "start. Set it from backend/aspire/Cinedex.AppHost with: " +
+                $"dotnet user-secrets set \"{AppHostConstants.PostgresPasswordKey}\" \"<password>\". " +
+                "If you are reusing an existing cinedex-aspire-pgdata volume, it must be the " +
+                "password that volume was initialized with; otherwise remove the volume first.");
+        }
+
+        var postgresPassword = builder.AddParameter("postgres-password", secret: true);
+
+        var postgresUsernameValue =
+            builder.Configuration[AppHostConstants.PostgresUsernameKey] ?? AppHostConstants.PostgresUserName;
+        var postgresUsername = builder.AddParameter("postgres-username", postgresUsernameValue);
+
+        // Host port 5432 matches compose.yaml, which means the two stacks cannot run at the same time
+        // — whichever starts second fails to bind. The volume name still differs from compose's
+        // cinedex_postgres_data on purpose: sharing a port is a startup error you see immediately,
+        // whereas sharing a data directory would silently mix two databases.
+        //
+        // Note the username and password are only read when the volume is first initialized. Changing
+        // either later does not rename or re-key an existing database; you have to
+        // `docker volume rm cinedex-aspire-pgdata` first.
+        var postgres = builder.AddPostgres("postgres", userName: postgresUsername, password: postgresPassword)
+            .WithImageTag("17-alpine")
+            .WithDataVolume("cinedex-aspire-pgdata")
+            .WithHostPort(5432);
+
+        return postgres.AddDatabase("movies");
+    }
+
+    /// <summary>Adds the Mailpit container, unless <see cref="AppHostConstants.MailpitEnabledKey"/> disables it.</summary>
+    /// <param name="builder">Distributed application builder.</param>
+    /// <returns>The Mailpit resource, or <see langword="null"/> when the feature flag is off.</returns>
+    public static IResourceBuilder<ContainerResource>? AddCinedexMailpit(this IDistributedApplicationBuilder builder)
+    {
+        // Defaults to true when the key is absent, same reasoning as MigrationsEnabledKey: a config
+        // file that predates the flag should still start Mailpit rather than silently drop it.
+        var mailpitEnabled = builder.Configuration.GetValue(AppHostConstants.MailpitEnabledKey, defaultValue: true);
+
+        if (!mailpitEnabled)
+        {
+            return null;
+        }
+
+        // Same image pin compose.yaml and SmtpEmailSenderTests use. Unlike compose this does not set up
+        // an MP_SMTP_AUTH_FILE: MP_SMTP_AUTH_ACCEPT_ANY takes any credentials, which keeps the resource
+        // declarative rather than needing a shell entrypoint.
+        return builder.AddContainer("mailpit", "axllent/mailpit", "v1.30.0")
+            .WithEnvironment("MP_MAX_MESSAGES", "500")
+            .WithEnvironment("MP_SMTP_AUTH_ACCEPT_ANY", "true")
+            .WithEnvironment("MP_SMTP_AUTH_ALLOW_INSECURE", "true")
+            .WithEndpoint(targetPort: 1025, name: AppHostConstants.SmtpEndpointName)
+            .WithHttpEndpoint(targetPort: 8025, name: "http");
+    }
+
+    /// <summary>
+    /// Adds <c>Cinedex.DatabaseMigrator</c>, unless <see cref="AppHostConstants.MigrationsEnabledKey"/> disables it.
+    /// </summary>
+    /// <param name="builder">Distributed application builder.</param>
+    /// <param name="moviesDb">The database the migrator applies both contexts' migrations against.</param>
+    /// <returns>The migrator resource, or <see langword="null"/> when the feature flag is off.</returns>
+    public static IResourceBuilder<ProjectResource>? AddCinedexMigrator(
+        this IDistributedApplicationBuilder builder,
+        IResourceBuilder<PostgresDatabaseResource> moviesDb)
+    {
+        // Defaults to true when the key is absent, so a config file that predates the flag still
+        // migrates rather than silently starting the services against an unmigrated schema.
+        var migrationsEnabled =
+            builder.Configuration.GetValue(AppHostConstants.MigrationsEnabledKey, defaultValue: true);
+
+        if (!migrationsEnabled)
+        {
+            return null;
+        }
+
+        // Applies migrations for both DbContexts and exits: DatabaseMigrationHostedService calls
+        // StopApplication() in a finally. That makes WaitForCompletion (see WaitForDatabaseAvailability)
+        // the exact analogue of compose's `condition: service_completed_successfully`, and it is what
+        // removes the "migrations are never applied automatically" step from the Aspire path.
+        return builder.AddProject<Projects.Cinedex_DatabaseMigrator>("migrator")
+            .WithEnvironment(AppHostConstants.GenericHostEnvironmentVariable, AppHostConstants.DevelopmentEnvironment)
+            .WithEnvironment(AppHostConstants.ConnectionStringVariable, moviesDb)
+            .WaitFor(moviesDb);
+    }
+
+    /// <summary>Adds the web service, wired to Postgres and (if enabled) Mailpit.</summary>
+    /// <param name="builder">Distributed application builder.</param>
+    /// <param name="moviesDb">The database the web service connects to.</param>
+    /// <param name="mailpit">The Mailpit resource from <see cref="AddCinedexMailpit"/>, or <see langword="null"/>.</param>
+    /// <returns>The web service resource.</returns>
+    public static IResourceBuilder<ProjectResource> AddCinedexWebService(
+        this IDistributedApplicationBuilder builder,
+        IResourceBuilder<PostgresDatabaseResource> moviesDb,
+        IResourceBuilder<ContainerResource>? mailpit)
+    {
+        // The profile must be named explicitly: the first entry in the web service's
+        // launchSettings.json is "docker-compose" (commandName DockerCompose), which Aspire cannot
+        // launch. The dedicated "aspire" profile is http-only, which keeps UseHttpsRedirection from
+        // answering the health probe with a 307 and avoids depending on the dev certificate.
+        //
+        // Do NOT replace this with launchProfileName: null and a synthesized WithHttpEndpoint. That
+        // works under `dotnet run`, where DCP starts the child and injects the port, but Visual Studio
+        // launches Aspire project resources itself and takes a web project's URLs from its launch
+        // profile — with no profile Kestrel falls back to 5000/5001 while Aspire's proxy forwards to
+        // the port it allocated, so every request hangs and the resource sits at Running (Unhealthy).
+        //
+        // Browser auth is unaffected by the lack of https: `Secure` cookies are accepted on
+        // http://localhost, which is a trustworthy origin.
+        //
+        // Features__ApiDocumentationEnabled defaults to false in appsettings.json, so Scalar would 404
+        // without it. The health path carries the /movies-svc base that UsePathBase applies.
+        // WithEndpoint turns the proxy off, so the endpoint is the port the app itself listens on. By
+        // default Aspire publishes the profile's port (5187) from a proxy and moves Kestrel to a
+        // dynamic one, which only holds if whoever launches the process honours the port Aspire
+        // assigns. Visual Studio launches project resources itself and takes a web project's URLs from
+        // its launch profile, so Kestrel would bind 5187 too and collide with the proxy. Unproxied,
+        // the topology is identical under `dotnet run`, Rider and Visual Studio.
+        //
+        // Smtp__Username/Password stay unconditional even with Mailpit disabled: SmtpOptions
+        // .ValidateOnStart requires both non-empty regardless, and EmailDeliveryWorker already
+        // swallows send failures (logged, not fatal — see its class remarks), so pointing them at a
+        // Mailpit that doesn't exist is harmless. Host/Port are the opposite: only Mailpit's dynamic
+        // container port is correct when it's running, so those two are set below, conditionally.
+        // With Mailpit disabled they're left unset, which falls back to the web service's own
+        // appsettings.Development.json ("localhost", 1025) — nothing listens there either, so delivery
+        // still just fails quietly rather than the app failing to start.
+        var webservice = builder.AddProject<Projects.Cinedex_WebService>("webservice", launchProfileName: "aspire")
+            .WithEndpoint("http", endpoint => endpoint.IsProxied = false)
+            .WithEnvironment(AppHostConstants.ConnectionStringVariable, moviesDb)
+            .WithEnvironment("Features__ApiDocumentationEnabled", "true")
+            .WithEnvironment("Smtp__Username", AppHostConstants.MailpitUser)
+            .WithEnvironment("Smtp__Password", AppHostConstants.MailpitPassword)
+            .WithEnvironment("Smtp__FromAddress", "no-reply@cinedex.local")
+            .WithEnvironment("Smtp__FromName", "Cinedex")
+            .WithEnvironment("Smtp__SecureSocketOptions", "None")
+            .WithHttpHealthCheck("/movies-svc/health/ready");
+
+        EndpointReference? smtp = mailpit?.GetEndpoint(AppHostConstants.SmtpEndpointName);
+
+        if (mailpit is not null && smtp is not null)
+        {
+            webservice
+                .WithEnvironment("Smtp__Host", smtp.Property(EndpointProperty.Host))
+                .WithEnvironment("Smtp__Port", smtp.Property(EndpointProperty.Port))
+                .WaitFor(mailpit);
+        }
+
+        // Point the dashboard link at the Scalar docs rather than the endpoint root. The root serves
+        // nothing useful — everything is behind the /movies-svc path base — so the default link lands
+        // on a 404. Applied as its own statement rather than inside the chain above because a
+        // multi-line lambda mid-chain trips IDE0055, which is an error here.
+        webservice.WithUrlForEndpoint("http", url =>
+        {
+            url.Url = AppHostConstants.ApiDocsPath;
+            url.DisplayText = AppHostConstants.ApiDocsDisplayText;
+        });
+
+        return webservice;
+    }
+
+    /// <summary>Adds the scheduler worker, wired to Postgres.</summary>
+    /// <param name="builder">Distributed application builder.</param>
+    /// <param name="moviesDb">The database the scheduler worker connects to.</param>
+    /// <returns>The scheduler worker resource.</returns>
+    public static IResourceBuilder<ProjectResource> AddCinedexSchedulerWorker(
+        this IDistributedApplicationBuilder builder,
+        IResourceBuilder<PostgresDatabaseResource> moviesDb) =>
+        builder.AddProject<Projects.Cinedex_SchedulerWorker>("schedulerworker")
+            .WithEnvironment(AppHostConstants.GenericHostEnvironmentVariable, AppHostConstants.DevelopmentEnvironment)
+            .WithEnvironment(AppHostConstants.ConnectionStringVariable, moviesDb);
+
+    /// <summary>
+    /// Makes each of <paramref name="consumers"/> wait on Postgres being ready before starting —
+    /// through the migrator's completion when one is in the graph, or directly on the database when
+    /// migrations are disabled.
+    /// </summary>
+    /// <param name="consumers">The resources that need Postgres before they can start.</param>
+    /// <param name="migrator">The migrator resource from <see cref="AddCinedexMigrator"/>, or <see langword="null"/>.</param>
+    /// <param name="moviesDb">The database to wait on directly when there is no migrator.</param>
+    /// <remarks>
+    /// With the migrator in the graph, waiting for it to exit implies Postgres is already up — it
+    /// waits on the database itself. Without it, consumers still have to wait for Postgres directly,
+    /// or they would race a database that is not accepting connections yet.
+    /// </remarks>
+    public static void WaitForDatabaseAvailability(
+        this IEnumerable<IResourceBuilder<ProjectResource>> consumers,
+        IResourceBuilder<ProjectResource>? migrator,
+        IResourceBuilder<PostgresDatabaseResource> moviesDb)
+    {
+        foreach (var consumer in consumers)
+        {
+            if (migrator is not null)
+            {
+                consumer.WaitForCompletion(migrator);
+            }
+            else
+            {
+                consumer.WaitFor(moviesDb);
+            }
+        }
+    }
+}

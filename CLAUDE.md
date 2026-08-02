@@ -5,6 +5,7 @@ Full-stack movie catalog (IMDB-inspired portfolio app): .NET 10 backend + React 
 ## Layout
 
 - `backend/` — .NET solution (`Cinedex.slnx`), hexagonal architecture. Details in `backend/CLAUDE.md`.
+- `backend/aspire/Cinedex.AppHost/` — Aspire orchestration for local dev. There is deliberately **no ServiceDefaults project**; `NuGetLibraries/Cinedex.Observability.OpenTelemetry` already fills that role.
 - `frontend/cinadex-ui/` — React + TypeScript + Vite SPA (folder is spelled `cinadex`, not `cinedex`).
 - `docs/` — design docs (auth & security model); feature specs under `docs/superpowers/specs/`.
 - `compose.yaml` — full stack: Postgres 17, web service, UI + Nginx reverse proxy, Seq (logs/traces), Mailpit (dev mail sink).
@@ -14,12 +15,13 @@ Full-stack movie catalog (IMDB-inspired portfolio app): .NET 10 backend + React 
 - Backend (from `backend/`): `dotnet build`, `dotnet test`, `dotnet run --project src/Presentation/Cinedex.WebService`
 - Frontend (from `frontend/cinadex-ui/`): `npm ci`, `npm run dev`, `npm run test:run`, `npm run lint`, `npm run format:check`
 - Full stack (repo root): `docker compose up --build` — requires a root `.env` (`cp .env.example .env`, fill in DB/Seq/Mailpit values) or compose fails.
+- Local dev loop (from `backend/`): `dotnet run --project aspire/Cinedex.AppHost` — Postgres + Mailpit as containers, the three .NET hosts as processes, migrations applied automatically, telemetry on the Aspire dashboard. Needs Docker and one User Secret (`Parameters:postgres-password`); needs no `.env`. **Cannot run at the same time as compose** — both bind Postgres on 5432 — though the data volumes are separate. Skip the migrator with `Features:EnableDatabaseMigrationsSvc=false` (see `backend/CLAUDE.md`).
 
 With compose up: UI/proxy at https://localhost:9000 (self-signed cert — `curl -k`), API at https://localhost:9000/movies-svc, Scalar API docs at `/movies-svc/api-docs/v1`, Seq at http://localhost:5341, Mailpit (captured email) at http://localhost:8025.
 
 ## Critical gotchas
 
-- **Migrations are never applied automatically** — not by compose, not by `dotnet run`. A fresh database needs `dotnet ef database update` for BOTH `FilmDbContext` and `AuthDbContext`. Commands in `backend/CLAUDE.md`.
+- **Migrations are never applied automatically** — not by compose, not by `dotnet run`. A fresh database needs `dotnet ef database update` for BOTH `FilmDbContext` and `AuthDbContext`. Commands in `backend/CLAUDE.md`. **Exception: the Aspire AppHost** runs `Cinedex.DatabaseMigrator` as a run-to-completion resource and gates the other services behind it, so that path needs no manual step.
 - **Edit only the root `CHANGELOG.md`.** `backend/CHANGELOG.md` is a build-managed copy (a local backend build refreshes it — commit the resulting diff). CI fails if the two files differ.
 - **Naming drift**: product is "Cinedex", API base path is `/movies-svc`, but the catalog entity is `Title` (routes are `/movies-svc/titles`). Older docs may say "Movie"/"Movies" — trust `ApiConstants.cs` and the domain code.
 - Backend treats all warnings as errors (StyleCop + .NET analyzers) — a style violation breaks the build.

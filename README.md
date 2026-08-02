@@ -9,6 +9,7 @@ A full-stack portfolio application for cataloging movie titles and their genres 
 ```
 Cinedex/
 ├── backend/      # .NET solution (Web API, application core, persistence, tests)
+│   └── aspire/   # Aspire AppHost — the local dev loop (see below)
 ├── frontend/     # Standalone SPA consuming the backend's OpenAPI spec
 ├── docs/         # Design docs (auth & security model, planned ADRs)
 └── compose.yaml  # Orchestrates PostgreSQL, the web service, the frontend, Seq, and Mailpit
@@ -33,3 +34,32 @@ Then open **https://localhost:9000** (self-signed cert — trust it or use `curl
 
 There's one manual step before logs show up in Seq — full walkthrough, access points, and
 troubleshooting in **[docs/getting-started.md](docs/getting-started.md)**.
+
+### 🧪 Or: the Aspire dev loop
+
+For iterating on the backend, the Aspire AppHost is faster — it runs the .NET services as local
+processes instead of rebuilding images, and it applies the database migrations for you:
+
+```bash
+cd backend/aspire/Cinedex.AppHost
+dotnet user-secrets set "Parameters:postgres-password" "<choose a password>"   # once
+dotnet run
+```
+
+It needs Docker and that one secret, but no `.env`. The password is only applied when the database
+volume is first created — to change it later, `docker volume rm cinedex-aspire-pgdata` first. PostgreSQL and Mailpit come up as containers; the migrator, web
+service and scheduler worker run as processes, with their logs and traces on the Aspire dashboard
+(the console prints a login URL). In JetBrains Rider, the equivalent **Aspire AppHost** entry is
+already in the Run dropdown.
+
+Once your schema is current, you can skip the migration step on subsequent runs — from
+`backend/aspire/Cinedex.AppHost`, either `dotnet user-secrets set "Features:EnableDatabaseMigrationsSvc" "false"`
+or copy `appsettings.Development.json.example` to `appsettings.Development.json` (git-ignored). Both
+are per-developer and neither touches a tracked file. Turn it back on for a run after pulling a new
+migration or against an empty database.
+
+This complements Compose rather than replacing it — `docker compose up` is still the prod-like path,
+with built images, the Nginx/HTTPS proxy, Seq and the SPA. **Run one or the other**: both publish
+PostgreSQL on 5432, so the second to start fails to bind. Their data volumes are separate, so neither
+can corrupt the other's database. The AppHost does not serve the SPA, so use Compose or `npm run dev`
+for frontend work.

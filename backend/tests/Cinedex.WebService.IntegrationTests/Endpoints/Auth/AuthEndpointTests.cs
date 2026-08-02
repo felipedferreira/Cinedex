@@ -12,8 +12,10 @@ using Cinedex.Application.Email;
 using Cinedex.WebService.Contracts.Requests;
 using Cinedex.WebService.Contracts.Responses;
 using Cinedex.WebService.IntegrationTests.Constants;
+using Cinedex.WebService.IntegrationTests.Fakes;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using Npgsql;
 
@@ -250,19 +252,28 @@ public sealed class AuthEndpointTests(WebApplicationFixture fixture)
     }
 
     [Fact]
-    public async Task Refresh_WithRotatedCookie_Returns401()
+    public async Task Refresh_WithRotatedCookie_RevokesFamilyAndReturnsExisting401Contract()
     {
         var email = NewEmail();
         await RegisterAsync(email, "rotateduser", Password);
         var (_, refreshCookie) = await LoginAsync(email, Password);
+        var familyId = await GetTokenFamilyIdAsync(refreshCookie);
 
         var rotation = await PostAsync(TestRouteConstants.Auth.RefreshEndpoint, refreshCookie);
         Assert.Equal(HttpStatusCode.OK, rotation.StatusCode);
+        var replacement = ReadRefreshCookieValue(rotation);
+        Assert.False(string.IsNullOrWhiteSpace(replacement));
 
-        // The pre-rotation token must no longer be accepted.
         var reuse = await PostAsync(TestRouteConstants.Auth.RefreshEndpoint, refreshCookie);
+        var unknown = await PostAsync(TestRouteConstants.Auth.RefreshEndpoint, "not-a-real-token");
 
         Assert.Equal(HttpStatusCode.Unauthorized, reuse.StatusCode);
+        Assert.Equal(string.Empty, ReadRefreshCookieValue(reuse));
+        await AssertSamePublicUnauthorizedContractAsync(unknown, reuse);
+        Assert.Equal(0L, await CountActiveTokensInFamilyAsync(familyId));
+
+        var replacementAttempt = await PostAsync(TestRouteConstants.Auth.RefreshEndpoint, replacement);
+        Assert.Equal(HttpStatusCode.Unauthorized, replacementAttempt.StatusCode);
     }
 
     [Fact]
@@ -271,6 +282,7 @@ public sealed class AuthEndpointTests(WebApplicationFixture fixture)
         var email = NewEmail();
         await RegisterAsync(email, "concurrentrefresh", Password);
         var (_, refreshCookie) = await LoginAsync(email, Password);
+        var familyId = await GetTokenFamilyIdAsync(refreshCookie);
 
         var responses = await Task.WhenAll(
             Enumerable.Range(0, 8)
@@ -283,6 +295,205 @@ public sealed class AuthEndpointTests(WebApplicationFixture fixture)
             responses.Select(ReadRefreshCookieValue),
             value => !string.IsNullOrWhiteSpace(value));
         Assert.NotEqual(refreshCookie, rotatedCookie);
+        Assert.Equal(0L, await CountActiveTokensInFamilyAsync(familyId));
+
+        var replacementAttempt = await PostAsync(TestRouteConstants.Auth.RefreshEndpoint, rotatedCookie);
+        Assert.Equal(HttpStatusCode.Unauthorized, replacementAttempt.StatusCode);
+    }
+
+    [Fact]
+    public async Task Refresh_WithReusedAncestor_RevokesTheActiveTailAcrossALongerChain()
+    {
+        var email = NewEmail();
+        await RegisterAsync(email, "reusechain", Password);
+        var (_, original) = await LoginAsync(email, Password);
+        var familyId = await GetTokenFamilyIdAsync(original);
+
+        var firstRotation = await PostAsync(TestRouteConstants.Auth.RefreshEndpoint, original);
+        var firstReplacement = ReadRefreshCookieValue(firstRotation);
+        Assert.False(string.IsNullOrWhiteSpace(firstReplacement));
+
+        var secondRotation = await PostAsync(TestRouteConstants.Auth.RefreshEndpoint, firstReplacement);
+        var activeTail = ReadRefreshCookieValue(secondRotation);
+        Assert.False(string.IsNullOrWhiteSpace(activeTail));
+
+        var reuse = await PostAsync(TestRouteConstants.Auth.RefreshEndpoint, original);
+
+        Assert.Equal(HttpStatusCode.Unauthorized, reuse.StatusCode);
+        Assert.Equal(0L, await CountActiveTokensInFamilyAsync(familyId));
+
+        var tailAttempt = await PostAsync(TestRouteConstants.Auth.RefreshEndpoint, activeTail);
+        Assert.Equal(HttpStatusCode.Unauthorized, tailAttempt.StatusCode);
+    }
+
+    [Fact]
+    public async Task Refresh_WithReuseInOneFamily_LeavesAnotherFamilyForTheSameUserValid()
+    {
+        var email = NewEmail();
+        await RegisterAsync(email, "familyisolation", Password);
+        var (_, compromisedOriginal) = await LoginAsync(email, Password);
+        var (_, independentFamily) = await LoginAsync(email, Password);
+
+        var rotation = await PostAsync(TestRouteConstants.Auth.RefreshEndpoint, compromisedOriginal);
+        Assert.Equal(HttpStatusCode.OK, rotation.StatusCode);
+
+        var reuse = await PostAsync(TestRouteConstants.Auth.RefreshEndpoint, compromisedOriginal);
+        Assert.Equal(HttpStatusCode.Unauthorized, reuse.StatusCode);
+
+        var independentRefresh = await PostAsync(TestRouteConstants.Auth.RefreshEndpoint, independentFamily);
+        Assert.Equal(HttpStatusCode.OK, independentRefresh.StatusCode);
+    }
+
+    [Fact]
+    public async Task Refresh_WhenAncestorReuseRacesTailRotation_LeavesNoActiveFamilyToken()
+    {
+        var email = NewEmail();
+        await RegisterAsync(email, "reuserace", Password);
+        var (_, original) = await LoginAsync(email, Password);
+        var familyId = await GetTokenFamilyIdAsync(original);
+
+        var initialRotation = await PostAsync(TestRouteConstants.Auth.RefreshEndpoint, original);
+        var activeTail = ReadRefreshCookieValue(initialRotation);
+        Assert.False(string.IsNullOrWhiteSpace(activeTail));
+
+        var responses = await Task.WhenAll(
+            PostAsync(TestRouteConstants.Auth.RefreshEndpoint, original),
+            PostAsync(TestRouteConstants.Auth.RefreshEndpoint, activeTail));
+
+        Assert.Equal(HttpStatusCode.Unauthorized, responses[0].StatusCode);
+        Assert.Contains(
+            responses[1].StatusCode,
+            new[] { HttpStatusCode.OK, HttpStatusCode.Unauthorized });
+        Assert.Equal(0L, await CountActiveTokensInFamilyAsync(familyId));
+
+        var racedReplacement = ReadRefreshCookieValue(responses[1]);
+        if (!string.IsNullOrWhiteSpace(racedReplacement))
+        {
+            var replacementAttempt = await PostAsync(TestRouteConstants.Auth.RefreshEndpoint, racedReplacement);
+            Assert.Equal(HttpStatusCode.Unauthorized, replacementAttempt.StatusCode);
+        }
+    }
+
+    [Fact]
+    public async Task Refresh_WithReuse_EmitsPiiSafeStructuredSecurityEvent()
+    {
+        var email = NewEmail();
+        const string username = "securityevent";
+        await RegisterAsync(email, username, Password);
+        var (login, original) = await LoginAsync(email, Password);
+        var userId = new JwtSecurityTokenHandler().ReadJwtToken(login.AccessToken).Subject;
+        var familyId = await GetTokenFamilyIdAsync(original);
+
+        var rotation = await PostAsync(TestRouteConstants.Auth.RefreshEndpoint, original);
+        var replacement = ReadRefreshCookieValue(rotation);
+        Assert.False(string.IsNullOrWhiteSpace(replacement));
+
+        fixture.LoggerProvider.Clear();
+        var reuse = await PostAsync(TestRouteConstants.Auth.RefreshEndpoint, original);
+
+        Assert.Equal(HttpStatusCode.Unauthorized, reuse.StatusCode);
+        CapturedLogEntry securityEvent = Assert.Single(
+            fixture.LoggerProvider.Entries,
+            entry => entry.EventId.Id == 1001);
+        Assert.Equal(LogLevel.Warning, securityEvent.Level);
+        Assert.Equal("RefreshTokenReuseDetected", securityEvent.EventId.Name);
+        Assert.Equal(
+            "Cinedex.Auth.Identity.Services.JwtTokenService",
+            securityEvent.Category);
+
+        var eventProperties = securityEvent.State
+            .Where(property => property.Key != "{OriginalFormat}")
+            .ToArray();
+        var revokedCount = Assert.Single(eventProperties);
+        Assert.Equal("RevokedTokenCount", revokedCount.Key);
+        Assert.Equal(1, Assert.IsType<int>(revokedCount.Value));
+
+        var emittedText = securityEvent.Message + "|" + string.Join(
+            "|",
+            securityEvent.State.Select(property => $"{property.Key}={property.Value}"));
+        var sensitiveValues = new[]
+        {
+            email,
+            username,
+            userId,
+            familyId.ToString(),
+            original,
+            Uri.UnescapeDataString(original),
+            HashRefreshToken(original),
+            replacement!,
+            Uri.UnescapeDataString(replacement!),
+            HashRefreshToken(replacement!),
+        };
+
+        foreach (var sensitiveValue in sensitiveValues)
+        {
+            Assert.DoesNotContain(sensitiveValue, emittedText, StringComparison.OrdinalIgnoreCase);
+        }
+
+        fixture.LoggerProvider.Clear();
+        var repeatedReuse = await PostAsync(TestRouteConstants.Auth.RefreshEndpoint, original);
+        Assert.Equal(HttpStatusCode.Unauthorized, repeatedReuse.StatusCode);
+
+        CapturedLogEntry repeatedEvent = Assert.Single(
+            fixture.LoggerProvider.Entries,
+            entry => entry.EventId.Id == 1001);
+        var repeatedEventProperties = repeatedEvent.State
+            .Where(property => property.Key != "{OriginalFormat}")
+            .ToArray();
+        var repeatedRevokedCount = Assert.Single(repeatedEventProperties);
+        Assert.Equal("RevokedTokenCount", repeatedRevokedCount.Key);
+        Assert.Equal(0, Assert.IsType<int>(repeatedRevokedCount.Value));
+    }
+
+    [Fact]
+    public async Task Refresh_WithNonReuseFailures_DoesNotEmitReuseSecurityEvent()
+    {
+        fixture.LoggerProvider.Clear();
+        var unknown = await PostAsync(TestRouteConstants.Auth.RefreshEndpoint, "not-a-real-token");
+        Assert.Equal(HttpStatusCode.Unauthorized, unknown.StatusCode);
+        AssertNoReuseSecurityEvent();
+
+        var expiredEmail = NewEmail();
+        await RegisterAsync(expiredEmail, "expirednonreuse", Password);
+        var (_, expiredToken) = await LoginAsync(expiredEmail, Password);
+        var expiredRotation = await PostAsync(TestRouteConstants.Auth.RefreshEndpoint, expiredToken);
+        var expiredFamilyTail = ReadRefreshCookieValue(expiredRotation);
+        Assert.False(string.IsNullOrWhiteSpace(expiredFamilyTail));
+        await ExpireTokenAsync(expiredToken);
+        fixture.LoggerProvider.Clear();
+        var expired = await PostAsync(TestRouteConstants.Auth.RefreshEndpoint, expiredToken);
+        Assert.Equal(HttpStatusCode.Unauthorized, expired.StatusCode);
+        AssertNoReuseSecurityEvent();
+
+        var expiredFamilyTailRefresh = await PostAsync(TestRouteConstants.Auth.RefreshEndpoint, expiredFamilyTail);
+        Assert.Equal(HttpStatusCode.OK, expiredFamilyTailRefresh.StatusCode);
+
+        var logoutEmail = NewEmail();
+        await RegisterAsync(logoutEmail, "logoutnonreuse", Password);
+        var (logoutLogin, loggedOutToken) = await LoginAsync(logoutEmail, Password);
+        var logout = await PostAsync(
+            TestRouteConstants.Auth.LogoutEndpoint,
+            loggedOutToken,
+            logoutLogin.AccessToken);
+        Assert.Equal(HttpStatusCode.NoContent, logout.StatusCode);
+        fixture.LoggerProvider.Clear();
+        var loggedOut = await PostAsync(TestRouteConstants.Auth.RefreshEndpoint, loggedOutToken);
+        Assert.Equal(HttpStatusCode.Unauthorized, loggedOut.StatusCode);
+        AssertNoReuseSecurityEvent();
+
+        var familyEmail = NewEmail();
+        await RegisterAsync(familyEmail, "familyrevoked", Password);
+        var (_, familyOriginal) = await LoginAsync(familyEmail, Password);
+        var familyRotation = await PostAsync(TestRouteConstants.Auth.RefreshEndpoint, familyOriginal);
+        var familyTail = ReadRefreshCookieValue(familyRotation);
+        Assert.False(string.IsNullOrWhiteSpace(familyTail));
+        var familyReuse = await PostAsync(TestRouteConstants.Auth.RefreshEndpoint, familyOriginal);
+        Assert.Equal(HttpStatusCode.Unauthorized, familyReuse.StatusCode);
+
+        fixture.LoggerProvider.Clear();
+        var alreadyFamilyRevoked = await PostAsync(TestRouteConstants.Auth.RefreshEndpoint, familyTail);
+        Assert.Equal(HttpStatusCode.Unauthorized, alreadyFamilyRevoked.StatusCode);
+        AssertNoReuseSecurityEvent();
     }
 
     [Fact]
@@ -359,7 +570,7 @@ public sealed class AuthEndpointTests(WebApplicationFixture fixture)
     }
 
     [Fact]
-    public async Task Refresh_WithSameCookieConcurrently_KeepsTheWinnerInTheSameFamily()
+    public async Task Refresh_WithSameCookieConcurrently_RevokesTheCompromisedFamily()
     {
         var email = NewEmail();
         await RegisterAsync(email, "concurrentfamily", Password);
@@ -374,11 +585,14 @@ public sealed class AuthEndpointTests(WebApplicationFixture fixture)
             responses.Select(ReadRefreshCookieValue),
             value => !string.IsNullOrWhiteSpace(value));
 
-        // Every caller read the same pre-rotation row before one of them won the conditional update.
-        // The family is immutable, so the winner's copy of it is still correct — and the seven losers
-        // must not have left rows behind.
+        // One request creates the replacement. The next request to acquire the family lock observes
+        // the replacement link and revokes that winner before returning its indistinguishable 401.
         Assert.Equal(originalFamilyId, await GetTokenFamilyIdAsync(rotatedCookie!));
         Assert.Equal(2L, await CountTokensInFamilyAsync(originalFamilyId));
+        Assert.Equal(0L, await CountActiveTokensInFamilyAsync(originalFamilyId));
+
+        var replacementAttempt = await PostAsync(TestRouteConstants.Auth.RefreshEndpoint, rotatedCookie);
+        Assert.Equal(HttpStatusCode.Unauthorized, replacementAttempt.StatusCode);
     }
 
     [Fact]
@@ -598,6 +812,25 @@ public sealed class AuthEndpointTests(WebApplicationFixture fixture)
         Convert.ToHexString(
             SHA256.HashData(Encoding.UTF8.GetBytes(Uri.UnescapeDataString(refreshCookieValue))));
 
+    private static async Task AssertSamePublicUnauthorizedContractAsync(
+        HttpResponseMessage expected,
+        HttpResponseMessage actual)
+    {
+        Assert.Equal(HttpStatusCode.Unauthorized, expected.StatusCode);
+        Assert.Equal(expected.StatusCode, actual.StatusCode);
+        Assert.Equal(expected.Content.Headers.ContentType?.MediaType, actual.Content.Headers.ContentType?.MediaType);
+
+        using var expectedDocument = JsonDocument.Parse(await expected.Content.ReadAsStringAsync());
+        using var actualDocument = JsonDocument.Parse(await actual.Content.ReadAsStringAsync());
+
+        foreach (var propertyName in new[] { "type", "title", "status", "detail", "instance" })
+        {
+            Assert.Equal(
+                expectedDocument.RootElement.GetProperty(propertyName).GetRawText(),
+                actualDocument.RootElement.GetProperty(propertyName).GetRawText());
+        }
+    }
+
     // Pulls the raw reset token out of the composed email's reset link, the way a recipient's mail
     // client would when they click through.
     private static string ExtractResetToken(EmailMessage message)
@@ -636,6 +869,9 @@ public sealed class AuthEndpointTests(WebApplicationFixture fixture)
         var separator = value.IndexOf(';', StringComparison.Ordinal);
         return separator < 0 ? value : value[..separator];
     }
+
+    private void AssertNoReuseSecurityEvent() =>
+        Assert.DoesNotContain(fixture.LoggerProvider.Entries, entry => entry.EventId.Id == 1001);
 
     private async Task DeleteUserRoleAsync()
     {
@@ -726,6 +962,42 @@ public sealed class AuthEndpointTests(WebApplicationFixture fixture)
         command.Parameters.AddWithValue("familyId", familyId);
 
         return (long)(await command.ExecuteScalarAsync() ?? 0L);
+    }
+
+    private async Task<long> CountActiveTokensInFamilyAsync(Guid familyId)
+    {
+        await using var connection = new NpgsqlConnection(fixture.ConnectionString);
+        await connection.OpenAsync();
+
+        await using var command = new NpgsqlCommand(
+            """
+            SELECT COUNT(*)
+            FROM auth."refreshTokens"
+            WHERE "familyId" = @familyId
+              AND "revokedAtUtc" IS NULL
+              AND "expiresAtUtc" > CURRENT_TIMESTAMP;
+            """,
+            connection);
+        command.Parameters.AddWithValue("familyId", familyId);
+
+        return (long)(await command.ExecuteScalarAsync() ?? 0L);
+    }
+
+    private async Task ExpireTokenAsync(string rawRefreshToken)
+    {
+        await using var connection = new NpgsqlConnection(fixture.ConnectionString);
+        await connection.OpenAsync();
+
+        await using var command = new NpgsqlCommand(
+            """
+            UPDATE auth."refreshTokens"
+            SET "expiresAtUtc" = CURRENT_TIMESTAMP - INTERVAL '1 minute'
+            WHERE "tokenHash" = @tokenHash;
+            """,
+            connection);
+        command.Parameters.AddWithValue("tokenHash", HashRefreshToken(rawRefreshToken));
+
+        Assert.Equal(1, await command.ExecuteNonQueryAsync());
     }
 
     private Task<HttpResponseMessage> RegisterAsync(string email, string username, string password) =>

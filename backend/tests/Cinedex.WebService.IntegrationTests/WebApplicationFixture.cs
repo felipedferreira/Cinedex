@@ -14,6 +14,7 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.DependencyInjection.Extensions;
+using Microsoft.Extensions.Logging;
 using Testcontainers.PostgreSql;
 
 namespace Cinedex.WebService.IntegrationTests;
@@ -39,6 +40,8 @@ public class WebApplicationFixture : WebApplicationFactory<Program>, IAsyncLifet
     public HttpClient AuthenticatedClient { get; private set; } = null!;
 
     internal CapturingEmailSender EmailSender => this.Services.GetRequiredService<CapturingEmailSender>();
+
+    internal CapturingLoggerProvider LoggerProvider { get; } = new();
 
     internal string ConnectionString => _postgresContainer.GetConnectionString();
 
@@ -87,6 +90,8 @@ public class WebApplicationFixture : WebApplicationFactory<Program>, IAsyncLifet
 
     protected override void ConfigureWebHost(IWebHostBuilder builder)
     {
+        builder.ConfigureLogging(logging => logging.AddProvider(this.LoggerProvider));
+
         builder.ConfigureAppConfiguration((_, config) =>
         {
             config.AddInMemoryCollection(new Dictionary<string, string?>

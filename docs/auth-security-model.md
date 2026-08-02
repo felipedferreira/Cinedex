@@ -144,14 +144,40 @@ refresh window means a continuously-active session can accumulate several hundre
 chain-walking would cost that many sequential round-trips on the refresh path. It is also
 forward-only, which leaves a chain's live tail unreachable from an older token.
 
-`FamilyId` is immutable once written. That is what lets rotation copy it from a non-tracked read
-without re-checking under the row lock: no version of the row holds a different value. Contrast
-`RevokedAtUtc`, which does change, and which the conditional update therefore re-verifies rather than
-trusting the read.
+`FamilyId` is immutable once written. A refresh can therefore use the value from its initial
+non-tracked lookup to acquire the family's transaction-scoped advisory lock, then re-read the token
+under that lock without any risk that it joined a different family while waiting.
 
-**Nothing reads `FamilyId` yet.** Presenting an already-rotated token still returns a bare `401` and
-leaves the rest of the family valid, and logout still revokes exactly one row. The identifier is
-groundwork; see [Known gaps](#known-gaps).
+### Reuse response
+
+`POST /auth/refresh` applies one state policy to the presented row:
+
+- An unknown or expired token returns the ordinary generic `401`; expiry takes precedence over reuse
+  detection.
+- A revoked token without a replacement link — for example one revoked by logout or by an earlier
+  family response — returns the same `401` without raising a new reuse event.
+- A known, unexpired token with `ReplacedByTokenHash` is evidence that an already-rotated token was
+  replayed. Every active token in that family is revoked before the same generic `401` is returned.
+- An unrevoked token is rotated normally.
+
+Every known, unexpired family is serialized with a PostgreSQL transaction-scoped advisory lock whose
+64-bit key is derived from `FamilyId`. Rotation and reuse both re-read state after acquiring it. This
+closes the insertion race that a set-based update alone would leave open: if the active tail rotates
+first, reuse sees and revokes the new replacement; if reuse wins, the tail observes its revocation and
+cannot insert another token. A hash collision can only make unrelated families wait for one another;
+the update still filters by the full `FamilyId`, so it cannot cross family boundaries.
+
+Reuse revocation is one `ExecuteUpdate` covering every unrevoked, unexpired family row, committed in
+the same transaction as detection. The service then emits warning event `1001` /
+`RefreshTokenReuseDetected` with only `RevokedTokenCount`. The raw token, token hash, family id, user
+id, email and username are deliberately absent. The event is emitted after commit, including when a
+concurrent response already revoked the tail and the count is zero.
+
+The public contract remains indistinguishable from every other invalid refresh attempt: RFC 7807
+`401 Unauthorized` with the existing generic detail, and the refresh cookie is cleared. Only the
+compromised login family is affected; other families for the same user remain valid. Already-issued
+access tokens also remain valid until their normal expiry because early access-token invalidation is
+a separate policy decision.
 
 The revoked ancestors stay in the family until the retention sweep reaps them; see
 [Refresh-token retention](#refresh-token-retention) for how long that is and why revoked rows
@@ -389,14 +415,6 @@ build on this.
   fixture migrates itself. Nothing in `Program.cs` migrates either context, so a `dotnet run` against a
   fresh database still needs the migrator or an explicit `dotnet ef database update`. See the
   [backend README](../backend/README.md#migrations).
-- **No refresh-token reuse response.** Every row now carries a `FamilyId` that a login mints and each
-  rotation copies, so an entire session's rotation chain is reachable by one indexed lookup rather
-  than by walking `ReplacedByTokenHash` hash by hash. Nothing reads it yet: presenting an
-  already-revoked token returns a bare `401` and leaves the rest of the family valid, so a
-  stolen-then-rotated token is still not treated as a compromise. The identifier was the
-  prerequisite; the response is the remaining work. The retention sweep keeps revoked rows for
-  `RefreshTokenCleanup:ReuseDetectionWindow` precisely so the trigger will still be there when that
-  response is built — see [Refresh-token retention](#refresh-token-retention).
 - **The forgot-password response still carries a small timing signal.** Queueing the reset email
   removed the large one — the four-round-trip SMTP conversation that only the known-account path
   performed, which MailKit lets run for up to two minutes against an unresponsive relay. What remains

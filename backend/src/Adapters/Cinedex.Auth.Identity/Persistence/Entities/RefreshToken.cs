@@ -1,4 +1,4 @@
-namespace Cinedex.Auth.Identity.Entities;
+namespace Cinedex.Auth.Identity.Persistence.Entities;
 
 // A persisted refresh token. Only a hash of the raw token is stored; the raw value is returned to
 // the client once at issue time and never persisted.

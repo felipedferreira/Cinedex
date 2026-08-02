@@ -1,6 +1,5 @@
 using Cinedex.Application.Abstractions;
 using Cinedex.Application.Email;
-using Cinedex.Auth.Identity.Entities;
 using Microsoft.AspNetCore.Identity;
 
 namespace Cinedex.Auth.Identity;

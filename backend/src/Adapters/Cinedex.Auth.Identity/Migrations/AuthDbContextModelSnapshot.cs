@@ -105,7 +105,7 @@ namespace Cinedex.Auth.Identity.Migrations
                     b.ToTable("AspNetUsers", "auth");
                 });
 
-            modelBuilder.Entity("Cinedex.Auth.Identity.Entities.RefreshToken", b =>
+            modelBuilder.Entity("Cinedex.Auth.Identity.Persistence.Entities.RefreshToken", b =>
                 {
                     b.Property<Guid>("Id")
                         .ValueGeneratedOnAdd()
@@ -347,7 +347,7 @@ namespace Cinedex.Auth.Identity.Migrations
                     b.ToTable("AspNetUserTokens", "auth");
                 });
 
-            modelBuilder.Entity("Cinedex.Auth.Identity.Entities.RefreshToken", b =>
+            modelBuilder.Entity("Cinedex.Auth.Identity.Persistence.Entities.RefreshToken", b =>
                 {
                     b.HasOne("Cinedex.Auth.Identity.Entities.ApplicationUser", null)
                         .WithMany()

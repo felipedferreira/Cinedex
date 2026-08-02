@@ -1,4 +1,3 @@
-using Cinedex.Auth.Identity.Entities;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
 

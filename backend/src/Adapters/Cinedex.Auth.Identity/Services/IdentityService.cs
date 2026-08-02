@@ -1,7 +1,7 @@
 using Cinedex.Application.Abstractions;
 using Cinedex.Application.Exceptions;
 using Cinedex.Auth.Identity.Constants;
-using Cinedex.Auth.Identity.Entities;
+using Cinedex.Auth.Identity.Persistence.Repository;
 using Cinedex.Domain.UserAggregate;
 using FluentValidation;
 using FluentValidation.Results;
@@ -13,6 +13,7 @@ namespace Cinedex.Auth.Identity.Services;
 
 internal sealed class IdentityService(
     UserManager<ApplicationUser> userManager,
+    IRefreshTokenRepository refreshTokens,
     AuthDbContext dbContext) : IIdentityService
 {
     public async Task<User> RegisterAsync(string email, string userName, string password, CancellationToken cancellationToken)
@@ -105,12 +106,13 @@ internal sealed class IdentityService(
             throw ToValidationException(result);
         }
 
-        var revokedAtUtc = DateTime.UtcNow;
-        await dbContext.RefreshTokens
-            .Where(token => token.UserId == applicationUser.Id && token.RevokedAtUtc == null)
-            .ExecuteUpdateAsync(
-                setters => setters.SetProperty(token => token.RevokedAtUtc, revokedAtUtc),
-                cancellationToken);
+        // A password reset ends every session. The repository shares this scope's AuthDbContext, so
+        // the revocation enlists in the transaction opened above and lands with the new password or
+        // not at all.
+        await refreshTokens.RevokeAllActiveForUserAsync(
+            applicationUser.Id,
+            DateTime.UtcNow,
+            cancellationToken);
 
         await transaction.CommitAsync(cancellationToken);
     }

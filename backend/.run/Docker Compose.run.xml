@@ -1,13 +1,17 @@
 <component name="ProjectRunConfigurationManager">
+  <!--
+    Starts the stack and nothing else. The "Launch Web Browser" before-launch task that used to
+    be here was removed: it never opened a browser, and even when such a task does fire it runs
+    *before* `docker compose up`, so it would land on a connection-refused page. Use the
+    "Docker Compose with Browser" configuration if you want the API docs opened for you.
+  -->
   <configuration default="false" name="Docker Compose" type="docker-deploy" factoryName="docker-compose.yml" server-name="Docker">
     <deployment type="docker-compose.yml">
       <settings>
-        <option name="sourceFilePath" value="../compose.yaml" />
+        <option name="sourceFilePath" value="$PROJECT_DIR$/../compose.yaml" />
       </settings>
     </deployment>
     <EXTENSION ID="com.jetbrains.rider.docker.debug" isFastModeEnabled="true" isSslEnabled="false" />
-    <method v="2">
-      <option name="LaunchBrowser.Before.Run" url="https://localhost:9000/movies-svc/api-docs/v1" />
-    </method>
+    <method v="2" />
   </configuration>
 </component>

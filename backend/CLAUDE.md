@@ -22,7 +22,7 @@ Dependencies point inward: WebService → Adapters → Application → Domain.
 - `src/Domain` — pure entities (`Title`, `Genre`, `User`); no framework dependencies allowed.
 - `src/Application` — vertical-slice use cases + ports under `Abstractions/`. Each use case folder holds `<Name>Command`/`<Name>Query`, `<Name>Handler`, `I<Name>Handler`, and (for writes) `<Name>Validator` (FluentValidation).
 - `src/Adapters/Cinedex.Persistence.Postgres` — `FilmDbContext`, `catalog` schema (titles, genres), Fluent API configs (domain stays EF-free).
-- `src/Adapters/Cinedex.Auth.Identity` — ASP.NET Core Identity + JWT issuance, `AuthDbContext`, `auth` schema.
+- `src/Adapters/Cinedex.Auth.Identity` — ASP.NET Core Identity + JWT issuance, `auth` schema. Refresh-token persistence is split CQRS-style, one namespace per side: `Persistence/Repository/` holds `IRefreshTokenRepository` (all writes, plus authoritative entity reads taken inside the rotation transaction) over `AuthDbContext`, and `Persistence/Query/` holds `IRefreshTokenQueries` (reads that are correct outside a transaction) over `AuthReadOnlyDbContext`. Query results are detached `RefreshTokenReadModel` values under `Persistence/ReadModels`; the persisted `RefreshToken` entity lives under `Persistence/Entities` and never crosses the query boundary. Neither side exposes an `IQueryable`. **A read taken under the family advisory lock must go through the repository** — the lock lives on the write connection, so running it on the read connection would read outside the lock and break reuse detection.
 - `src/Adapters/Cinedex.Email.Smtp` — MailKit SMTP implementation of the `IEmailSender` port, plus the delivery queue: `ChannelEmailDispatcher` (the `IEmailDispatcher` port) enqueues, and the `EmailDeliveryWorker` background service drains it. Request-path code must depend on `IEmailDispatcher`, never `IEmailSender` — awaiting SMTP inline reopens an account-enumeration timing oracle on `password/forgot`.
 - `src/Presentation/Cinedex.WebService` — FastEndpoints (one class per endpoint), exception-handler chain (`ExceptionHandlers/`, registration order matters, `DefaultExceptionHandler` last), health checks (`/health/live`, `/health/ready`), OpenTelemetry → Seq.
 - `NuGetLibraries/Cinedex.WebService.Contracts` — shared request/response DTOs (the packable API contract).
@@ -54,9 +54,9 @@ Routes: base path `/movies-svc`; catalog resources are `titles` and `genres`; au
 
 Scalar API docs and the OpenAPI JSON are served only when `Features:ApiDocumentationEnabled` is true — `false` in `appsettings.json` (production default); Development settings and compose turn it on. If `/api-docs/v1` 404s, check this flag first.
 
-## EF Core migrations — two contexts, always pass `--context`
+## EF Core migrations — three registered contexts, only two migrate
 
-Two DbContexts share one database with separate schemas and `__EFMigrationsHistory` tables. Every `dotnet ef` command MUST pass `--context`, or it fails with "More than one DbContext was found". **Nothing applies migrations automatically** — except the integration-test fixture, which migrates itself, and the Aspire AppHost, which runs `Cinedex.DatabaseMigrator` to completion before starting anything else. Everywhere else a fresh database needs both:
+`FilmDbContext` and `AuthDbContext` share one database with separate schemas and `__EFMigrationsHistory` tables. `AuthReadOnlyDbContext` is also registered but is a read-only view of the same model as `AuthDbContext` — **it has no migrations and must never be passed to `dotnet ef migrations add`**, which would scaffold a duplicate migration set including the `RoleConfiguration` seed data. Every `dotnet ef` command MUST pass `--context`, or it fails with "More than one DbContext was found". **Nothing applies migrations automatically** — except the integration-test fixture, which migrates itself, and the Aspire AppHost, which runs `Cinedex.DatabaseMigrator` to completion before starting anything else. Everywhere else a fresh database needs both:
 
 ```bash
 dotnet ef database update --context FilmDbContext \
@@ -69,6 +69,10 @@ dotnet ef database update --context AuthDbContext \
 ```
 
 Use the same shape with `migrations add <Name>`. The connection string resolves from the WebService's User Secrets in Development (`dotnet user-secrets set "ConnectionStrings:DefaultConnection" "..."` from the WebService directory), or pass `--connection "..."` explicitly (e.g. to target the compose Postgres on `localhost:5432`).
+
+### Connection strings
+
+`ConnectionStrings:DefaultConnection` is the read-write string, shared by both migrating contexts. `ConnectionStrings:ReadOnlyConnection` is **optional** and backs `AuthReadOnlyDbContext` only; when it is unset, empty, or whitespace, auth reads fall back to `DefaultConnection` — which is what every environment does today, so behaviour is unchanged unless you set it. Point it at a `SELECT`-only Postgres role to get the privilege split (grants are documented in `.env.example`). Never put it in a tracked `appsettings.json`: those files carry a `"<SECRETS>"` placeholder, and a non-empty placeholder here would defeat the fallback and break local runs.
 
 ## Auth
 

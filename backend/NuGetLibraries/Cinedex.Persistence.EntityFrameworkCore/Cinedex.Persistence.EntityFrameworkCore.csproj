@@ -1,0 +1,38 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <IsPackable>true</IsPackable>
+
+    <!-- NuGet Package Metadata (package-specific) -->
+    <PackageId>Cinedex.Persistence.EntityFrameworkCore</PackageId>
+    <Title>Cinedex Persistence for Entity Framework Core</Title>
+    <Authors>Felipe Ferreira</Authors>
+    <Description>Entity Framework Core implementation of the Cinedex persistence ports: unit of work, real database transactions, savepoints and scope-shared repository resolution.</Description>
+    <PackageProjectUrl>https://github.com/felipedferreira/Cinedex</PackageProjectUrl>
+    <RepositoryUrl>https://github.com/felipedferreira/Cinedex</RepositoryUrl>
+    <PackageTags>unit-of-work;repository;efcore;entity-framework;persistence;transactions</PackageTags>
+    <PackageReadmeFile>README.md</PackageReadmeFile>
+  </PropertyGroup>
+
+  <!--
+    Relational rather than a specific provider: this package needs IDbContextTransaction and
+    savepoints, not PostgreSQL. Everything Npgsql-shaped — SQLSTATE translation, advisory locks —
+    lives in Cinedex.Persistence.EntityFrameworkCore.Postgres so that a consumer on a different
+    provider can take this package without inheriting a PostgreSQL dependency.
+  -->
+  <ItemGroup>
+    <PackageReference Include="Microsoft.EntityFrameworkCore.Relational" />
+    <PackageReference Include="Microsoft.Extensions.DependencyInjection.Abstractions" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\Cinedex.Persistence.Abstractions\Cinedex.Persistence.Abstractions.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <None Include="README.md" Pack="true" PackagePath="\" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Update="StyleCop.Analyzers" PrivateAssets="all" />
+  </ItemGroup>
+</Project>

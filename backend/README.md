@@ -233,10 +233,13 @@ exception detail so the endpoints don't leak internal information.
 curl -k -s https://localhost:9000/movies-svc/health/live
 # {"status":"Healthy","checks":[]}
 
-# Readiness (includes the Postgres connectivity check)
+# Readiness (includes the Postgres connectivity checks)
 curl -k -s https://localhost:9000/movies-svc/health/ready
-# {"status":"Healthy","checks":[{"name":"postgres","status":"Healthy"}]}
+# {"status":"Healthy","checks":[{"name":"postgres","status":"Healthy"},{"name":"postgres-readonly","status":"Healthy"}]}
 ```
+
+`postgres-readonly` probes `ConnectionStrings:ReadOnlyConnection` when it's configured, otherwise
+the same connection as `postgres`.
 
 The public Compose path goes through the HTTPS `cinadex-ui` reverse proxy; use `-k` with curl unless
 you have trusted the local self-signed certificate.

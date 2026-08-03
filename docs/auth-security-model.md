@@ -415,6 +415,17 @@ build on this.
   fixture migrates itself. Nothing in `Program.cs` migrates either context, so a `dotnet run` against a
   fresh database still needs the migrator or an explicit `dotnet ef database update`. See the
   [backend README](../backend/README.md#migrations).
+- **`POST /auth/refresh` depends on two connections, with no fallback between them.** It reads
+  through `AuthReadOnlyDbContext` (`ConnectionStrings:ReadOnlyConnection`) before opening the
+  write transaction. That's optional config — unset, empty, or whitespace falls back to
+  `DefaultConnection`, and every environment runs that way today — but once it's set to a real
+  value, refresh depends on it directly: if that connection is unreachable or misconfigured, the
+  read fails and refresh returns `500`. There is no code path that falls back to the write
+  connection instead; that would silently mask a broken privilege split rather than surface it.
+  Register, login, and logout stay on `DefaultConnection` alone and are unaffected. **Diagnostic:**
+  refresh returning `500` while those three keep working points at `ReadOnlyConnection`
+  specifically — check the `postgres-readonly` entry in `GET /health/ready` first (see
+  [backend README](../backend/README.md#-health-checks)).
 - **The forgot-password response still carries a small timing signal.** Queueing the reset email
   removed the large one — the four-round-trip SMTP conversation that only the known-account path
   performed, which MailKit lets run for up to two minutes against an unresponsive relay. What remains

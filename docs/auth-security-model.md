@@ -146,9 +146,7 @@ forward-only, which leaves a chain's live tail unreachable from an older token.
 
 `FamilyId` is immutable once written. A refresh can therefore use the value from its initial
 non-tracked lookup to acquire the family's transaction-scoped advisory lock, then re-read the token
-under that lock without any risk that it joined a different family while waiting. That initial
-lookup is also the only refresh-token read allowed on the read-only connection — see
-[Read/write split](#readwrite-split).
+under that lock without any risk that it joined a different family while waiting.
 
 ### Reuse response
 
@@ -221,29 +219,6 @@ losing one costs a single login, so the migration ends whatever sessions were li
 Deleting rather than aborting on existing data also keeps the migration unable to fail:
 `movies.databasemigrator` gates the web service on its exit code, so a migration that could reject a
 populated table would stop the stack from starting.
-
-### Read/write split
-
-Refresh-token persistence is split CQRS-style across two `DbContext`s over one shared model.
-`AuthModel.Configure` is the single place that model is described — schema, table, and index
-configuration — called from both `OnModelCreating` overrides, so the two contexts cannot drift
-apart on a column or index. `AuthDbContext` is the read-write half: it owns migrations, and every
-refresh-token write goes through `IRefreshTokenRepository`. `AuthReadOnlyDbContext` is the
-read-only half, backing `IRefreshTokenQueries`; it resolves `ConnectionStrings:ReadOnlyConnection`
-independently (see [Configuration](#configuration)) and overrides `SaveChanges` to throw, so a
-write attempted through it fails at the call site during development rather than as a database
-permission error in production. `IRefreshTokenQueries` also never returns an `IQueryable` or the
-`RefreshToken` entity, only the detached `RefreshTokenReadModel` — there is no queryable handle
-left for a caller to call `ExecuteUpdate`/`ExecuteDelete` on, which the `SaveChanges` override
-alone would not stop.
-
-Only one refresh-token read is correct on the read-only connection: the non-tracked preflight
-lookup in `RefreshAsync` that lets it reject an unknown or expired token before opening a
-transaction (see [Token families](#token-families)). Every other read — the authoritative re-read
-taken once the family's advisory lock is held, and every read the retention sweep below performs —
-goes through `IRefreshTokenRepository` on the write connection instead. The advisory lock belongs
-to the connection that opened it; re-reading the same rows over a second connection would read
-outside that lock and silently reopen the insertion race the lock exists to close.
 
 ### Refresh-token retention
 
@@ -371,13 +346,6 @@ startup via `ValidateOnStart`, so a bad one fails the worker at boot rather than
 > `ConnectionStrings:DefaultConnection` is handled. `AddJwtAuthentication` throws at startup if
 > the key is absent, but it cannot tell a real key from the placeholder.
 
-`ConnectionStrings:ReadOnlyConnection` is **optional** and backs `AuthReadOnlyDbContext` only —
-see [Read/write split](#readwrite-split). Unset, empty, or whitespace falls back to
-`ConnectionStrings:DefaultConnection`, which is what every environment does today; pointing it at
-a `SELECT`-only Postgres role is how an environment opts into that connection's privilege split
-(grants and role setup are in `.env.example`). Once set, `POST /auth/refresh` depends on it
-directly and has no fallback to `DefaultConnection` if it breaks — see [Known gaps](#known-gaps).
-
 ## Password reset
 
 `POST /auth/password/forgot` **always returns `202 Accepted`**, whether or not the email
@@ -447,17 +415,6 @@ build on this.
   fixture migrates itself. Nothing in `Program.cs` migrates either context, so a `dotnet run` against a
   fresh database still needs the migrator or an explicit `dotnet ef database update`. See the
   [backend README](../backend/README.md#migrations).
-- **`POST /auth/refresh` depends on two connections, with no fallback between them.** It reads
-  through `AuthReadOnlyDbContext` (`ConnectionStrings:ReadOnlyConnection`) before opening the
-  write transaction. That's optional config — unset, empty, or whitespace falls back to
-  `DefaultConnection`, and every environment runs that way today — but once it's set to a real
-  value, refresh depends on it directly: if that connection is unreachable or misconfigured, the
-  read fails and refresh returns `500`. There is no code path that falls back to the write
-  connection instead; that would silently mask a broken privilege split rather than surface it.
-  Register, login, and logout stay on `DefaultConnection` alone and are unaffected. **Diagnostic:**
-  refresh returning `500` while those three keep working points at `ReadOnlyConnection`
-  specifically — check the `postgres-readonly` entry in `GET /health/ready` first (see
-  [backend README](../backend/README.md#-health-checks)).
 - **The forgot-password response still carries a small timing signal.** Queueing the reset email
   removed the large one — the four-round-trip SMTP conversation that only the known-account path
   performed, which MailKit lets run for up to two minutes against an unresponsive relay. What remains

@@ -1,7 +1,6 @@
 using System.Diagnostics;
-using Cinedex.Auth.Identity.Entities;
 using Cinedex.Auth.Identity.Options;
-using Microsoft.EntityFrameworkCore;
+using Cinedex.Auth.Identity.Persistence.Repository;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
@@ -104,15 +103,12 @@ internal sealed class RefreshTokenCleanupWorker(
                 revokedCutoff);
 
             await using AsyncServiceScope scope = scopeFactory.CreateAsyncScope();
-            var dbContext = scope.ServiceProvider.GetRequiredService<AuthDbContext>();
+            var refreshTokens = scope.ServiceProvider.GetRequiredService<IRefreshTokenRepository>();
 
             // Expired and never revoked. Unreachable by every code path: rotation rejects an expired
             // token outright, and family-wide revocation only ever targets unexpired live tails.
             var (expiredDeleted, budgetAfterExpired) = await this.DeleteBatchesAsync(
-                dbContext.RefreshTokens
-                    .Where(token => token.RevokedAtUtc == null && token.ExpiresAtUtc < expiredCutoff)
-                    .OrderBy(token => token.ExpiresAtUtc),
-                dbContext,
+                (batchSize, ct) => refreshTokens.DeleteExpiredBatchAsync(expiredCutoff, batchSize, ct),
                 this._options.MaxBatchesPerRun,
                 cancellationToken);
 
@@ -126,12 +122,7 @@ internal sealed class RefreshTokenCleanupWorker(
             // necessarily expired, but that stops holding if Jwt:RefreshTokenDays is raised past the
             // reuse-detection window, and the invariant should be enforced rather than assumed.
             var (revokedDeleted, remainingBudget) = await this.DeleteBatchesAsync(
-                dbContext.RefreshTokens
-                    .Where(token => token.RevokedAtUtc != null
-                        && token.RevokedAtUtc < revokedCutoff
-                        && token.ExpiresAtUtc < now)
-                    .OrderBy(token => token.RevokedAtUtc),
-                dbContext,
+                (batchSize, ct) => refreshTokens.DeleteRevokedBatchAsync(revokedCutoff, now, batchSize, ct),
                 budgetAfterExpired,
                 cancellationToken);
 
@@ -177,20 +168,15 @@ internal sealed class RefreshTokenCleanupWorker(
         }
     }
 
-    // Deletes candidates a page at a time, stopping when the predicate drains or the batch budget
-    // runs out. Each ExecuteDeleteAsync is its own implicit transaction — EF does not open one for
-    // it the way SaveChangesAsync does — so row locks are taken and released within a single
-    // statement rather than held across the sweep. That is what keeps this off the back of
-    // concurrent issuance and rotation, and it is why the sweep must never be wrapped in an
-    // explicit transaction.
+    // Runs one of the repository's batch deletes a page at a time, stopping when the predicate
+    // drains or the batch budget runs out. Only the pacing lives here — which rows a batch selects,
+    // and why the delete is set-based rather than a tracked RemoveRange, belongs to the repository
+    // and is documented there.
     //
-    // The batch is chosen by a keyed subquery and the DELETE matches on the primary key, written
-    // out rather than left to EF's automatic pushdown so the emitted shape is visible here instead
-    // of being an implementation detail of the translator. batchIds stays an IQueryable on purpose:
-    // materialising it would round-trip the ids and open a window between the read and the delete.
+    // The budget is what bounds a sweep. Without it a large backlog would be drained in one
+    // unbounded run, competing with issuance and rotation for the same rows for as long as it took.
     private async Task<(int Deleted, int RemainingBudget)> DeleteBatchesAsync(
-        IQueryable<RefreshToken> candidates,
-        AuthDbContext dbContext,
+        Func<int, CancellationToken, Task<int>> deleteBatchAsync,
         int batchBudget,
         CancellationToken cancellationToken)
     {
@@ -198,41 +184,7 @@ internal sealed class RefreshTokenCleanupWorker(
 
         while (batchBudget > 0)
         {
-            IQueryable<Guid> batchIds = candidates
-                .Select(token => token.Id)
-                .Take(this._options.BatchSize);
-
-            // ExecuteDeleteAsync rather than loading the rows and calling RemoveRange, which is the
-            // more usual way to delete through EF. The trade, deliberately taken:
-            //
-            //   What we give up. ExecuteDelete bypasses the whole SaveChanges pipeline — no change
-            //   tracking, no interceptors, no concurrency-token checks, no domain events, and no
-            //   EF-side cascade (the database's FK rules still apply). It also reports only a row
-            //   count, never which rows went. In a codebase that audits or soft-deletes through a
-            //   SaveChanges interceptor, using it would silently skip that, with no compile error to
-            //   warn you. None of that machinery exists here today, and this sweep needs nothing
-            //   from the rows it removes: it logs counts only, on purpose, so the log store never
-            //   becomes a record of who was signed in.
-            //
-            //   What we get. RemoveRange would first materialise every row — eight columns for up to
-            //   BatchSize × MaxBatchesPerRun rows per sweep — purely to throw them away. Worse, the
-            //   scope here is per sweep, so one DbContext serves every batch: the change tracker
-            //   would still hold each previous batch's entities, and DetectChanges is O(tracked), so
-            //   each successive SaveChanges would slow down while memory grew, unless we added
-            //   ChangeTracker.Clear() calls purely to work around the approach. SaveChanges would
-            //   also wrap each batch in a transaction spanning BatchSize individual DELETE
-            //   statements, holding the same row locks far longer than the one set-based statement
-            //   below — the opposite of what a job that must not block issuance or rotation wants.
-            //
-            // The rule this follows: RemoveRange expresses "these objects are gone from my model",
-            // ExecuteDelete expresses "these rows are gone from the table". Retention is storage
-            // housekeeping, not a domain operation, so it is the second kind.
-            //
-            // Revisit this if AuthDbContext ever gains a SaveChanges interceptor, a soft-delete
-            // convention, or a concurrency token on RefreshToken — this call would bypass all three.
-            var batchDeleted = await dbContext.RefreshTokens
-                .Where(token => batchIds.Contains(token.Id))
-                .ExecuteDeleteAsync(cancellationToken);
+            var batchDeleted = await deleteBatchAsync(this._options.BatchSize, cancellationToken);
 
             deleted += batchDeleted;
             batchBudget--;

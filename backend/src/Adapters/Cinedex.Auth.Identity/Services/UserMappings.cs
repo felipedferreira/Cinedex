@@ -1,4 +1,3 @@
-using Cinedex.Auth.Identity.Entities;
 using Cinedex.Domain.UserAggregate;
 
 namespace Cinedex.Auth.Identity.Services;

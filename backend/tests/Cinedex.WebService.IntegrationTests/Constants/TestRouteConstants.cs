@@ -25,4 +25,9 @@ internal static class TestRouteConstants
         public const string ForgotPasswordEndpoint = $"{MoviesServiceBasePath}/auth/password/forgot";
         public const string ResetPasswordEndpoint = $"{MoviesServiceBasePath}/auth/password/reset";
     }
+
+    public static class Health
+    {
+        public const string ReadyEndpoint = "/health/ready";
+    }
 }

@@ -22,7 +22,7 @@ Dependencies point inward: WebService → Adapters → Application → Domain.
 - `src/Domain` — pure entities (`Title`, `Genre`, `User`); no framework dependencies allowed.
 - `src/Application` — vertical-slice use cases + ports under `Abstractions/`. Each use case folder holds `<Name>Command`/`<Name>Query`, `<Name>Handler`, `I<Name>Handler`, and (for writes) `<Name>Validator` (FluentValidation).
 - `src/Adapters/Cinedex.Persistence.Postgres` — `FilmDbContext`, `catalog` schema (titles, genres), Fluent API configs (domain stays EF-free).
-- `src/Adapters/Cinedex.Auth.Identity` — ASP.NET Core Identity + JWT issuance, `AuthDbContext`, `auth` schema.
+- `src/Adapters/Cinedex.Auth.Identity` — ASP.NET Core Identity + JWT issuance, `auth` schema. Refresh-token persistence goes through `IRefreshTokenRepository` (`Persistence/Repository/`), backed by `AuthDbContext`; the persisted `RefreshToken` entity lives under `Persistence/Entities`.
 - `src/Adapters/Cinedex.Email.Smtp` — MailKit SMTP implementation of the `IEmailSender` port, plus the delivery queue: `ChannelEmailDispatcher` (the `IEmailDispatcher` port) enqueues, and the `EmailDeliveryWorker` background service drains it. Request-path code must depend on `IEmailDispatcher`, never `IEmailSender` — awaiting SMTP inline reopens an account-enumeration timing oracle on `password/forgot`.
 - `src/Presentation/Cinedex.WebService` — FastEndpoints (one class per endpoint), exception-handler chain (`ExceptionHandlers/`, registration order matters, `DefaultExceptionHandler` last), health checks (`/health/live`, `/health/ready`), OpenTelemetry → Seq.
 - `NuGetLibraries/Cinedex.WebService.Contracts` — shared request/response DTOs (the packable API contract).

@@ -5,21 +5,19 @@ using System.Text;
 using Cinedex.Application.Abstractions;
 using Cinedex.Application.Auth;
 using Cinedex.Application.Exceptions;
-using Cinedex.Auth.Identity.Entities;
 using Cinedex.Auth.Identity.Options;
+using Cinedex.Auth.Identity.Persistence.Repository;
 using Cinedex.Domain.UserAggregate;
 using Microsoft.AspNetCore.Identity;
-using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Storage;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using Microsoft.IdentityModel.Tokens;
-using Npgsql;
 
 namespace Cinedex.Auth.Identity.Services;
 
 internal sealed class JwtTokenService(
-    AuthDbContext dbContext,
+    IRefreshTokenRepository refreshTokens,
     UserManager<ApplicationUser> userManager,
     IOptions<JwtOptions> options,
     ILogger<JwtTokenService> logger) : ITokenService
@@ -38,8 +36,7 @@ internal sealed class JwtTokenService(
         // A login starts a new session, so it starts a new token family.
         var refreshEntity = CreateRefreshTokenEntity(user.Id, Guid.CreateVersion7(), rawRefreshToken);
 
-        dbContext.RefreshTokens.Add(refreshEntity);
-        await dbContext.SaveChangesAsync(cancellationToken);
+        await refreshTokens.AddAsync(refreshEntity, cancellationToken);
 
         return CreateTokenResponse(user, roles, rawRefreshToken, refreshEntity.ExpiresAtUtc);
     }
@@ -49,24 +46,20 @@ internal sealed class JwtTokenService(
         var tokenHash = HashToken(refreshToken);
         var now = DateTime.UtcNow;
 
-        var existing = await dbContext.RefreshTokens
-            .AsNoTracking()
-            .FirstOrDefaultAsync(token => token.TokenHash == tokenHash, cancellationToken);
+        var preflight = await refreshTokens.FindByTokenHashAsync(tokenHash, cancellationToken);
 
-        if (existing is null || existing.ExpiresAtUtc <= now)
+        if (preflight is null || preflight.ExpiresAtUtc <= now)
         {
             throw new InvalidCredentialsException("The refresh token is invalid or has expired.");
         }
 
-        await using var transaction = await dbContext.Database.BeginTransactionAsync(cancellationToken);
-        await AcquireFamilyLockAsync(existing.FamilyId, transaction, cancellationToken);
+        await using var transaction = await refreshTokens.BeginTransactionAsync(cancellationToken);
+        await refreshTokens.AcquireFamilyLockAsync(preflight.FamilyId, cancellationToken);
 
         // The preflight read above avoids opening a transaction for unknown and expired tokens. A
         // family may have changed while this request waited for its advisory lock, so only this
         // second read is authoritative for rotation and reuse detection.
-        existing = await dbContext.RefreshTokens
-            .AsNoTracking()
-            .FirstOrDefaultAsync(token => token.TokenHash == tokenHash, cancellationToken);
+        var existing = await refreshTokens.FindByTokenHashAsync(tokenHash, cancellationToken);
         now = DateTime.UtcNow;
 
         if (existing is null || existing.ExpiresAtUtc <= now)
@@ -87,8 +80,9 @@ internal sealed class JwtTokenService(
             throw new InvalidCredentialsException("The refresh token is invalid or has expired.");
         }
 
-        var applicationUser = await dbContext.Users
-            .FirstOrDefaultAsync(user => user.Id == existing.UserId, cancellationToken);
+        // UserManager reads through the same scoped AuthDbContext the transaction was opened on, so
+        // this stays inside it.
+        var applicationUser = await userManager.FindByIdAsync(existing.UserId.ToString());
 
         if (applicationUser is null)
         {
@@ -100,31 +94,24 @@ internal sealed class JwtTokenService(
         var rawRefreshToken = GenerateRefreshToken();
 
         // Rotation continues the incoming token's family rather than starting one. FamilyId is
-        // init-only, so the authoritative row re-read under the family lock can be copied safely.
-        // RevokedAtUtc can still change in a logout race, which is why the update below remains
-        // conditional rather than trusting this read.
+        // immutable for a row's lifetime, so the authoritative re-read under the family lock can be
+        // copied safely. RevokedAtUtc can still change in a logout race, which is why the update
+        // below remains conditional rather than trusting this read.
         var refreshEntity = CreateRefreshTokenEntity(domainUser.Id, existing.FamilyId, rawRefreshToken);
 
         // Rotate with a conditional update so concurrent refreshes cannot both win the same token.
-        var revokedCount = await dbContext.RefreshTokens
-            .Where(token =>
-                token.TokenHash == tokenHash &&
-                token.RevokedAtUtc == null &&
-                token.ExpiresAtUtc > now)
-            .ExecuteUpdateAsync(
-                setters => setters
-                    .SetProperty(token => token.RevokedAtUtc, now)
-                    .SetProperty(token => token.ReplacedByTokenHash, refreshEntity.TokenHash),
-                cancellationToken);
+        var revokedCount = await refreshTokens.RotateAsync(
+            tokenHash,
+            now,
+            refreshEntity.TokenHash,
+            cancellationToken);
 
         if (revokedCount != 1)
         {
             // The family lock serializes updated replicas, but keep the conditional update and this
             // re-read for logout races and rolling deployments where an older replica does not yet
             // participate in the advisory-lock protocol.
-            var current = await dbContext.RefreshTokens
-                .AsNoTracking()
-                .FirstOrDefaultAsync(token => token.TokenHash == tokenHash, cancellationToken);
+            var current = await refreshTokens.FindByTokenHashAsync(tokenHash, cancellationToken);
             var reuseDetectedAt = DateTime.UtcNow;
 
             if (current is not null &&
@@ -141,56 +128,15 @@ internal sealed class JwtTokenService(
             throw new InvalidCredentialsException("The refresh token is invalid or has expired.");
         }
 
-        dbContext.RefreshTokens.Add(refreshEntity);
-        await dbContext.SaveChangesAsync(cancellationToken);
+        await refreshTokens.AddAsync(refreshEntity, cancellationToken);
         await transaction.CommitAsync(cancellationToken);
 
         return CreateTokenResponse(domainUser, roles, rawRefreshToken, refreshEntity.ExpiresAtUtc);
     }
 
-    public async Task RevokeRefreshTokenAsync(string refreshToken, CancellationToken cancellationToken)
-    {
-        var tokenHash = HashToken(refreshToken);
-
-        var existing = await dbContext.RefreshTokens
-            .FirstOrDefaultAsync(token => token.TokenHash == tokenHash, cancellationToken);
-
-        if (existing is null || existing.RevokedAtUtc is not null)
-        {
-            return;
-        }
-
-        existing.RevokedAtUtc = DateTime.UtcNow;
-        await dbContext.SaveChangesAsync(cancellationToken);
-    }
-
-    // Serializes refresh operations within one token family. Without this lock, reuse detection
-    // could revoke the current tail while a concurrent rotation inserts a new replacement after the
-    // revocation statement, allowing an active token to survive in the compromised family.
-    private static async Task AcquireFamilyLockAsync(
-        Guid familyId,
-        IDbContextTransaction transaction,
-        CancellationToken cancellationToken)
-    {
-        // Advisory transaction locks belong to the PostgreSQL session and transaction that acquire
-        // them, so execute the command through the exact connection and transaction EF opened.
-        var connection = (NpgsqlConnection)transaction.GetDbTransaction().Connection!;
-        var npgsqlTransaction = (NpgsqlTransaction)transaction.GetDbTransaction();
-
-        // PostgreSQL advisory locks use a 64-bit key. Hash the family UUID into that key so every
-        // request for the same family waits on the same logical mutex. The lock is released
-        // automatically when the surrounding transaction commits or rolls back.
-        //
-        // Two UUIDs can theoretically hash to the same key, but that only makes unrelated families
-        // wait for one another. It cannot cross family boundaries because the revocation update
-        // still filters rows by the complete FamilyId.
-        await using var command = new NpgsqlCommand(
-            "SELECT pg_advisory_xact_lock(hashtextextended(CAST(@familyId AS text), 0));",
-            connection,
-            npgsqlTransaction);
-        command.Parameters.AddWithValue("familyId", familyId);
-        await command.ExecuteNonQueryAsync(cancellationToken);
-    }
+    // Idempotent: revoking an unknown or already-revoked token matches no row and is a no-op.
+    public Task RevokeRefreshTokenAsync(string refreshToken, CancellationToken cancellationToken) =>
+        refreshTokens.RevokeByTokenHashAsync(HashToken(refreshToken), DateTime.UtcNow, cancellationToken);
 
     private static string GenerateRefreshToken() =>
         Convert.ToBase64String(RandomNumberGenerator.GetBytes(32));
@@ -204,14 +150,10 @@ internal sealed class JwtTokenService(
         IDbContextTransaction transaction,
         CancellationToken cancellationToken)
     {
-        var revokedTokenCount = await dbContext.RefreshTokens
-            .Where(token =>
-                token.FamilyId == familyId &&
-                token.RevokedAtUtc == null &&
-                token.ExpiresAtUtc > detectedAtUtc)
-            .ExecuteUpdateAsync(
-                setters => setters.SetProperty(token => token.RevokedAtUtc, detectedAtUtc),
-                cancellationToken);
+        var revokedTokenCount = await refreshTokens.RevokeActiveFamilyAsync(
+            familyId,
+            detectedAtUtc,
+            cancellationToken);
 
         await transaction.CommitAsync(cancellationToken);
 

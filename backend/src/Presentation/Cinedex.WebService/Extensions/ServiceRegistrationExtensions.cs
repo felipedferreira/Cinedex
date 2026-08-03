@@ -44,17 +44,33 @@ public static class ServiceRegistrationExtensions
         builder.Services.AddOpenApi();
         builder.Services.AddProblemDetails();
 
-        var connectionString = builder.Configuration.GetConnectionString(ConfigurationConstants.DefaultConnection)
+        // Startup guard: fail immediately if the key is absent altogether, rather than letting it
+        // surface later as an unhealthy readiness probe. The value is deliberately not reused below —
+        // it cannot be trusted to be the one the application will actually connect with.
+        _ = builder.Configuration.GetConnectionString(ConfigurationConstants.DefaultConnection)
             ?? throw new InvalidOperationException(
                 string.Format(
                     CultureInfo.InvariantCulture,
                     "Connection string '{0}' is not configured.",
                     ConfigurationConstants.DefaultConnection));
 
+        // Resolved lazily, from the built IServiceProvider, so the probe targets the same connection
+        // string AddAuthenticationPersistence hands the DbContexts — a readiness check that passes
+        // against a different database than the app uses is worse than no check at all. Reading
+        // builder.Configuration eagerly here is what makes them diverge: under
+        // WebApplicationFactory the test host's overrides are only layered on once the host finishes
+        // building, so an eager read captures appsettings.json's "<SECRETS>" placeholder instead.
         builder.Services
             .AddHealthChecks()
             .AddNpgSql(
-                connectionString: connectionString,
+                connectionStringFactory: sp =>
+                    sp.GetRequiredService<IConfiguration>()
+                        .GetConnectionString(ConfigurationConstants.DefaultConnection)
+                    ?? throw new InvalidOperationException(
+                        string.Format(
+                            CultureInfo.InvariantCulture,
+                            "Connection string '{0}' is not configured.",
+                            ConfigurationConstants.DefaultConnection)),
                 name: "postgres",
                 tags: [HealthCheckConstants.ReadyTag]);
 

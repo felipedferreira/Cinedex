@@ -1,8 +1,8 @@
 using Cinedex.Application.Abstractions;
 using Cinedex.Application.Auth;
 using Cinedex.Auth.Identity.Constants;
-using Cinedex.Auth.Identity.Entities;
 using Cinedex.Auth.Identity.Options;
+using Cinedex.Auth.Identity.Persistence.Repository;
 using Cinedex.Auth.Identity.Services;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
@@ -13,12 +13,18 @@ namespace Cinedex.Auth.Identity;
 
 public static class DependencyInjection
 {
+    /// <summary>
+    /// Registers the auth persistence layer: <see cref="AuthDbContext"/> and the refresh-token
+    /// repository that sits on it.
+    /// </summary>
+    /// <param name="services">The service collection to add the persistence layer to.</param>
+    /// <returns>The same <paramref name="services"/> instance so calls can be chained.</returns>
     public static IServiceCollection AddAuthenticationPersistence(this IServiceCollection services)
     {
         services.AddDbContext<AuthDbContext>((sp, options) =>
         {
             var configuration = sp.GetRequiredService<IConfiguration>();
-            var connectionString = configuration.GetConnectionString("DefaultConnection");
+            var connectionString = configuration.GetConnectionString(AuthDatabaseConstants.DefaultConnectionName);
             options
                 .UseNpgsql(
                     connectionString,
@@ -27,6 +33,8 @@ public static class DependencyInjection
                         AuthDatabaseConstants.AuthSchema))
                 .UseCamelCaseNamingConvention();
         });
+
+        services.AddScoped<IRefreshTokenRepository, RefreshTokenRepository>();
 
         return services;
     }

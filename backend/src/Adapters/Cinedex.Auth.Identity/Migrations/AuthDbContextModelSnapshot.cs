@@ -23,7 +23,7 @@ namespace Cinedex.Auth.Identity.Migrations
 
             NpgsqlModelBuilderExtensions.UseIdentityByDefaultColumns(modelBuilder);
 
-            modelBuilder.Entity("Cinedex.Auth.Identity.Entities.ApplicationUser", b =>
+            modelBuilder.Entity("Cinedex.Auth.Identity.Persistence.Entities.ApplicationUser", b =>
                 {
                     b.Property<Guid>("Id")
                         .ValueGeneratedOnAdd()
@@ -349,7 +349,7 @@ namespace Cinedex.Auth.Identity.Migrations
 
             modelBuilder.Entity("Cinedex.Auth.Identity.Persistence.Entities.RefreshToken", b =>
                 {
-                    b.HasOne("Cinedex.Auth.Identity.Entities.ApplicationUser", null)
+                    b.HasOne("Cinedex.Auth.Identity.Persistence.Entities.ApplicationUser", null)
                         .WithMany()
                         .HasForeignKey("UserId")
                         .OnDelete(DeleteBehavior.Cascade)
@@ -369,7 +369,7 @@ namespace Cinedex.Auth.Identity.Migrations
 
             modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityUserClaim<System.Guid>", b =>
                 {
-                    b.HasOne("Cinedex.Auth.Identity.Entities.ApplicationUser", null)
+                    b.HasOne("Cinedex.Auth.Identity.Persistence.Entities.ApplicationUser", null)
                         .WithMany()
                         .HasForeignKey("UserId")
                         .OnDelete(DeleteBehavior.Cascade)
@@ -379,7 +379,7 @@ namespace Cinedex.Auth.Identity.Migrations
 
             modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityUserLogin<System.Guid>", b =>
                 {
-                    b.HasOne("Cinedex.Auth.Identity.Entities.ApplicationUser", null)
+                    b.HasOne("Cinedex.Auth.Identity.Persistence.Entities.ApplicationUser", null)
                         .WithMany()
                         .HasForeignKey("UserId")
                         .OnDelete(DeleteBehavior.Cascade)
@@ -396,7 +396,7 @@ namespace Cinedex.Auth.Identity.Migrations
                         .IsRequired()
                         .HasConstraintName("fK_AspNetUserRoles_AspNetRoles_roleId");
 
-                    b.HasOne("Cinedex.Auth.Identity.Entities.ApplicationUser", null)
+                    b.HasOne("Cinedex.Auth.Identity.Persistence.Entities.ApplicationUser", null)
                         .WithMany()
                         .HasForeignKey("UserId")
                         .OnDelete(DeleteBehavior.Cascade)
@@ -406,7 +406,7 @@ namespace Cinedex.Auth.Identity.Migrations
 
             modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityUserToken<System.Guid>", b =>
                 {
-                    b.HasOne("Cinedex.Auth.Identity.Entities.ApplicationUser", null)
+                    b.HasOne("Cinedex.Auth.Identity.Persistence.Entities.ApplicationUser", null)
                         .WithMany()
                         .HasForeignKey("UserId")
                         .OnDelete(DeleteBehavior.Cascade)

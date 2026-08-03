@@ -72,7 +72,7 @@ Use the same shape with `migrations add <Name>`. The connection string resolves 
 
 ### Connection strings
 
-`ConnectionStrings:DefaultConnection` is the read-write string, shared by both migrating contexts. `ConnectionStrings:ReadOnlyConnection` is **optional** and backs `AuthReadOnlyDbContext` only; when it is unset, empty, or whitespace, auth reads fall back to `DefaultConnection` — which is what every environment does today, so behaviour is unchanged unless you set it. Point it at a `SELECT`-only Postgres role to get the privilege split (grants are documented in `.env.example`). Never put it in a tracked `appsettings.json`: those files carry a `"<SECRETS>"` placeholder, and a non-empty placeholder here would defeat the fallback and break local runs.
+`ConnectionStrings:DefaultConnection` is the read-write string, shared by both migrating contexts. `ConnectionStrings:ReadOnlyConnection` is **optional** and backs `AuthReadOnlyDbContext` only; when it is unset, empty, or whitespace, auth reads fall back to `DefaultConnection` — which is what every environment does today, so behaviour is unchanged unless you set it. Point it at a `SELECT`-only Postgres role to get the privilege split (grants are documented in `.env.example`). Never put it in a tracked `appsettings.json`: those files carry a `"<SECRETS>"` placeholder, and a non-empty placeholder here would defeat the fallback and break local runs. Once set, `POST /auth/refresh` depends on it directly and has no fallback to `DefaultConnection` if it breaks — a `500` on refresh while login, register, and logout keep working means check this connection first (`docs/auth-security-model.md`, Known gaps).
 
 ## Auth
 

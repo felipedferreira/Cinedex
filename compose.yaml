@@ -123,10 +123,6 @@ services:
       ForwardedHeaders__Enabled: "true"
       Features__ApiDocumentationEnabled: "true"
       ConnectionStrings__DefaultConnection: "${DB_CONNECTION_STRING}"
-      # Optional lower-privilege connection for auth reads. Empty when DB_READONLY_CONNECTION_STRING
-      # is unset, which the web service treats as absent and falls back to DefaultConnection.
-      # Only this service reads it; the migrator and scheduler worker never query on the read side.
-      ConnectionStrings__ReadOnlyConnection: "${DB_READONLY_CONNECTION_STRING:-}"
       Kestrel__Endpoints__Http__Url: "http://0.0.0.0:8080"
       # OpenTelemetry -> Seq OTLP ingestion (Seq listens on container port 80)
       OTEL_EXPORTER_OTLP_ENDPOINT: "http://seq/ingest/otlp"

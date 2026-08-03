@@ -54,17 +54,6 @@ public static class ServiceRegistrationExtensions
                     "Connection string '{0}' is not configured.",
                     ConfigurationConstants.DefaultConnection));
 
-        // Resolved lazily, from the built IServiceProvider, so the probe targets the same connection
-        // string AddAuthenticationPersistence hands the DbContexts — a readiness check that passes
-        // against a different database than the app uses is worse than no check at all. Reading
-        // builder.Configuration eagerly here is what makes them diverge: under
-        // WebApplicationFactory the test host's overrides are only layered on once the host finishes
-        // building, so an eager read captures appsettings.json's "<SECRETS>" placeholder instead.
-        //
-        // The read-only check applies the same reasoning to ConnectionStrings:ReadOnlyConnection, with
-        // the fallback AddAuthenticationPersistence already uses for AuthReadOnlyDbContext: unset,
-        // empty or whitespace means "use the default connection", so the check is always registered —
-        // matching AuthReadOnlyDbContext, which always exists whether or not the key is set.
         builder.Services
             .AddHealthChecks()
             .AddNpgSql(
@@ -77,24 +66,6 @@ public static class ServiceRegistrationExtensions
                             "Connection string '{0}' is not configured.",
                             ConfigurationConstants.DefaultConnection)),
                 name: "postgres",
-                tags: [HealthCheckConstants.ReadyTag])
-            .AddNpgSql(
-                connectionStringFactory: sp =>
-                {
-                    var configuration = sp.GetRequiredService<IConfiguration>();
-                    var readOnlyConnectionString =
-                        configuration.GetConnectionString(ConfigurationConstants.ReadOnlyConnection);
-
-                    return string.IsNullOrWhiteSpace(readOnlyConnectionString)
-                        ? configuration.GetConnectionString(ConfigurationConstants.DefaultConnection)
-                            ?? throw new InvalidOperationException(
-                                string.Format(
-                                    CultureInfo.InvariantCulture,
-                                    "Connection string '{0}' is not configured.",
-                                    ConfigurationConstants.DefaultConnection))
-                        : readOnlyConnectionString;
-                },
-                name: "postgres-readonly",
                 tags: [HealthCheckConstants.ReadyTag]);
 
         // Register exception handlers in chain order — DefaultExceptionHandler must be last (catch-all)

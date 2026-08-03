@@ -54,6 +54,12 @@ public static class ServiceRegistrationExtensions
                     "Connection string '{0}' is not configured.",
                     ConfigurationConstants.DefaultConnection));
 
+        // Resolved lazily, from the built IServiceProvider, so the probe targets the same connection
+        // string AddAuthenticationPersistence hands the DbContexts — a readiness check that passes
+        // against a different database than the app uses is worse than no check at all. Reading
+        // builder.Configuration eagerly here is what makes them diverge: under
+        // WebApplicationFactory the test host's overrides are only layered on once the host finishes
+        // building, so an eager read captures appsettings.json's "<SECRETS>" placeholder instead.
         builder.Services
             .AddHealthChecks()
             .AddNpgSql(

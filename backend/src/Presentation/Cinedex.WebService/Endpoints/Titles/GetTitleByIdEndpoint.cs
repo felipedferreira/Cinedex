@@ -1,9 +1,8 @@
 using Cinedex.Application.Titles.GetTitleById;
 using Cinedex.WebService.Constants;
 using FastEndpoints;
-
-using FoundryOceanus.WebService.Contracts.Requests;
 using FoundryOceanus.WebService.Contracts.Responses;
+
 namespace Cinedex.WebService.Endpoints.Titles;
 
 internal sealed class GetTitleByIdEndpoint(IGetTitleByIdHandler handler) : EndpointWithoutRequest<TitleDetailsResponse>

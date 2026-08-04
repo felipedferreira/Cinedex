@@ -5,11 +5,9 @@
 
     <!-- NuGet Package Metadata (package-specific) -->
     <PackageId>FoundryOceanus.WebService.Contracts</PackageId>
-    <Title>Oceanus Web Service Contracts</Title>
+    <Title>FoundryOceanus Web Service Contracts</Title>
     <Authors>Felipe Ferreira</Authors>
-    <Description>DTOs and contract classes for the Cinedex Web Service API</Description>
-    <PackageProjectUrl>https://github.com/felipedferreira/Cinedex</PackageProjectUrl>
-    <RepositoryUrl>https://github.com/felipedferreira/Cinedex</RepositoryUrl>
+    <Description>Shared DTOs and contract classes for web service APIs</Description>
     <PackageTags>movies;api;contracts;dto</PackageTags>
     <PackageReadmeFile>README.md</PackageReadmeFile>
   </PropertyGroup>

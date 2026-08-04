@@ -1,8 +1,8 @@
 using System.Net;
 using System.Net.Http.Json;
-using Cinedex.WebService.Contracts.Enums;
-using Cinedex.WebService.Contracts.Requests;
 using Cinedex.WebService.IntegrationTests.Constants;
+using FoundryOceanus.WebService.Contracts.Enums;
+using FoundryOceanus.WebService.Contracts.Requests;
 
 namespace Cinedex.WebService.IntegrationTests.Titles;
 

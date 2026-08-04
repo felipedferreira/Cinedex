@@ -1,8 +1,8 @@
 using System.Net;
 using System.Net.Http.Json;
-using Cinedex.WebService.Contracts.Requests;
-using Cinedex.WebService.Contracts.Responses;
 using Cinedex.WebService.IntegrationTests.Constants;
+using FoundryOceanus.WebService.Contracts.Requests;
+using FoundryOceanus.WebService.Contracts.Responses;
 
 namespace Cinedex.WebService.IntegrationTests.Genres;
 

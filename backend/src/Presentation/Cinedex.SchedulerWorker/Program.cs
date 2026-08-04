@@ -1,9 +1,9 @@
 using Cinedex.Auth.Identity;
+using FoundryOceanus.Observability.OpenTelemetry.Extensions;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
-using FoundryOceanus.Observability.OpenTelemetry.Extensions;
 
 namespace Cinedex.SchedulerWorker;
 

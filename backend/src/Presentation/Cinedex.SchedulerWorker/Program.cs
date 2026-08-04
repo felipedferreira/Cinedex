@@ -3,7 +3,7 @@ using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
-using Oceanus.Observability.OpenTelemetry.Extensions;
+using FoundryOceanus.Observability.OpenTelemetry.Extensions;
 
 namespace Cinedex.SchedulerWorker;
 

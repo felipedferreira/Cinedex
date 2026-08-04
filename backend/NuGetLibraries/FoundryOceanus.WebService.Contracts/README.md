@@ -5,7 +5,7 @@ This NuGet package contains the DTOs (Data Transfer Objects) and contract classe
 ## Installation
 
 ```bash
-dotnet add package Oceanus.WebService.Contracts
+dotnet add package FoundryOceanus.WebService.Contracts
 ```
 
 ## Contents
@@ -48,8 +48,8 @@ Write operations do not return resource DTOs in the response body. Clients shoul
 ## Usage Example
 
 ```csharp
-using Oceanus.WebService.Contracts.Requests;
-using Oceanus.WebService.Contracts.Responses;
+using FoundryOceanus.WebService.Contracts.Requests;
+using FoundryOceanus.WebService.Contracts.Responses;
 
 var request = new CreateTitlesRequest
 {

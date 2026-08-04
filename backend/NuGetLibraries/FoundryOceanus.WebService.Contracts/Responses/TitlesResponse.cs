@@ -1,4 +1,4 @@
-namespace Oceanus.WebService.Contracts.Responses;
+namespace FoundryOceanus.WebService.Contracts.Responses;
 
 public class TitlesResponse
 {

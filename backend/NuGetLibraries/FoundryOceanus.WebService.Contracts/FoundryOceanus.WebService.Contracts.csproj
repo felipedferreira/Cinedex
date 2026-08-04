@@ -10,7 +10,7 @@
     <Description>Shared DTOs and contract classes for web service APIs</Description>
     <PackageProjectUrl>https://github.com/felipedferreira/Cinedex</PackageProjectUrl>
     <RepositoryUrl>https://github.com/felipedferreira/Cinedex</RepositoryUrl>
-    <PackageTags>movies;api;contracts;dto</PackageTags>
+    <PackageTags>api;contracts;dto;rest</PackageTags>
     <PackageReadmeFile>README.md</PackageReadmeFile>
   </PropertyGroup>
 

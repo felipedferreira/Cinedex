@@ -21,10 +21,10 @@
   </Folder>
   <Folder Name="/nuget-libraries/">
     <Project Path="NuGetLibraries\FoundryOceanus.Observability.OpenTelemetry\FoundryOceanus.Observability.OpenTelemetry.csproj" />
+    <Project Path="NuGetLibraries\FoundryOceanus.Persistence.Abstractions\FoundryOceanus.Persistence.Abstractions.csproj" />
+    <Project Path="NuGetLibraries\FoundryOceanus.Persistence.EntityFrameworkCore\FoundryOceanus.Persistence.EntityFrameworkCore.csproj" />
+    <Project Path="NuGetLibraries\FoundryOceanus.Persistence.EntityFrameworkCore.Postgres\FoundryOceanus.Persistence.EntityFrameworkCore.Postgres.csproj" />
     <Project Path="NuGetLibraries\FoundryOceanus.WebService.Contracts\FoundryOceanus.WebService.Contracts.csproj" />
-    <Project Path="NuGetLibraries\Cinedex.Persistence.Abstractions\Cinedex.Persistence.Abstractions.csproj" />
-    <Project Path="NuGetLibraries\Cinedex.Persistence.EntityFrameworkCore\Cinedex.Persistence.EntityFrameworkCore.csproj" />
-    <Project Path="NuGetLibraries\Cinedex.Persistence.EntityFrameworkCore.Postgres\Cinedex.Persistence.EntityFrameworkCore.Postgres.csproj" />
   </Folder>
   <Folder Name="/src/" />
   <Folder Name="/src/1 - Presentation/">

@@ -1,4 +1,4 @@
-using Cinedex.Persistence.Abstractions;
+using FoundryOceanus.Persistence.Abstractions;
 
 namespace Cinedex.Persistence.Tests.Fakes;
 

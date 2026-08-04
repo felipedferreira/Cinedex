@@ -1,9 +1,9 @@
-using Cinedex.Persistence.Abstractions;
-using Cinedex.Persistence.EntityFrameworkCore;
-using Cinedex.Persistence.EntityFrameworkCore.DependencyInjection;
-using Cinedex.Persistence.EntityFrameworkCore.Postgres;
-using Cinedex.Persistence.EntityFrameworkCore.Postgres.DependencyInjection;
 using Cinedex.Persistence.Tests.Fakes;
+using FoundryOceanus.Persistence.Abstractions;
+using FoundryOceanus.Persistence.EntityFrameworkCore;
+using FoundryOceanus.Persistence.EntityFrameworkCore.DependencyInjection;
+using FoundryOceanus.Persistence.EntityFrameworkCore.Postgres;
+using FoundryOceanus.Persistence.EntityFrameworkCore.Postgres.DependencyInjection;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
 

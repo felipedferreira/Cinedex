@@ -1,0 +1,32 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <IsPackable>true</IsPackable>
+
+    <!-- NuGet Package Metadata (package-specific) -->
+    <PackageId>FoundryOceanus.Persistence.Abstractions</PackageId>
+    <Title>FoundryOceanus Persistence Abstractions</Title>
+    <Authors>Felipe Ferreira</Authors>
+    <Description>Storage-agnostic unit-of-work, transaction and repository ports. Referenced by application/domain code so business logic never depends on an ORM.</Description>
+    <PackageProjectUrl>https://github.com/felipedferreira/Cinedex</PackageProjectUrl>
+    <RepositoryUrl>https://github.com/felipedferreira/Cinedex</RepositoryUrl>
+    <PackageTags>unit-of-work;repository;persistence;abstractions;hexagonal;ports-and-adapters</PackageTags>
+    <PackageReadmeFile>README.md</PackageReadmeFile>
+  </PropertyGroup>
+
+  <!--
+    This project has no PackageReference entries, and that is the single most important fact about
+    it. It is what the application layer depends on, so anything added here is something business
+    logic transitively depends on. Adding Microsoft.EntityFrameworkCore here — even "just for the
+    DbContext type" — would invert the dependency this whole library exists to keep pointing inward.
+
+    If something here seems to need EF, it belongs in FoundryOceanus.Persistence.EntityFrameworkCore.
+  -->
+
+  <ItemGroup>
+    <None Include="README.md" Pack="true" PackagePath="\" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Update="StyleCop.Analyzers" PrivateAssets="all" />
+  </ItemGroup>
+</Project>

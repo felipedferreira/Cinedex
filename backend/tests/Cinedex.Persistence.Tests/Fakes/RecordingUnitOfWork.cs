@@ -1,5 +1,5 @@
-using Cinedex.Persistence.Abstractions;
-using Cinedex.Persistence.Abstractions.Transactions;
+using FoundryOceanus.Persistence.Abstractions;
+using FoundryOceanus.Persistence.Abstractions.Transactions;
 
 namespace Cinedex.Persistence.Tests.Fakes;
 

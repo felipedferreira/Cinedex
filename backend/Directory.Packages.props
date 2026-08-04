@@ -59,7 +59,7 @@
     <PackageVersion Include="EFCore.NamingConventions" Version="10.0.1" />
     <PackageVersion Include="Microsoft.EntityFrameworkCore.Design" Version="10.0.2" />
     <!--
-      Relational (not the full provider) is what NuGetLibraries/Cinedex.Persistence.EntityFrameworkCore
+      Relational (not the full provider) is what NuGetLibraries/FoundryOceanus.Persistence.EntityFrameworkCore
       depends on: it carries IDbContextTransaction and savepoint support without pinning that package
       to PostgreSQL. The Npgsql-specific half lives in the .Postgres package alongside it.
     -->

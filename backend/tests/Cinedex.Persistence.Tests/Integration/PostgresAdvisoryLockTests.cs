@@ -1,7 +1,7 @@
-using Cinedex.Persistence.Abstractions;
-using Cinedex.Persistence.Abstractions.Transactions;
-using Cinedex.Persistence.EntityFrameworkCore.Postgres;
 using Cinedex.Persistence.Tests.Fakes;
+using FoundryOceanus.Persistence.Abstractions;
+using FoundryOceanus.Persistence.Abstractions.Transactions;
+using FoundryOceanus.Persistence.EntityFrameworkCore.Postgres;
 using Microsoft.Extensions.DependencyInjection;
 
 namespace Cinedex.Persistence.Tests.Integration;

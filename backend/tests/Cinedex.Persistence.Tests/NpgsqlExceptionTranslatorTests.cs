@@ -1,5 +1,5 @@
-using Cinedex.Persistence.Abstractions.Exceptions;
-using Cinedex.Persistence.EntityFrameworkCore.Postgres;
+using FoundryOceanus.Persistence.Abstractions.Exceptions;
+using FoundryOceanus.Persistence.EntityFrameworkCore.Postgres;
 using Microsoft.EntityFrameworkCore;
 using Npgsql;
 

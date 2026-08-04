@@ -1,4 +1,4 @@
-using Cinedex.Persistence.EntityFrameworkCore;
+using FoundryOceanus.Persistence.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore;
 
 namespace Cinedex.Persistence.Tests.Fakes;

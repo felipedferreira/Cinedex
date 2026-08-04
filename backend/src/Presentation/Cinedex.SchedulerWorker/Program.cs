@@ -1,9 +1,9 @@
 using Cinedex.Auth.Identity;
-using Cinedex.Observability.OpenTelemetry.Extensions;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
+using Oceanus.Observability.OpenTelemetry.Extensions;
 
 namespace Cinedex.SchedulerWorker;
 

@@ -1,6 +1,6 @@
-# Cinedex.Observability.OpenTelemetry
+# Oceanus.Observability.OpenTelemetry
 
-Shared OpenTelemetry setup for Cinedex services. Provides logging and tracing exported to Seq over OTLP.
+Shared OpenTelemetry setup for .NET services. Provides logging and tracing exported to OTLP collectors (e.g., Seq).
 
 `AddObservability` hangs off `IHostApplicationBuilder`, so the same call works for console hosts
 (`Host.CreateApplicationBuilder`) and web hosts (`WebApplication.CreateBuilder`). Each host passes its
@@ -11,7 +11,7 @@ own instrumentation through `configureTracing`.
 ### Generic host (e.g. DatabaseMigrator, SchedulerWorker)
 
 ```csharp
-using Cinedex.Observability.OpenTelemetry.Extensions;
+using Oceanus.Observability.OpenTelemetry.Extensions;
 
 HostApplicationBuilder builder = Host.CreateApplicationBuilder(args);
 
@@ -23,7 +23,7 @@ builder.AddObservability(
 ### Web host (ASP.NET Core)
 
 ```csharp
-using Cinedex.Observability.OpenTelemetry.Extensions;
+using Oceanus.Observability.OpenTelemetry.Extensions;
 
 var builder = WebApplication.CreateBuilder(args);
 

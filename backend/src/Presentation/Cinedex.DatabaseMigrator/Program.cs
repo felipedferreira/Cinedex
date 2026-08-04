@@ -1,9 +1,9 @@
 using Cinedex.Auth.Identity;
-using Cinedex.Observability.OpenTelemetry.Extensions;
 using Cinedex.Persistence.Postgres;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
+using Oceanus.Observability.OpenTelemetry.Extensions;
 
 namespace Cinedex.DatabaseMigrator;
 

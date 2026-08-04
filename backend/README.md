@@ -17,7 +17,7 @@ genre does not hold a back-reference to movies.
 - **Titles reference genres by id** — `CreateTitlesRequest`/`UpdateTitlesRequest` carry a `GenreIds` collection, and title responses include the linked genres.
 - **Seeded data** — the database ships with 17 common genres (Action, Comedy, Drama, …) so movies can be tagged immediately.
 
-See the [contracts README](NuGetLibraries/Oceanus.WebService.Contracts/README.md) for the request/response DTOs.
+See the [contracts README](NuGetLibraries/FoundryOceanus.WebService.Contracts/README.md) for the request/response DTOs.
 
 ## 🔐 Authentication
 
@@ -173,8 +173,8 @@ for why auth is isolated in its own schema.
 - **[Design docs](../docs/README.md)** - Why the system is shaped this way
   - [Auth & Security Model](../docs/auth-security-model.md) - JWT, refresh rotation, the `auth` schema
 - **[Changelog](../CHANGELOG.md)** - Version history and release notes
-- **[NuGetLibraries](NuGetLibraries/Oceanus.WebService.Contracts/README.md)** - NuGet package documentation
-  - Oceanus.WebService.Contracts - API contracts and DTOs
+- **[NuGetLibraries](NuGetLibraries/FoundryOceanus.WebService.Contracts/README.md)** - NuGet package documentation
+  - FoundryOceanus.WebService.Contracts - API contracts and DTOs
 
 ## 🚀 Quick Start
 
@@ -429,7 +429,7 @@ backend/
 │   ├── Application/                      # use cases + ports (Abstractions/)
 │   └── Domain/                           # entities, no outward dependencies
 └── NuGetLibraries/
-    └── Oceanus.WebService.Contracts/      # shared API DTOs
+    └── FoundryOceanus.WebService.Contracts/      # shared API DTOs
 ```
 
 ## Project Descriptions

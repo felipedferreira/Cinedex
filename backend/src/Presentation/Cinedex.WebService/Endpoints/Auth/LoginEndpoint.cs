@@ -1,7 +1,7 @@
 using Cinedex.Application.Auth.Login;
 using Cinedex.WebService.Constants;
-using Oceanus.WebService.Contracts.Requests;
-using Oceanus.WebService.Contracts.Responses;
+using FoundryOceanus.WebService.Contracts.Requests;
+using FoundryOceanus.WebService.Contracts.Responses;
 using Cinedex.WebService.Http;
 using FastEndpoints;
 

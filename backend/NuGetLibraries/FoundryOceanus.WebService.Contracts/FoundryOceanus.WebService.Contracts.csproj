@@ -4,7 +4,7 @@
     <IsPackable>true</IsPackable>
 
     <!-- NuGet Package Metadata (package-specific) -->
-    <PackageId>Oceanus.WebService.Contracts</PackageId>
+    <PackageId>FoundryOceanus.WebService.Contracts</PackageId>
     <Title>Oceanus Web Service Contracts</Title>
     <Authors>Felipe Ferreira</Authors>
     <Description>DTOs and contract classes for the Cinedex Web Service API</Description>

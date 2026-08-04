@@ -1,6 +1,6 @@
 using Cinedex.Application.Genres.ListGenres;
 using Cinedex.WebService.Constants;
-using Oceanus.WebService.Contracts.Responses;
+using FoundryOceanus.WebService.Contracts.Responses;
 using FastEndpoints;
 
 namespace Cinedex.WebService.Endpoints.Genres;

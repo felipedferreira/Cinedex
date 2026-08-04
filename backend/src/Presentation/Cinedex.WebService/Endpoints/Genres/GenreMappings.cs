@@ -1,8 +1,8 @@
 using Cinedex.Application.Genres;
 using Cinedex.Application.Genres.CreateGenre;
 using Cinedex.Application.Genres.UpdateGenre;
-using Oceanus.WebService.Contracts.Requests;
-using Oceanus.WebService.Contracts.Responses;
+using FoundryOceanus.WebService.Contracts.Requests;
+using FoundryOceanus.WebService.Contracts.Responses;
 
 namespace Cinedex.WebService.Endpoints.Genres;
 

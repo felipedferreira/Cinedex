@@ -2,8 +2,8 @@ using Cinedex.Application.Titles.CreateTitle;
 using Cinedex.WebService.Constants;
 using FastEndpoints;
 
-using Oceanus.WebService.Contracts.Requests;
-using Oceanus.WebService.Contracts.Responses;
+using FoundryOceanus.WebService.Contracts.Requests;
+using FoundryOceanus.WebService.Contracts.Responses;
 namespace Cinedex.WebService.Endpoints.Titles;
 
 internal sealed class CreateTitleEndpoint(ICreateTitleHandler handler) : Endpoint<CreateTitlesRequest, EmptyResponse>

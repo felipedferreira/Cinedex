@@ -1,4 +1,4 @@
-namespace Oceanus.WebService.Contracts.Enums;
+namespace FoundryOceanus.WebService.Contracts.Enums;
 
 public enum TitleType
 {

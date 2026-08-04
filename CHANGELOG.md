@@ -9,7 +9,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
-## [0.7.0] - August 3 2026 Orchestration, Email & Token Hardening
+## [0.8.0] - August 4 2026 Persistence Ports & the FoundryOceanus Split
 
 ### Added
 - **Database migrations applied automatically on the Compose path (`Cinedex.DatabaseMigrator`)** - A new run-to-completion .NET Generic Host presentation project that applies the EF Core migrations for both `FilmDbContext` and `AuthDbContext` and then exits, wired into Compose as `movies.databasemigrator`. The web service and the scheduler worker gate on it with `condition: service_completed_successfully`, so neither can start against an unmigrated schema, and the migrator itself waits for Postgres and Seq to report healthy. This retires the manual step on the Compose path — two `dotnet ef database update` invocations, one per `DbContext`. It does not change a bare `dotnet run`, which still applies nothing.

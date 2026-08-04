@@ -115,7 +115,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - `src/Core/` dissolved; `Cinedex.Application` and `Cinedex.Domain` now sit directly under `src/`
   - Updated all `ProjectReference` paths, `Movies.slnx` solution folders, `Dockerfile` COPY paths, and `compose.yaml`
 - **`Directory.Packages.props`** - Centralized versions for `FastEndpoints`, `FluentValidation`, and `Microsoft.Extensions.DependencyInjection.Abstractions`
-- **`Cinedex.WebService.csproj`** - Added `FastEndpoints` package reference and a project reference to `Cinedex.WebService.Contracts`
+- **`Cinedex.WebService.csproj`** - Added `FastEndpoints` package reference and a project reference to `Oceanus.WebService.Contracts`
 - **`Cinedex.Application.csproj`** - Added `Microsoft.Extensions.DependencyInjection.Abstractions` and `FluentValidation`
 - **Dockerfile** - Fixed build paths; added copying of `Directory.Build.props`, `Directory.Packages.props`, and explicit COPY steps for all layer dependencies before restore
 - **Clean-architecture cleanup** - Renamed `Cinedex.Persistance.Postgres` → `Cinedex.Persistence.Postgres` (typo fix); merged `Cinedex.Application.Abstractions` into `Cinedex.Application`
@@ -168,7 +168,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - `resharper_blank_lines_after_block_statements = 1` - Blank lines after block statements
 
 ### Fixed
-- **Build configuration** - Added `GenerateDocumentationFile=true` to `Cinedex.WebService.Contracts.csproj`
+- **Build configuration** - Added `GenerateDocumentationFile=true` to `Oceanus.WebService.Contracts.csproj`
   - Enables IDE0005 (Remove unnecessary imports) rule enforcement on build
 
 ---
@@ -249,7 +249,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - Cinedex.Application (business logic)
   - Cinedex.Application.Abstractions (interfaces)
   - Cinedex.Persistence.Postgres (data access)
-  - Cinedex.WebService.Contracts (DTOs)
+  - Oceanus.WebService.Contracts (DTOs)
   - Integration tests project
 - **WeatherForecast endpoint** - Sample endpoint implementation
 

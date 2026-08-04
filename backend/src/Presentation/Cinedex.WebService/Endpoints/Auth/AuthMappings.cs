@@ -3,8 +3,8 @@ using Cinedex.Application.Auth.ForgotPassword;
 using Cinedex.Application.Auth.Login;
 using Cinedex.Application.Auth.RegisterUser;
 using Cinedex.Application.Auth.ResetPassword;
-using Cinedex.WebService.Contracts.Requests;
-using Cinedex.WebService.Contracts.Responses;
+using Oceanus.WebService.Contracts.Requests;
+using Oceanus.WebService.Contracts.Responses;
 
 namespace Cinedex.WebService.Endpoints.Auth;
 

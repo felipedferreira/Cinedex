@@ -1,6 +1,6 @@
 using Cinedex.Application.Auth.ResetPassword;
 using Cinedex.WebService.Constants;
-using Cinedex.WebService.Contracts.Requests;
+using Oceanus.WebService.Contracts.Requests;
 using FastEndpoints;
 
 namespace Cinedex.WebService.Endpoints.Auth;

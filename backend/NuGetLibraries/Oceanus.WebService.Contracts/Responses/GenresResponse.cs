@@ -1,4 +1,4 @@
-namespace Cinedex.WebService.Contracts.Responses;
+namespace Oceanus.WebService.Contracts.Responses;
 
 public class GenresResponse
 {

@@ -1,5 +1,5 @@
-using Cinedex.Observability.OpenTelemetry.Extensions;
 using Cinedex.WebService.Extensions;
+using Oceanus.Observability.OpenTelemetry.Extensions;
 using OpenTelemetry.Trace;
 
 namespace Cinedex.WebService;

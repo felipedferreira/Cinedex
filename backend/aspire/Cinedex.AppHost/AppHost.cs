@@ -12,7 +12,7 @@ namespace Cinedex.AppHost;
 /// </para>
 /// <para>
 /// There is no <c>Cinedex.ServiceDefaults</c> project on purpose. Every host already calls
-/// <c>AddObservability()</c> from <c>Cinedex.Observability.OpenTelemetry</c>, which reads the standard
+/// <c>AddObservability()</c> from <c>FoundryOceanus.Observability.OpenTelemetry</c>, which reads the standard
 /// <c>OTEL_EXPORTER_OTLP_*</c> variables this AppHost injects — so logs and traces reach the Aspire
 /// dashboard with no change to any service. Health endpoints already exist too. The only things
 /// ServiceDefaults would add are service discovery and HTTP resilience defaults, neither of which

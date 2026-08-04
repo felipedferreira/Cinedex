@@ -1,6 +1,6 @@
-# Oceanus Web Service Contracts
+# FoundryOceanus Web Service Contracts
 
-This NuGet package contains the DTOs (Data Transfer Objects) and contract classes for the Cinedex Web Service API.
+This NuGet package contains the DTOs (Data Transfer Objects) and contract classes for the web service API.
 
 ## Installation
 

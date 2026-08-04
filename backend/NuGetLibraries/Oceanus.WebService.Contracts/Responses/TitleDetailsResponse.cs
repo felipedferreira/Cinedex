@@ -1,8 +1,8 @@
-using Cinedex.WebService.Contracts.Enums;
+using Oceanus.WebService.Contracts.Enums;
 
-namespace Cinedex.WebService.Contracts.Responses;
+namespace Oceanus.WebService.Contracts.Responses;
 
-public class TitleResponse
+public class TitleDetailsResponse
 {
     public required Guid Id { get; init; }
 
@@ -13,4 +13,6 @@ public class TitleResponse
     public required int YearOfRelease { get; init; }
 
     public string? Description { get; init; }
+
+    public IEnumerable<GenreResponse> Genres { get; init; } = Enumerable.Empty<GenreResponse>();
 }

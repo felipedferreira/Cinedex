@@ -21,7 +21,7 @@
   </Folder>
   <Folder Name="/nuget-libraries/">
     <Project Path="NuGetLibraries\Oceanus.Observability.OpenTelemetry\Oceanus.Observability.OpenTelemetry.csproj" />
-    <Project Path="NuGetLibraries\Cinedex.WebService.Contracts\Cinedex.WebService.Contracts.csproj" />
+    <Project Path="NuGetLibraries\Oceanus.WebService.Contracts\Oceanus.WebService.Contracts.csproj" />
   </Folder>
   <Folder Name="/src/" />
   <Folder Name="/src/1 - Presentation/">

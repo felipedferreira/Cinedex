@@ -1,4 +1,4 @@
-namespace Cinedex.WebService.Contracts.Responses;
+namespace Oceanus.WebService.Contracts.Responses;
 
 /// <summary>
 /// The access token issued by login or refresh. The refresh token is not included: it is returned

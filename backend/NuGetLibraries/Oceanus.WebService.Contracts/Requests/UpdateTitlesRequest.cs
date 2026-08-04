@@ -1,8 +1,8 @@
-using Cinedex.WebService.Contracts.Enums;
+using Oceanus.WebService.Contracts.Enums;
 
-namespace Cinedex.WebService.Contracts.Requests;
+namespace Oceanus.WebService.Contracts.Requests;
 
-public class CreateTitlesRequest
+public class UpdateTitlesRequest
 {
     public required string Title { get; init; } = string.Empty;
 

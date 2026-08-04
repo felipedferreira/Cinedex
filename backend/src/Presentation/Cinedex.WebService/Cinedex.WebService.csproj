@@ -36,7 +36,7 @@
       <ProjectReference Include="..\..\Application\Cinedex.Application.csproj" />
       <ProjectReference Include="..\..\Domain\Cinedex.Domain.csproj" />
       <ProjectReference Include="..\..\..\NuGetLibraries\Oceanus.Observability.OpenTelemetry\Oceanus.Observability.OpenTelemetry.csproj" />
-      <ProjectReference Include="..\..\..\NuGetLibraries\Cinedex.WebService.Contracts\Cinedex.WebService.Contracts.csproj" />
+      <ProjectReference Include="..\..\..\NuGetLibraries\Oceanus.WebService.Contracts\Oceanus.WebService.Contracts.csproj" />
     </ItemGroup>
 
 

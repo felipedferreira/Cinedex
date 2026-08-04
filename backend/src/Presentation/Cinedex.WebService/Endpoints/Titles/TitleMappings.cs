@@ -2,11 +2,11 @@ using Cinedex.Application.Titles;
 using Cinedex.Application.Titles.CreateTitle;
 using Cinedex.Application.Titles.UpdateTitle;
 using Cinedex.WebService.Endpoints.Genres;
-using ContractTitleType = Oceanus.WebService.Contracts.Enums.TitleType;
+using ContractTitleType = FoundryOceanus.WebService.Contracts.Enums.TitleType;
 using DomainTitleType = Cinedex.Domain.Enums.TitleType;
 
-using Oceanus.WebService.Contracts.Requests;
-using Oceanus.WebService.Contracts.Responses;
+using FoundryOceanus.WebService.Contracts.Requests;
+using FoundryOceanus.WebService.Contracts.Responses;
 namespace Cinedex.WebService.Endpoints.Titles;
 
 internal static class TitleMappings

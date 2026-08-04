@@ -1,8 +1,8 @@
-using Oceanus.WebService.Contracts.Enums;
+using FoundryOceanus.WebService.Contracts.Enums;
 
-namespace Oceanus.WebService.Contracts.Responses;
+namespace FoundryOceanus.WebService.Contracts.Responses;
 
-public class TitleDetailsResponse
+public class TitleResponse
 {
     public required Guid Id { get; init; }
 
@@ -13,6 +13,4 @@ public class TitleDetailsResponse
     public required int YearOfRelease { get; init; }
 
     public string? Description { get; init; }
-
-    public IEnumerable<GenreResponse> Genres { get; init; } = Enumerable.Empty<GenreResponse>();
 }

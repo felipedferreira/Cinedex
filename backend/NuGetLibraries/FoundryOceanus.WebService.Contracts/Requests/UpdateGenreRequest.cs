@@ -1,4 +1,4 @@
-namespace Oceanus.WebService.Contracts.Requests;
+namespace FoundryOceanus.WebService.Contracts.Requests;
 
 public class UpdateGenreRequest
 {

@@ -3,7 +3,7 @@
     <IsPackable>true</IsPackable>
 
     <!-- NuGet Package Metadata (package-specific) -->
-    <PackageId>Oceanus.Observability.OpenTelemetry</PackageId>
+    <PackageId>FoundryOceanus.Observability.OpenTelemetry</PackageId>
     <Title>Oceanus OpenTelemetry Observability</Title>
     <Authors>Felipe Ferreira</Authors>
     <Description>Shared OpenTelemetry logging and tracing setup for .NET services, exported to OTLP collectors (e.g., Seq).</Description>

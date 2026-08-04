@@ -27,7 +27,7 @@ Compose, plus the one manual setup step (Seq), a "try it out" walkthrough, and t
 | [Root README](../README.md) | Repository layout, quick start teaser. |
 | [Backend README](../backend/README.md) | Architecture guide, migrations, health checks, observability reference, coverage. |
 | [Frontend README](../frontend/cinadex-ui/README.md) | `cinadex-ui` stack, scripts, linting, testing. |
-| [Contracts README](../backend/NuGetLibraries/Oceanus.WebService.Contracts/README.md) | Shared request/response DTOs. |
+| [Contracts README](../backend/NuGetLibraries/FoundryOceanus.WebService.Contracts/README.md) | Shared request/response DTOs. |
 | [CONTRIBUTING](../CONTRIBUTING.md) | Workflow, code standards, PR checklist. |
 | [CHANGELOG](../CHANGELOG.md) | Version history. |
 

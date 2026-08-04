@@ -1,6 +1,6 @@
 using Cinedex.Application.Auth.ForgotPassword;
 using Cinedex.WebService.Constants;
-using Oceanus.WebService.Contracts.Requests;
+using FoundryOceanus.WebService.Contracts.Requests;
 using FastEndpoints;
 
 namespace Cinedex.WebService.Endpoints.Auth;

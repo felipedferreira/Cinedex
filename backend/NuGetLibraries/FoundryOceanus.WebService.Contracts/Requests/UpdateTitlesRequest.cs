@@ -1,6 +1,6 @@
-using Oceanus.WebService.Contracts.Enums;
+using FoundryOceanus.WebService.Contracts.Enums;
 
-namespace Oceanus.WebService.Contracts.Requests;
+namespace FoundryOceanus.WebService.Contracts.Requests;
 
 public class UpdateTitlesRequest
 {

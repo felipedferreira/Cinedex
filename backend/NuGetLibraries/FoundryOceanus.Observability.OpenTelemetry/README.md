@@ -1,4 +1,4 @@
-# Oceanus.Observability.OpenTelemetry
+# FoundryOceanus.Observability.OpenTelemetry
 
 Shared OpenTelemetry setup for .NET services. Provides logging and tracing exported to OTLP collectors (e.g., Seq).
 
@@ -11,7 +11,7 @@ own instrumentation through `configureTracing`.
 ### Generic host (e.g. DatabaseMigrator, SchedulerWorker)
 
 ```csharp
-using Oceanus.Observability.OpenTelemetry.Extensions;
+using FoundryOceanus.Observability.OpenTelemetry.Extensions;
 
 HostApplicationBuilder builder = Host.CreateApplicationBuilder(args);
 
@@ -23,7 +23,7 @@ builder.AddObservability(
 ### Web host (ASP.NET Core)
 
 ```csharp
-using Oceanus.Observability.OpenTelemetry.Extensions;
+using FoundryOceanus.Observability.OpenTelemetry.Extensions;
 
 var builder = WebApplication.CreateBuilder(args);
 

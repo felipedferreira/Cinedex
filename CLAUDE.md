@@ -5,7 +5,7 @@ Full-stack movie catalog (IMDB-inspired portfolio app): .NET 10 backend + React 
 ## Layout
 
 - `backend/` — .NET solution (`Cinedex.slnx`), hexagonal architecture. Details in `backend/CLAUDE.md`.
-- `backend/aspire/Cinedex.AppHost/` — Aspire orchestration for local dev. There is deliberately **no ServiceDefaults project**; `NuGetLibraries/Oceanus.Observability.OpenTelemetry` already fills that role.
+- `backend/aspire/Cinedex.AppHost/` — Aspire orchestration for local dev. There is deliberately **no ServiceDefaults project**; `NuGetLibraries/FoundryOceanus.Observability.OpenTelemetry` already fills that role.
 - `frontend/cinadex-ui/` — React + TypeScript + Vite SPA (folder is spelled `cinadex`, not `cinedex`).
 - `docs/` — design docs (auth & security model); feature specs under `docs/superpowers/specs/`.
 - `compose.yaml` — full stack: Postgres 17, web service, UI + Nginx reverse proxy, Seq (logs/traces), Mailpit (dev mail sink).

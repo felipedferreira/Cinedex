@@ -1,11 +1,11 @@
-# Cinedex Web Service Contracts
+# Oceanus Web Service Contracts
 
 This NuGet package contains the DTOs (Data Transfer Objects) and contract classes for the Cinedex Web Service API.
 
 ## Installation
 
 ```bash
-dotnet add package Cinedex.WebService.Contracts
+dotnet add package Oceanus.WebService.Contracts
 ```
 
 ## Contents
@@ -48,8 +48,8 @@ Write operations do not return resource DTOs in the response body. Clients shoul
 ## Usage Example
 
 ```csharp
-using Cinedex.WebService.Contracts.Requests;
-using Cinedex.WebService.Contracts.Responses;
+using Oceanus.WebService.Contracts.Requests;
+using Oceanus.WebService.Contracts.Responses;
 
 var request = new CreateTitlesRequest
 {

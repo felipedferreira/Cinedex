@@ -1,8 +1,9 @@
 using Cinedex.Application.Genres.UpdateGenre;
 using Cinedex.WebService.Constants;
-using Cinedex.WebService.Contracts.Requests;
 using FastEndpoints;
 
+using Oceanus.WebService.Contracts.Requests;
+using Oceanus.WebService.Contracts.Responses;
 namespace Cinedex.WebService.Endpoints.Genres;
 
 internal sealed class UpdateGenreEndpoint(IUpdateGenreHandler handler) : Endpoint<UpdateGenreRequest>

@@ -8,6 +8,8 @@
     <Title>FoundryOceanus Web Service Contracts</Title>
     <Authors>Felipe Ferreira</Authors>
     <Description>Shared DTOs and contract classes for web service APIs</Description>
+    <PackageProjectUrl>https://github.com/felipedferreira/Cinedex</PackageProjectUrl>
+    <RepositoryUrl>https://github.com/felipedferreira/Cinedex</RepositoryUrl>
     <PackageTags>movies;api;contracts;dto</PackageTags>
     <PackageReadmeFile>README.md</PackageReadmeFile>
   </PropertyGroup>

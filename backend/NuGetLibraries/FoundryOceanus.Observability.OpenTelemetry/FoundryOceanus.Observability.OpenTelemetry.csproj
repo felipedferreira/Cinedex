@@ -7,6 +7,8 @@
     <Title>FoundryOceanus OpenTelemetry Observability</Title>
     <Authors>Felipe Ferreira</Authors>
     <Description>Shared OpenTelemetry logging and tracing setup for .NET services, exported to OTLP collectors (e.g., Seq).</Description>
+    <PackageProjectUrl>https://github.com/felipedferreira/Cinedex</PackageProjectUrl>
+    <RepositoryUrl>https://github.com/felipedferreira/Cinedex</RepositoryUrl>
     <PackageTags>observability;opentelemetry;logging;tracing;seq;otlp</PackageTags>
     <PackageReadmeFile>README.md</PackageReadmeFile>
   </PropertyGroup>

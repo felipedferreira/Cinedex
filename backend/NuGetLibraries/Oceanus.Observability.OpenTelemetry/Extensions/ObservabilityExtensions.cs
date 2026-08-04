@@ -1,15 +1,15 @@
-using Cinedex.Observability.OpenTelemetry.Constants;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
+using Oceanus.Observability.OpenTelemetry.Constants;
 using OpenTelemetry.Logs;
 using OpenTelemetry.Resources;
 using OpenTelemetry.Trace;
 
-namespace Cinedex.Observability.OpenTelemetry.Extensions;
+namespace Oceanus.Observability.OpenTelemetry.Extensions;
 
 /// <summary>
-/// Extension methods that wire up OpenTelemetry logging and tracing for any Cinedex host.
+/// Extension methods that wire up OpenTelemetry logging and tracing for any .NET host.
 /// </summary>
 public static class ObservabilityExtensions
 {

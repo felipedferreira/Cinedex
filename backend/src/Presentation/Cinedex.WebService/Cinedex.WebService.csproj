@@ -35,8 +35,8 @@
       <ProjectReference Include="..\..\Adapters\Cinedex.Persistence.Postgres\Cinedex.Persistence.Postgres.csproj" />
       <ProjectReference Include="..\..\Application\Cinedex.Application.csproj" />
       <ProjectReference Include="..\..\Domain\Cinedex.Domain.csproj" />
-      <ProjectReference Include="..\..\..\NuGetLibraries\Cinedex.Observability.OpenTelemetry\Cinedex.Observability.OpenTelemetry.csproj" />
-      <ProjectReference Include="..\..\..\NuGetLibraries\Cinedex.WebService.Contracts\Cinedex.WebService.Contracts.csproj" />
+      <ProjectReference Include="..\..\..\NuGetLibraries\FoundryOceanus.Observability.OpenTelemetry\FoundryOceanus.Observability.OpenTelemetry.csproj" />
+      <ProjectReference Include="..\..\..\NuGetLibraries\FoundryOceanus.WebService.Contracts\FoundryOceanus.WebService.Contracts.csproj" />
     </ItemGroup>
 
 

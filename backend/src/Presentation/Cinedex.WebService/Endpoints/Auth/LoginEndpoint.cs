@@ -1,9 +1,9 @@
 using Cinedex.Application.Auth.Login;
 using Cinedex.WebService.Constants;
-using Cinedex.WebService.Contracts.Requests;
-using Cinedex.WebService.Contracts.Responses;
 using Cinedex.WebService.Http;
 using FastEndpoints;
+using FoundryOceanus.WebService.Contracts.Requests;
+using FoundryOceanus.WebService.Contracts.Responses;
 
 namespace Cinedex.WebService.Endpoints.Auth;
 

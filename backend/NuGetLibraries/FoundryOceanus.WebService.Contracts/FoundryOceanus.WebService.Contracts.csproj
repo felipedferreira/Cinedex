@@ -4,10 +4,10 @@
     <IsPackable>true</IsPackable>
 
     <!-- NuGet Package Metadata (package-specific) -->
-    <PackageId>Cinedex.WebService.Contracts</PackageId>
-    <Title>Cinedex Web Service Contracts</Title>
+    <PackageId>FoundryOceanus.WebService.Contracts</PackageId>
+    <Title>FoundryOceanus Web Service Contracts</Title>
     <Authors>Felipe Ferreira</Authors>
-    <Description>DTOs and contract classes for the Cinedex Web Service API</Description>
+    <Description>Shared DTOs and contract classes for web service APIs</Description>
     <PackageProjectUrl>https://github.com/felipedferreira/Cinedex</PackageProjectUrl>
     <RepositoryUrl>https://github.com/felipedferreira/Cinedex</RepositoryUrl>
     <PackageTags>movies;api;contracts;dto</PackageTags>

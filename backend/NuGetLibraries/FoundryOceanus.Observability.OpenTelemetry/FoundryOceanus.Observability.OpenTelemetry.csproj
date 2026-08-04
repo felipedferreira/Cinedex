@@ -3,10 +3,10 @@
     <IsPackable>true</IsPackable>
 
     <!-- NuGet Package Metadata (package-specific) -->
-    <PackageId>Cinedex.Observability.OpenTelemetry</PackageId>
-    <Title>Cinedex OpenTelemetry Observability</Title>
+    <PackageId>FoundryOceanus.Observability.OpenTelemetry</PackageId>
+    <Title>FoundryOceanus OpenTelemetry Observability</Title>
     <Authors>Felipe Ferreira</Authors>
-    <Description>Shared OpenTelemetry logging and tracing setup for Cinedex services, exported to Seq via OTLP.</Description>
+    <Description>Shared OpenTelemetry logging and tracing setup for .NET services, exported to OTLP collectors (e.g., Seq).</Description>
     <PackageProjectUrl>https://github.com/felipedferreira/Cinedex</PackageProjectUrl>
     <RepositoryUrl>https://github.com/felipedferreira/Cinedex</RepositoryUrl>
     <PackageTags>observability;opentelemetry;logging;tracing;seq;otlp</PackageTags>

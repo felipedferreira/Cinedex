@@ -1,7 +1,7 @@
 using Cinedex.Application.Titles.ListTitles;
 using Cinedex.WebService.Constants;
-using Cinedex.WebService.Contracts.Responses;
 using FastEndpoints;
+using FoundryOceanus.WebService.Contracts.Responses;
 
 namespace Cinedex.WebService.Endpoints.Titles;
 

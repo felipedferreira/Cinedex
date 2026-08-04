@@ -1,4 +1,4 @@
-namespace Cinedex.Observability.OpenTelemetry.Constants;
+namespace FoundryOceanus.Observability.OpenTelemetry.Constants;
 
 /// <summary>
 /// Standard OpenTelemetry environment variable keys for OTLP export configuration.

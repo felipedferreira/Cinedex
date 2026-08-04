@@ -1,10 +1,10 @@
 using Cinedex.Application.Titles;
 using Cinedex.Application.Titles.CreateTitle;
 using Cinedex.Application.Titles.UpdateTitle;
-using Cinedex.WebService.Contracts.Requests;
-using Cinedex.WebService.Contracts.Responses;
 using Cinedex.WebService.Endpoints.Genres;
-using ContractTitleType = Cinedex.WebService.Contracts.Enums.TitleType;
+using FoundryOceanus.WebService.Contracts.Requests;
+using FoundryOceanus.WebService.Contracts.Responses;
+using ContractTitleType = FoundryOceanus.WebService.Contracts.Enums.TitleType;
 using DomainTitleType = Cinedex.Domain.Enums.TitleType;
 
 namespace Cinedex.WebService.Endpoints.Titles;

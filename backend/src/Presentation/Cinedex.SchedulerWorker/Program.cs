@@ -1,5 +1,5 @@
 using Cinedex.Auth.Identity;
-using Cinedex.Observability.OpenTelemetry.Extensions;
+using FoundryOceanus.Observability.OpenTelemetry.Extensions;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;

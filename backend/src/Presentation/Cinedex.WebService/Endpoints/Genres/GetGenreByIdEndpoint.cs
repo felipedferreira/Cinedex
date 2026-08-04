@@ -1,7 +1,7 @@
 using Cinedex.Application.Genres.GetGenreById;
 using Cinedex.WebService.Constants;
-using Cinedex.WebService.Contracts.Responses;
 using FastEndpoints;
+using FoundryOceanus.WebService.Contracts.Responses;
 
 namespace Cinedex.WebService.Endpoints.Genres;
 

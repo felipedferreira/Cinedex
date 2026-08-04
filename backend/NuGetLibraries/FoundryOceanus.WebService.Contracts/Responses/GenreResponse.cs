@@ -1,4 +1,4 @@
-namespace Cinedex.WebService.Contracts.Responses;
+namespace FoundryOceanus.WebService.Contracts.Responses;
 
 public class GenreResponse
 {

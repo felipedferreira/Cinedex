@@ -1,11 +1,9 @@
-using Cinedex.WebService.Contracts.Enums;
+using FoundryOceanus.WebService.Contracts.Enums;
 
-namespace Cinedex.WebService.Contracts.Responses;
+namespace FoundryOceanus.WebService.Contracts.Requests;
 
-public class TitleResponse
+public class CreateTitlesRequest
 {
-    public required Guid Id { get; init; }
-
     public required string Title { get; init; } = string.Empty;
 
     public required TitleType Type { get; init; }
@@ -13,4 +11,6 @@ public class TitleResponse
     public required int YearOfRelease { get; init; }
 
     public string? Description { get; init; }
+
+    public IEnumerable<Guid> GenreIds { get; init; } = Enumerable.Empty<Guid>();
 }

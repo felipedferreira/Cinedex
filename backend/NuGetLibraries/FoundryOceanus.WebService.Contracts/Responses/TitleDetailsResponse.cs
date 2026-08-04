@@ -1,6 +1,6 @@
-using Cinedex.WebService.Contracts.Enums;
+using FoundryOceanus.WebService.Contracts.Enums;
 
-namespace Cinedex.WebService.Contracts.Responses;
+namespace FoundryOceanus.WebService.Contracts.Responses;
 
 public class TitleDetailsResponse
 {

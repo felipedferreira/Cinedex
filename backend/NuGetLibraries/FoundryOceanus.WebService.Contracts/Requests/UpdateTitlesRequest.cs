@@ -1,8 +1,8 @@
-using Cinedex.WebService.Contracts.Enums;
+using FoundryOceanus.WebService.Contracts.Enums;
 
-namespace Cinedex.WebService.Contracts.Requests;
+namespace FoundryOceanus.WebService.Contracts.Requests;
 
-public class CreateTitlesRequest
+public class UpdateTitlesRequest
 {
     public required string Title { get; init; } = string.Empty;
 

@@ -1,11 +1,11 @@
-# Cinedex Web Service Contracts
+# FoundryOceanus Web Service Contracts
 
-This NuGet package contains the DTOs (Data Transfer Objects) and contract classes for the Cinedex Web Service API.
+This NuGet package contains the DTOs (Data Transfer Objects) and contract classes for the web service API.
 
 ## Installation
 
 ```bash
-dotnet add package Cinedex.WebService.Contracts
+dotnet add package FoundryOceanus.WebService.Contracts
 ```
 
 ## Contents
@@ -48,8 +48,8 @@ Write operations do not return resource DTOs in the response body. Clients shoul
 ## Usage Example
 
 ```csharp
-using Cinedex.WebService.Contracts.Requests;
-using Cinedex.WebService.Contracts.Responses;
+using FoundryOceanus.WebService.Contracts.Requests;
+using FoundryOceanus.WebService.Contracts.Responses;
 
 var request = new CreateTitlesRequest
 {

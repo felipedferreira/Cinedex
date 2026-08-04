@@ -1,4 +1,4 @@
-namespace Cinedex.WebService.Contracts.Requests;
+namespace FoundryOceanus.WebService.Contracts.Requests;
 
 public class CreateGenreRequest
 {

@@ -1,3 +1,4 @@
+using Aspire.Hosting.JavaScript;
 using Microsoft.Extensions.Configuration;
 
 namespace Cinedex.AppHost;
@@ -189,6 +190,57 @@ internal static class AppHostBuilderExtensions
         });
 
         return webservice;
+    }
+
+    /// <summary>
+    /// Adds the SPA's Vite dev server, unless <see cref="AppHostConstants.FrontendUiEnabledKey"/>
+    /// disables it.
+    /// </summary>
+    /// <param name="builder">Distributed application builder.</param>
+    /// <param name="webservice">The web service the dev server proxies <c>/movies-svc</c> to.</param>
+    /// <returns>The dev server resource, or <see langword="null"/> when the feature flag is off.</returns>
+    public static IResourceBuilder<ViteAppResource>? AddCinedexFrontendUi(
+        this IDistributedApplicationBuilder builder,
+        IResourceBuilder<ProjectResource> webservice)
+    {
+        // Defaults to true when the key is absent, same reasoning as the other two flags. Unlike them
+        // this one also needs Node and npm on PATH; turning it off is the escape hatch for a machine
+        // that has neither, or for a backend-only session.
+        var frontendUiEnabled =
+            builder.Configuration.GetValue(AppHostConstants.FrontendUiEnabledKey, defaultValue: true);
+
+        if (!frontendUiEnabled)
+        {
+            return null;
+        }
+
+        // AddViteApp runs the package.json "dev" script (so: the same `npm run dev` a developer would
+        // run by hand) and installs dependencies first when node_modules is missing, which is what
+        // makes this work on a fresh clone. AddNpmApp is the Aspire 12 spelling and is obsolete —
+        // warnings are errors here, so it would not compile.
+        //
+        // The endpoint is declared https because vite.config.ts serves TLS itself through
+        // @vitejs/plugin-basic-ssl; Aspire is not terminating it and never sees the certificate. Port
+        // and target port are pinned to the same fixed 9000 vite.config.ts defaults to, and the proxy
+        // is off, for the reason it is off on the web service: Vite owns that socket. It binds with
+        // strictPort, so a proxy in front of it would only add a second port to an address that has to
+        // stay https://localhost:9000 anyway — that is the URL the web service builds password-reset
+        // links from (Frontend:BaseUrl) and the one compose publishes the SPA on.
+        //
+        // env: PORT is how Aspire tells the dev server which port it allocated — belt and braces, since
+        // AddViteApp also appends `--port` to the npm command from the same endpoint. Vite does not
+        // read PORT on its own, so vite.config.ts reads it explicitly and falls back to 9000. Unproxied,
+        // all three agree; the wiring still holds if the port ever moves.
+        return builder.AddViteApp("ui", AppHostConstants.FrontendAppDirectory)
+            .WithHttpsEndpoint(
+                port: AppHostConstants.FrontendPort,
+                targetPort: AppHostConstants.FrontendPort,
+                env: AppHostConstants.FrontendPortVariable,
+                isProxied: false)
+            .WithEnvironment(
+                AppHostConstants.ViteApiProxyTargetVariable,
+                webservice.GetEndpoint("http"))
+            .WaitFor(webservice);
     }
 
     /// <summary>Adds the scheduler worker, wired to Postgres.</summary>

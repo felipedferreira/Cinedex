@@ -7,6 +7,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+- **The SPA runs under the Aspire AppHost (`AddCinedexFrontendUi`)** - `dotnet run --project aspire/Cinedex.AppHost` now starts `frontend/cinadex-ui`'s Vite dev server alongside Postgres, Mailpit and the three .NET hosts, so the inner loop covers the whole stack rather than the backend half of it. Previously the SPA was only part of the Compose path, and using it with the AppHost meant a second terminal running `npm run dev` and remembering that its `/movies-svc` proxy defaults to the bare `dotnet run` address, not the one the AppHost gives the web service.
+  - **Aspire supplies both of the dev server's inputs.** `VITE_API_PROXY_TARGET` is set from the web service's endpoint reference, replacing `vite.config.ts`'s `https://localhost:7201` default, and the port comes from the declared endpoint — `AddViteApp` appends it to the npm command as `--port`, and it is also exported as `PORT`. Vite does not read `PORT` on its own, so `vite.config.ts` now reads it explicitly and falls back to 9000; a bare `npm run dev` behaves exactly as before, and `PORT=3000 npm run dev` now works too.
+  - **The endpoint is pinned to 9000 and unproxied**, for the reason the web service's is: Vite binds with `strictPort` and owns that socket, and the URL has to keep matching the web service's `Frontend:BaseUrl`, which password-reset links are built from. It is declared `https` because `@vitejs/plugin-basic-ssl` serves TLS itself — Aspire never sees the certificate and is not terminating anything. That also means the AppHost and Compose now collide on 9000 as well as on 5432, reinforcing that only one stack runs at a time.
+  - **`Features:EnableFrontendUiSvc`** (committed as `true`, same override channels as the other two flags) omits the resource entirely when set to `false`. It is the one resource that needs Node and npm on `PATH`, so a backend-only session — or a machine without them — turns it off; with it on, Aspire installs the SPA's dependencies when `node_modules` is missing, so a fresh clone needs no separate `npm ci`.
+  - The resource comes from `Aspire.Hosting.JavaScript`'s `AddViteApp`. Aspire 13 renamed that package from `Aspire.Hosting.NodeJs` and obsoleted `AddNpmApp`; with warnings as errors, the older spelling would not compile.
+
 ---
 
 ## [0.8.0] - August 4 2026 Persistence Ports & the FoundryOceanus Split

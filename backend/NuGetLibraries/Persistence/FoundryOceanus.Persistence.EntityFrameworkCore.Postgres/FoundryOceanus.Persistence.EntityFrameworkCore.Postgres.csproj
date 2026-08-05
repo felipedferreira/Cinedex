@@ -1,0 +1,39 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <IsPackable>true</IsPackable>
+
+    <!-- NuGet Package Metadata (package-specific) -->
+    <PackageId>FoundryOceanus.Persistence.EntityFrameworkCore.Postgres</PackageId>
+    <Title>FoundryOceanus Persistence for PostgreSQL</Title>
+    <Authors>FoundryOceanus Contributors</Authors>
+    <Description>PostgreSQL support for the FoundryOceanus Entity Framework Core unit of work: SQLSTATE-aware exception translation and transaction-scoped advisory locks.</Description>
+    <PackageProjectUrl>https://github.com/felipedferreira/Cinedex</PackageProjectUrl>
+    <RepositoryUrl>https://github.com/felipedferreira/Cinedex</RepositoryUrl>
+    <RepositoryType>git</RepositoryType>
+    <Copyright>Copyright © 2026 FoundryOceanus Contributors</Copyright>
+    <PackageTags>unit-of-work;repository;efcore;postgresql;npgsql;persistence;transactions;advisory-lock</PackageTags>
+    <PackageReadmeFile>README.md</PackageReadmeFile>
+  </PropertyGroup>
+
+  <!--
+    Npgsql, not Npgsql.EntityFrameworkCore.PostgreSQL. This package reads PostgresException.SqlState
+    and issues advisory-lock statements over an ADO command; it never configures a DbContext, so it
+    has no business pinning which version of the EF provider a consumer uses. Consumers bring their
+    own provider package.
+  -->
+  <ItemGroup>
+    <PackageReference Include="Npgsql" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\FoundryOceanus.Persistence.EntityFrameworkCore\FoundryOceanus.Persistence.EntityFrameworkCore.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <None Include="README.md" Pack="true" PackagePath="\" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Update="StyleCop.Analyzers" PrivateAssets="all" />
+  </ItemGroup>
+</Project>

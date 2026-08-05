@@ -24,7 +24,7 @@
 
     <ItemGroup>
       <ProjectReference Include="..\..\Adapters\Cinedex.Auth.Identity\Cinedex.Auth.Identity.csproj" />
-      <ProjectReference Include="..\..\..\NuGetLibraries\FoundryOceanus.Observability.OpenTelemetry\FoundryOceanus.Observability.OpenTelemetry.csproj" />
+      <ProjectReference Include="..\..\..\NuGetLibraries\Observability\FoundryOceanus.Observability.OpenTelemetry\FoundryOceanus.Observability.OpenTelemetry.csproj" />
     </ItemGroup>
 
     <ItemGroup>

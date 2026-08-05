@@ -16,9 +16,9 @@
     </ItemGroup>
 
     <ItemGroup>
-        <ProjectReference Include="..\..\NuGetLibraries\FoundryOceanus.Persistence.Abstractions\FoundryOceanus.Persistence.Abstractions.csproj" />
-        <ProjectReference Include="..\..\NuGetLibraries\FoundryOceanus.Persistence.EntityFrameworkCore\FoundryOceanus.Persistence.EntityFrameworkCore.csproj" />
-        <ProjectReference Include="..\..\NuGetLibraries\FoundryOceanus.Persistence.EntityFrameworkCore.Postgres\FoundryOceanus.Persistence.EntityFrameworkCore.Postgres.csproj" />
+        <ProjectReference Include="..\..\NuGetLibraries\Persistence\FoundryOceanus.Persistence.Abstractions\FoundryOceanus.Persistence.Abstractions.csproj" />
+        <ProjectReference Include="..\..\NuGetLibraries\Persistence\FoundryOceanus.Persistence.EntityFrameworkCore\FoundryOceanus.Persistence.EntityFrameworkCore.csproj" />
+        <ProjectReference Include="..\..\NuGetLibraries\Persistence\FoundryOceanus.Persistence.EntityFrameworkCore.Postgres\FoundryOceanus.Persistence.EntityFrameworkCore.Postgres.csproj" />
     </ItemGroup>
 
     <ItemGroup>

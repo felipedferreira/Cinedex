@@ -17,7 +17,7 @@ Cinedex/
 
 - **[Getting Started](docs/getting-started.md)** — new here? Clone-to-running-app in 5 minutes via Docker Compose
 - **[Backend](backend/README.md)** — hexagonal (ports & adapters) .NET solution: architecture guide, build/test/migration instructions
-- **[Frontend](frontend/README.md)** — npm workspace: the React + TypeScript + Vite SPA (`cinadex-ui`) and the shared component library (`@cinedex/ui`) with its Storybook
+- **[Frontend](frontend/README.md)** — npm workspace: the React + TypeScript + Vite SPA (`cinadex-app`), the shared component library (`@cinedex/components`), and its Storybook (`@cinedex/storybook`) as a separate app
 - **[Design docs](docs/README.md)** — why the system is shaped this way (auth & security model, planned ADRs)
 - **[Changelog](CHANGELOG.md)** — version history and release notes
 

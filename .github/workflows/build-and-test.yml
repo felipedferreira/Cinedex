@@ -109,16 +109,16 @@ jobs:
 
     # One report per workspace — the action reads a single coverage directory,
     # and the distinct names keep the two job summaries apart.
-    - name: Coverage summary (cinadex-ui)
+    - name: Coverage summary (cinadex-app)
       if: always()
       uses: davelosert/vitest-coverage-report-action@v2
       with:
-        name: cinadex-ui
-        working-directory: frontend/apps/cinadex-ui
+        name: cinadex-app
+        working-directory: frontend/apps/cinadex-app
 
-    - name: Coverage summary (@cinedex/ui)
+    - name: Coverage summary (@cinedex/components)
       if: always()
       uses: davelosert/vitest-coverage-report-action@v2
       with:
-        name: '@cinedex/ui'
-        working-directory: frontend/packages/ui
+        name: '@cinedex/components'
+        working-directory: frontend/packages/components

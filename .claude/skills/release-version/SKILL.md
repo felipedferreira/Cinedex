@@ -123,8 +123,8 @@ shot:
 3. Every `frontend/**/package.json` that isn't under `node_modules`. The
    frontend is an npm workspace, so today that is three files, all bumped in
    lockstep with the product version: the workspace root
-   `frontend/package.json`, the app `frontend/apps/cinadex-ui/package.json`,
-   and the component library `frontend/packages/ui/package.json`.
+   `frontend/package.json`, the app `frontend/apps/cinadex-app/package.json`,
+   and the component library `frontend/packages/components/package.json`.
 
 Run it from the repo root (the default `--repo-root` is the current directory).
 

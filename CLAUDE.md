@@ -7,19 +7,20 @@ Full-stack movie catalog (IMDB-inspired portfolio app): .NET 10 backend + React 
 - `backend/` — .NET solution (`Cinedex.slnx`), hexagonal architecture. Details in `backend/CLAUDE.md`.
 - `backend/aspire/Cinedex.AppHost/` — Aspire orchestration for local dev. There is deliberately **no ServiceDefaults project**; `NuGetLibraries/FoundryOceanus.Observability.OpenTelemetry` already fills that role.
 - `frontend/` — npm workspace root (`apps/*` + `packages/*`); the lockfile lives here, not in the packages.
-  - `frontend/apps/cinadex-ui/` — React + TypeScript + Vite SPA (folder is spelled `cinadex`, not `cinedex`).
-  - `frontend/packages/ui/` — `@cinedex/ui`, the shared component library plus its Storybook. Source-consumed: its `exports` point at `src/`, so there is no build step and no `dist/`.
+  - `frontend/apps/cinadex-app/` — React + TypeScript + Vite SPA (folder is spelled `cinadex`, not `cinedex`).
+  - `frontend/apps/storybook/` — `@cinedex/storybook`, the Storybook for the component library. Its own app: it depends on `@cinedex/components` and owns the stories, so they can only use what the library actually exports.
+  - `frontend/packages/components/` — `@cinedex/components`, the shared component library. Source-consumed: its `exports` point at `src/`, so there is no build step and no `dist/`.
 - `docs/` — design docs (auth & security model); feature specs under `docs/superpowers/specs/`.
-- `compose.yaml` — full stack: Postgres 17, web service, UI + Nginx reverse proxy, Seq (logs/traces), Mailpit (dev mail sink).
+- `compose.yaml` — full stack: Postgres 17, web service, UI + Nginx reverse proxy, Storybook, Seq (logs/traces), Mailpit (dev mail sink).
 
 ## Commands
 
 - Backend (from `backend/`): `dotnet build`, `dotnet test`, `dotnet run --project src/Presentation/Cinedex.WebService`
-- Frontend (from `frontend/`, the workspace root): `npm ci`, `npm run dev` (app on 9000), `npm run storybook` (Storybook on 6006), `npm run build`, `npm run test:run`, `npm run coverage`, `npm run lint`, `npm run format:check`. Lint and format run once across every package; build/test fan out with `--workspaces`. Target one package with `-w cinadex-ui` or `-w @cinedex/ui`.
+- Frontend (from `frontend/`, the workspace root): `npm ci`, `npm run dev` (app on 9000), `npm run storybook` (Storybook on 6006), `npm run build`, `npm run test:run`, `npm run coverage`, `npm run lint`, `npm run format:check`. Lint and format run once across every package; build/test fan out with `--workspaces`. Target one package with `-w cinadex-app` or `-w @cinedex/components`.
 - Full stack (repo root): `docker compose up --build` — requires a root `.env` (`cp .env.example .env`, fill in DB/Seq/Mailpit values) or compose fails.
 - Local dev loop (from `backend/`): `dotnet run --project aspire/Cinedex.AppHost` — Postgres + Mailpit as containers, the three .NET hosts and the SPA's Vite dev server as processes, migrations applied automatically, telemetry on the Aspire dashboard. The UI comes up at https://localhost:9000 with its `/movies-svc` proxy already pointed at the AppHost's web service, so this path now covers the full stack. Needs Docker, Node/npm, and one User Secret (`Parameters:postgres-password`); needs no `.env`. **Cannot run at the same time as compose** — both bind Postgres on 5432 and the SPA on 9000 — though the data volumes are separate. Skip the migrator with `Features:EnableDatabaseMigrationsSvc=false`, or the UI with `Features:EnableFrontendUiSvc=false` (see `backend/CLAUDE.md`).
 
-With compose up: UI/proxy at https://localhost:9000 (self-signed cert — `curl -k`), API at https://localhost:9000/movies-svc, Scalar API docs at `/movies-svc/api-docs/v1`, Seq at http://localhost:5341, Mailpit (captured email) at http://localhost:8025.
+With compose up: UI/proxy at https://localhost:9000 (self-signed cert — `curl -k`), API at https://localhost:9000/movies-svc, Scalar API docs at `/movies-svc/api-docs/v1`, Storybook at http://localhost:9001, Seq at http://localhost:5341, Mailpit (captured email) at http://localhost:8025.
 
 ## Critical gotchas
 

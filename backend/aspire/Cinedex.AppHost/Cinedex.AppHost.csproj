@@ -17,7 +17,7 @@
     <ItemGroup>
         <PackageReference Include="Aspire.Hosting.AppHost" />
         <!--
-            Runs the Vite dev server (frontend/apps/cinadex-ui) as a resource. Aspire 13 renamed
+            Runs the Vite dev server (frontend/apps/cinadex-app) as a resource. Aspire 13 renamed
             Aspire.Hosting.NodeJs to this and obsoleted AddNpmApp in favour of AddViteApp — with
             TreatWarningsAsErrors the old API would not compile anyway.
         -->

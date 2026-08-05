@@ -2,14 +2,14 @@
   "version": "0.0.1",
   "configurations": [
     {
-      "name": "cinadex-ui",
+      "name": "cinadex-app",
       "runtimeExecutable": "npm",
       "runtimeArgs": ["run", "dev", "--prefix", "frontend"],
       "port": 9000,
       "autoPort": false
     },
     {
-      "name": "ui-storybook",
+      "name": "storybook",
       "runtimeExecutable": "npm",
       "runtimeArgs": ["run", "storybook", "--prefix", "frontend"],
       "port": 6006,

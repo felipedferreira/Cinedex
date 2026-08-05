@@ -22,7 +22,7 @@ dist-ssr
 # Package-Restore rule (`**/[Pp]ackages/*`) would otherwise swallow this
 # workspace's packages/ directory whole — silently, so `git add` would just
 # skip the component library. Re-include it here; rules above still apply
-# inside it, so packages/ui/dist and friends stay ignored.
+# inside it, so packages/components/dist and friends stay ignored.
 !packages/*
 
 # Editor directories and files

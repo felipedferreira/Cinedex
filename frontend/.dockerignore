@@ -1,0 +1,12 @@
+# The build context is this directory (the workspace root), so these patterns
+# must match inside every workspace package too.
+**/node_modules
+**/dist
+**/coverage
+**/storybook-static
+**/.storybook
+.idea
+.git
+.gitignore
+*.md
+**/*.md

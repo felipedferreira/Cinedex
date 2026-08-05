@@ -4,8 +4,15 @@
     {
       "name": "cinadex-ui",
       "runtimeExecutable": "npm",
-      "runtimeArgs": ["run", "dev", "--prefix", "frontend/cinadex-ui"],
+      "runtimeArgs": ["run", "dev", "--prefix", "frontend"],
       "port": 9000,
+      "autoPort": false
+    },
+    {
+      "name": "ui-storybook",
+      "runtimeExecutable": "npm",
+      "runtimeArgs": ["run", "storybook", "--prefix", "frontend"],
+      "port": 6006,
       "autoPort": false
     },
     {

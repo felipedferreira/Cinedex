@@ -178,6 +178,6 @@ Almost always a missing or incomplete root `.env` — see [step 1](#1-configure-
 | Doc | For |
 |---|---|
 | [Backend README](../backend/README.md) | Architecture, local (non-Docker) dev, EF migrations, testing & coverage |
-| [Frontend README](../frontend/cinadex-ui/README.md) | `cinadex-ui` stack, scripts, linting, testing |
+| [Frontend README](../frontend/README.md) | Workspace layout, scripts, linting, testing; the `cinadex-ui` app and the `@cinedex/ui` component library |
 | [Auth & Security Model](auth-security-model.md) | JWT design, refresh-token rotation, known gaps |
 | [CONTRIBUTING](../CONTRIBUTING.md) | Workflow, code standards, PR checklist |

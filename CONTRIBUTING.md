@@ -55,9 +55,9 @@ The one-shot database migrator applies pending migrations for both `FilmDbContex
    dotnet test
    ```
 
-**Frontend** (commands run from `frontend/cinadex-ui/`):
+**Frontend** (commands run from `frontend/`, the npm workspace root):
 
-1. Install dependencies:
+1. Install dependencies for every package:
    ```bash
    npm ci
    ```
@@ -67,10 +67,16 @@ The one-shot database migrator applies pending migrations for both `FilmDbContex
    npm run dev
    ```
 
-3. Run tests:
+3. Browse the component library (http://localhost:6006):
    ```bash
-   npm run test:run    # single pass; plain `npm test` runs watch mode
+   npm run storybook
    ```
+
+4. Run tests:
+   ```bash
+   npm run test:run    # single pass across all packages
+   ```
+   Watch mode is per-package: `npm run test -w cinadex-ui` or `-w @cinedex/ui`.
 
 ## Development Workflow
 
@@ -102,12 +108,13 @@ dotnet test
 dotnet build
 ```
 
-**Frontend** (from `frontend/cinadex-ui/`):
+**Frontend** (from `frontend/`):
 
 ```bash
 npm run lint
 npm run format:check
 npm run test:run
+npm run build-storybook
 ```
 
 Your IDE should automatically enforce EditorConfig rules (backend) and Prettier/ESLint rules (frontend). Most formatting issues can be fixed automatically with `npm run lint:fix` and `npm run format`.
@@ -239,7 +246,7 @@ The project has automated CI/CD configured in `.github/workflows/build-and-test.
 
 - Runs on every push to main and on all pull requests
 - **Backend job** — changelog-sync check (root `CHANGELOG.md` vs `backend/CHANGELOG.md`), Release build, tests
-- **Frontend job** — `lint`, `format:check`, `build`, coverage
+- **Frontend job** — `lint`, `format:check`, `build`, `build-storybook`, coverage (one summary per workspace package)
 
 Status checks are **required** to merge to main.
 

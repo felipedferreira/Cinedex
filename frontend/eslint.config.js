@@ -7,7 +7,12 @@ import prettier from 'eslint-config-prettier';
 import { defineConfig, globalIgnores } from 'eslint/config';
 
 export default defineConfig([
-  globalIgnores(['dist', 'coverage']),
+  globalIgnores([
+    '**/dist',
+    '**/coverage',
+    '**/storybook-static',
+    '**/node_modules',
+  ]),
   {
     files: ['**/*.{ts,tsx}'],
     extends: [
@@ -20,13 +25,23 @@ export default defineConfig([
     languageOptions: {
       globals: globals.browser,
       parserOptions: {
+        // `projectService` resolves the nearest tsconfig per file, so this one
+        // config covers every workspace package from the frontend root.
         projectService: true,
         tsconfigRootDir: import.meta.dirname,
       },
     },
   },
   {
-    files: ['**/*.test.{ts,tsx}', 'src/test/**'],
+    // Barrel files and Storybook stories legitimately export things that are
+    // not components, which `react-refresh/only-export-components` flags.
+    files: ['packages/*/src/index.ts', '**/*.stories.tsx'],
+    rules: {
+      'react-refresh/only-export-components': 'off',
+    },
+  },
+  {
+    files: ['**/*.test.{ts,tsx}', '**/test/**'],
     languageOptions: {
       globals: globals.vitest,
     },

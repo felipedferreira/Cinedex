@@ -85,8 +85,16 @@ internal static class AppHostConstants
     /// folder: three levels up is the repository root. Deliberately outside <c>backend/</c> and
     /// outside <c>Cinedex.slnx</c> — Aspire launches it as an external process, it is not a
     /// <c>ProjectReference</c>.
+    /// <para>
+    /// This is the app package inside the <c>frontend/</c> npm workspace, not the workspace root.
+    /// That matters: the package's <c>dev</c> script is plain <c>vite</c>, so the <c>--port</c>
+    /// <c>AddViteApp</c> appends reaches it, whereas the root script delegates through
+    /// <c>-w cinadex-ui</c> and would swallow it. Installing from here is still correct — npm walks
+    /// up to the workspace root, so the single hoisted lockfile and the <c>@cinedex/ui</c> link are
+    /// what a fresh clone gets.
+    /// </para>
     /// </summary>
-    public const string FrontendAppDirectory = "../../../frontend/cinadex-ui";
+    public const string FrontendAppDirectory = "../../../frontend/apps/cinadex-ui";
 
     /// <summary>
     /// Fixed host port for the dev server, matching the port <c>vite.config.ts</c> defaults to and

@@ -6,14 +6,16 @@ Full-stack movie catalog (IMDB-inspired portfolio app): .NET 10 backend + React 
 
 - `backend/` — .NET solution (`Cinedex.slnx`), hexagonal architecture. Details in `backend/CLAUDE.md`.
 - `backend/aspire/Cinedex.AppHost/` — Aspire orchestration for local dev. There is deliberately **no ServiceDefaults project**; `NuGetLibraries/FoundryOceanus.Observability.OpenTelemetry` already fills that role.
-- `frontend/cinadex-ui/` — React + TypeScript + Vite SPA (folder is spelled `cinadex`, not `cinedex`).
+- `frontend/` — npm workspace root (`apps/*` + `packages/*`); the lockfile lives here, not in the packages.
+  - `frontend/apps/cinadex-ui/` — React + TypeScript + Vite SPA (folder is spelled `cinadex`, not `cinedex`).
+  - `frontend/packages/ui/` — `@cinedex/ui`, the shared component library plus its Storybook. Source-consumed: its `exports` point at `src/`, so there is no build step and no `dist/`.
 - `docs/` — design docs (auth & security model); feature specs under `docs/superpowers/specs/`.
 - `compose.yaml` — full stack: Postgres 17, web service, UI + Nginx reverse proxy, Seq (logs/traces), Mailpit (dev mail sink).
 
 ## Commands
 
 - Backend (from `backend/`): `dotnet build`, `dotnet test`, `dotnet run --project src/Presentation/Cinedex.WebService`
-- Frontend (from `frontend/cinadex-ui/`): `npm ci`, `npm run dev`, `npm run test:run`, `npm run lint`, `npm run format:check`
+- Frontend (from `frontend/`, the workspace root): `npm ci`, `npm run dev` (app on 9000), `npm run storybook` (Storybook on 6006), `npm run build`, `npm run test:run`, `npm run coverage`, `npm run lint`, `npm run format:check`. Lint and format run once across every package; build/test fan out with `--workspaces`. Target one package with `-w cinadex-ui` or `-w @cinedex/ui`.
 - Full stack (repo root): `docker compose up --build` — requires a root `.env` (`cp .env.example .env`, fill in DB/Seq/Mailpit values) or compose fails.
 - Local dev loop (from `backend/`): `dotnet run --project aspire/Cinedex.AppHost` — Postgres + Mailpit as containers, the three .NET hosts and the SPA's Vite dev server as processes, migrations applied automatically, telemetry on the Aspire dashboard. The UI comes up at https://localhost:9000 with its `/movies-svc` proxy already pointed at the AppHost's web service, so this path now covers the full stack. Needs Docker, Node/npm, and one User Secret (`Parameters:postgres-password`); needs no `.env`. **Cannot run at the same time as compose** — both bind Postgres on 5432 and the SPA on 9000 — though the data volumes are separate. Skip the migrator with `Features:EnableDatabaseMigrationsSvc=false`, or the UI with `Features:EnableFrontendUiSvc=false` (see `backend/CLAUDE.md`).
 
@@ -30,6 +32,6 @@ With compose up: UI/proxy at https://localhost:9000 (self-signed cert — `curl 
 ## Toolchain & CI
 
 - .NET SDK 10.0.100 (`backend/global.json`, prerelease allowed), Node 22, Docker.
-- CI (`.github/workflows/build-and-test.yml`): backend job = changelog-sync check + Release build + tests; frontend job = lint + format:check + build + coverage. All checks required to merge to `main`.
+- CI (`.github/workflows/build-and-test.yml`): backend job = changelog-sync check + Release build + tests; frontend job = lint + format:check + build + build-storybook + coverage (one coverage summary per workspace). All checks required to merge to `main`.
 - Commit messages follow Conventional Commits: `type(scope): summary` (types in use: `feat`, `fix`, `refactor`, `test`, `docs`, `chore`). Branches have no prefix convention — recent ones are short kebab-case descriptions (e.g. `asp-net-identity-auth`).
 - Changelog entries accumulate under `## [Unreleased]` (Keep a Changelog format); a release turns them into a `## [x.y.z] - Title` section with a matching version bump in `backend/Directory.Build.props` (Version, FileVersion, InformationalVersion together).

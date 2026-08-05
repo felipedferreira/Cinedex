@@ -120,8 +120,11 @@ shot:
    leaves `## [Unreleased]` empty for the next cycle.
 2. `backend/Directory.Build.props` — `<Version>`, `<FileVersion>`, and
    `<InformationalVersion>` together.
-3. Every `frontend/**/package.json` that isn't under `node_modules` (today just
-   `frontend/cinadex-ui/package.json`).
+3. Every `frontend/**/package.json` that isn't under `node_modules`. The
+   frontend is an npm workspace, so today that is three files, all bumped in
+   lockstep with the product version: the workspace root
+   `frontend/package.json`, the app `frontend/apps/cinadex-ui/package.json`,
+   and the component library `frontend/packages/ui/package.json`.
 
 Run it from the repo root (the default `--repo-root` is the current directory).
 
@@ -136,15 +139,16 @@ because they're better handled by their own tooling:
   `backend/`) and commit the refreshed `backend/CHANGELOG.md` diff alongside the
   release.
 - **Sync the frontend lockfile:** `npm install --package-lock-only` in
-  `frontend/cinadex-ui/` so `package-lock.json`'s version matches `package.json`.
+  `frontend/` (the workspace root, where the single lockfile lives) so the
+  recorded versions match the bumped `package.json` files.
 
 Then confirm the change with `git diff --stat` and summarize what moved.
 
 ## Guardrails
 
 - **Only** edit the root `CHANGELOG.md`, never `backend/CHANGELOG.md` (see above).
-- **Only** the frontend app's own `package.json` — the script already excludes
-  `node_modules`; don't touch dependency manifests.
+- **Only** the frontend workspace's own `package.json` files — the script
+  already excludes `node_modules`; don't touch dependency manifests.
 - The script refuses to write if the new version isn't strictly greater than the
   current one, or if `## [Unreleased]` is empty. Treat those errors as signals to
   re-check the decision, not to force past them.

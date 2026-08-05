@@ -73,9 +73,11 @@ jobs:
       contents: read
       pull-requests: write
 
+    # `frontend/` is an npm workspace root (apps/* + packages/*); every script
+    # below fans out to the workspaces from here.
     defaults:
       run:
-        working-directory: frontend/cinadex-ui
+        working-directory: frontend
 
     steps:
     - uses: actions/checkout@v6
@@ -85,7 +87,7 @@ jobs:
       with:
         node-version: 22
         cache: npm
-        cache-dependency-path: frontend/cinadex-ui/package-lock.json
+        cache-dependency-path: frontend/package-lock.json
 
     - name: Install dependencies
       run: npm ci
@@ -99,11 +101,24 @@ jobs:
     - name: Build
       run: npm run build
 
+    - name: Build Storybook
+      run: npm run build-storybook
+
     - name: Run tests with coverage
       run: npm run coverage
 
-    - name: Coverage summary
+    # One report per workspace — the action reads a single coverage directory,
+    # and the distinct names keep the two job summaries apart.
+    - name: Coverage summary (cinadex-ui)
       if: always()
       uses: davelosert/vitest-coverage-report-action@v2
       with:
-        working-directory: frontend/cinadex-ui
+        name: cinadex-ui
+        working-directory: frontend/apps/cinadex-ui
+
+    - name: Coverage summary (@cinedex/ui)
+      if: always()
+      uses: davelosert/vitest-coverage-report-action@v2
+      with:
+        name: '@cinedex/ui'
+        working-directory: frontend/packages/ui

@@ -163,7 +163,11 @@ services:
   cinadex-ui:
     image: cinadex-ui
     build:
-      context: ./frontend/cinadex-ui
+      # The frontend is an npm workspace: the context has to be the workspace
+      # root so the build can see the hoisted lockfile and the @cinedex/ui
+      # package the app depends on.
+      context: ./frontend
+      dockerfile: apps/cinadex-ui/Dockerfile
     container_name: cinadex-ui
     ports:
       - "127.0.0.1:9000:443"

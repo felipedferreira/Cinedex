@@ -1,20 +1,26 @@
 # cinadex-ui
 
-The standalone SPA for Cinedex. In Docker Compose, Nginx serves it and reverse-proxies the backend OpenAPI spec at `https://localhost:9000/movies-svc/openapi/v1.json`.
+The SPA for Cinedex. In Docker Compose, Nginx serves it and reverse-proxies the backend OpenAPI spec at `https://localhost:9000/movies-svc/openapi/v1.json`.
+
+One of two packages in the [`frontend/` npm workspace](../../README.md); shared components, design tokens and base styling come from [`@cinedex/ui`](../../packages/ui/README.md).
 
 ## 📁 Layout
 
 ```
-cinadex-ui/
-├── public/          # Static assets (favicon, icons)
-├── src/
-│   ├── assets/      # Imported assets (images, SVGs)
-│   ├── test/        # Global test setup (jest-dom, jsdom cleanup)
-│   ├── App.tsx      # Root component
-│   └── main.tsx     # Entry point
-├── eslint.config.js
-├── vite.config.ts
-└── package.json
+frontend/                    # workspace root — lockfile and shared config live here
+├── eslint.config.js  .prettierrc.json  .gitignore  .dockerignore
+├── packages/ui/             # @cinedex/ui — component library + Storybook
+└── apps/cinadex-ui/         # this package
+    ├── public/              # Static assets (favicon, icons)
+    ├── src/
+    │   ├── assets/          # Imported assets (images, SVGs)
+    │   ├── test/            # Global test setup (jest-dom, jsdom cleanup)
+    │   ├── index.css        # App-only layout; tokens come from @cinedex/ui
+    │   ├── App.tsx          # Root component
+    │   └── main.tsx         # Entry point
+    ├── Dockerfile           # built from the frontend/ context, not this one
+    ├── vite.config.ts
+    └── package.json
 ```
 
 ## 🧰 Tech Stack
@@ -28,10 +34,10 @@ cinadex-ui/
 
 ## 🚀 Getting Started
 
-Prerequisites: [Node.js](https://nodejs.org/) (LTS recommended) and npm.
+Prerequisites: [Node.js](https://nodejs.org/) (LTS recommended) and npm. **Run these from `frontend/`**, the workspace root — npm installs every package from there.
 
 ```bash
-npm install     # install dependencies
+npm install     # install the whole workspace
 npm run dev     # start the dev server with HMR
 ```
 
@@ -51,26 +57,30 @@ first when `node_modules` is missing. Turn the whole resource off there with
 
 ## 📜 Scripts
 
-| Script                 | Description                                    |
-| ---------------------- | ---------------------------------------------- |
-| `npm run dev`          | Start the Vite dev server with HMR             |
-| `npm run build`        | Type-check and build for production to `dist/` |
-| `npm run preview`      | Preview the production build locally           |
-| `npm run lint`         | Lint the project with ESLint                   |
-| `npm run lint:fix`     | Lint and auto-fix fixable problems             |
-| `npm run format`       | Format all files with Prettier                 |
-| `npm run format:check` | Check formatting without writing (CI-friendly) |
-| `npm run test`         | Run the test suite in watch mode (Vitest)      |
-| `npm run test:run`     | Run the test suite once (CI-friendly)          |
-| `npm run test:ui`      | Run tests in the interactive Vitest UI         |
-| `npm run coverage`     | Run tests once and generate a coverage report  |
+All run from `frontend/`. Build and test scripts fan out across the workspace — add `-w cinadex-ui` to scope one to this package.
+
+| Script                    | Description                                      |
+| ------------------------- | ------------------------------------------------ |
+| `npm run dev`             | Start the Vite dev server with HMR               |
+| `npm run build`           | Type-check and build every package to `dist/`    |
+| `npm run preview`         | Preview the production build locally             |
+| `npm run storybook`       | Start Storybook for `@cinedex/ui` on port 6006   |
+| `npm run build-storybook` | Build the static Storybook (also run in CI)      |
+| `npm run lint`            | Lint every package with ESLint                   |
+| `npm run lint:fix`        | Lint and auto-fix fixable problems               |
+| `npm run format`          | Format all files with Prettier                   |
+| `npm run format:check`    | Check formatting without writing (CI-friendly)   |
+| `npm run test:run`        | Run every test suite once (CI-friendly)          |
+| `npm run coverage`        | Run tests once and generate coverage per package |
+
+Watch mode and the Vitest UI are per-package: `npm run test -w cinadex-ui`, `npm run test:ui -w cinadex-ui`.
 
 ## 🎨 Linting & Formatting
 
 [ESLint](https://eslint.org/) handles code quality and [Prettier](https://prettier.io/) handles formatting; the two are kept from overlapping via [`eslint-config-prettier`](https://github.com/prettier/eslint-config-prettier).
 
-- ESLint uses **type-aware** rules (`typescript-eslint` `strictTypeChecked` + `stylisticTypeChecked`), so it reads the TypeScript project to catch type-level issues. Config: [`eslint.config.js`](eslint.config.js).
-- Prettier settings live in [`.prettierrc.json`](.prettierrc.json) (single quotes, no semicolons).
+- ESLint uses **type-aware** rules (`typescript-eslint` `strictTypeChecked` + `stylisticTypeChecked`), so it reads the TypeScript project to catch type-level issues. One config at the workspace root covers every package: [`eslint.config.js`](../../eslint.config.js).
+- Prettier settings live in [`.prettierrc.json`](../../.prettierrc.json) (single quotes, semicolons).
 
 ```bash
 npm run lint          # report problems
@@ -79,7 +89,7 @@ npm run format        # rewrite files to match Prettier
 npm run format:check  # verify formatting (used in CI)
 ```
 
-CI runs `lint`, `format:check`, `build`, and `test:run` for the frontend, so all four must pass before a change can merge.
+CI runs `lint`, `format:check`, `build`, `build-storybook`, and `coverage` for the frontend, so all five must pass before a change can merge.
 
 ## 🧪 Testing
 
@@ -121,7 +131,7 @@ The following reporters are configured in [`vite.config.ts`](vite.config.ts) so 
 
 ## 🔌 Backend
 
-The SPA consumes the backend API. With the backend running (see the [root README](../../README.md)), the API is available at:
+The SPA consumes the backend API. With the backend running (see the [root README](../../../README.md)), the API is available at:
 
 - **npm dev server:** https://localhost:9000/movies-svc
 - **npm dev OpenAPI Spec:** https://localhost:9000/movies-svc/openapi/v1.json

@@ -1,7 +1,7 @@
-using FoundryOceanus.Persistence.Abstractions;
+﻿using FoundryOceanus.Persistence.Abstractions;
 using FoundryOceanus.Persistence.Abstractions.Transactions;
 
-namespace Cinedex.Persistence.Tests.Fakes;
+namespace FoundryOceanus.Persistence.Tests.Fakes;
 
 /// <summary>
 /// An <see cref="IUnitOfWork"/> that records what was called on it, for testing

@@ -1,6 +1,6 @@
-using FoundryOceanus.Persistence.Abstractions.Transactions;
+﻿using FoundryOceanus.Persistence.Abstractions.Transactions;
 
-namespace Cinedex.Persistence.Tests.Fakes;
+namespace FoundryOceanus.Persistence.Tests.Fakes;
 
 /// <summary>
 /// An <see cref="ITransaction"/> that records commits, rollbacks and disposal.

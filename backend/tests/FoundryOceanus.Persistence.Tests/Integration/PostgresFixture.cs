@@ -1,10 +1,10 @@
-using Cinedex.Persistence.Tests.Fakes;
-using FoundryOceanus.Persistence.EntityFrameworkCore.Postgres.DependencyInjection;
+﻿using FoundryOceanus.Persistence.EntityFrameworkCore.Postgres.DependencyInjection;
+using FoundryOceanus.Persistence.Tests.Fakes;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
 using Testcontainers.PostgreSql;
 
-namespace Cinedex.Persistence.Tests.Integration;
+namespace FoundryOceanus.Persistence.Tests.Integration;
 
 /// <summary>
 /// Starts one PostgreSQL container for the whole integration collection and builds service providers
@@ -12,7 +12,7 @@ namespace Cinedex.Persistence.Tests.Integration;
 /// </summary>
 /// <remarks>
 /// Real PostgreSQL rather than the in-memory provider, and not optionally. Everything these tests
-/// cover — SQLSTATE classification, serialization failures, advisory locks, savepoints — either does
+/// cover â€” SQLSTATE classification, serialization failures, advisory locks, savepoints â€” either does
 /// not exist in the in-memory provider or behaves differently there. A test suite that passed against
 /// a fake would be asserting that the fake works.
 /// </remarks>

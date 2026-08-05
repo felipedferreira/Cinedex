@@ -25,7 +25,7 @@ convention, only by there being nothing to violate.
 
 **Semantic narrowing.** `DbContext` exposes around forty public members, including
 `Database.ExecuteSqlRaw`, `ChangeTracker`, and every `DbSet<T>` as a fully composable `IQueryable`.
-`IUnitOfWork` exposes five members and no query surface. Nobody *can* compose an ad-hoc query in a
+`IUnitOfWork` exposes six members and no query surface. Nobody *can* compose an ad-hoc query in a
 command handler, because the type does not permit it. That is a constraint, not a wrapper.
 
 **Policy in one place.** Retry classification, isolation-level defaults, and error translation live
@@ -54,7 +54,7 @@ it: PostgreSQL SQLSTATE constants come from Npgsql's own `PostgresErrorCodes`, w
 
 | Type | Purpose |
 | --- | --- |
-| `IUnitOfWork` | Resolve repositories, save, and open transactions. Five members. |
+| `IUnitOfWork` | Resolve repositories, save, and open transactions. Six members. |
 | `ITransaction` | A real database transaction. Commit, roll back, create savepoints. |
 | `ISavepoint` | A point inside a transaction to roll back to without abandoning it. |
 | `TransactionIsolationLevel` | The four levels PostgreSQL actually implements. |

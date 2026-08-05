@@ -1,10 +1,10 @@
-using Cinedex.Persistence.Tests.Fakes;
-using FoundryOceanus.Persistence.Abstractions;
+﻿using FoundryOceanus.Persistence.Abstractions;
 using FoundryOceanus.Persistence.Abstractions.Exceptions;
 using FoundryOceanus.Persistence.Abstractions.Transactions;
+using FoundryOceanus.Persistence.Tests.Fakes;
 using Microsoft.Extensions.DependencyInjection;
 
-namespace Cinedex.Persistence.Tests.Integration;
+namespace FoundryOceanus.Persistence.Tests.Integration;
 
 /// <summary>
 /// Transaction behaviour against real PostgreSQL.
@@ -132,7 +132,7 @@ public sealed class UnitOfWorkTransactionTests(PostgresFixture fixture)
     [Fact]
     public async Task CurrentTransaction_AfterCommit_ReadsAsNoTransaction()
     {
-        // Callers assert on this to check they are inside a transaction — an advisory lock is the
+        // Callers assert on this to check they are inside a transaction â€” an advisory lock is the
         // example. A committed transaction satisfying that check would protect nothing.
         await using ServiceProvider provider = fixture.BuildServiceProvider();
         await using AsyncServiceScope scope = provider.CreateAsyncScope();
@@ -148,7 +148,7 @@ public sealed class UnitOfWorkTransactionTests(PostgresFixture fixture)
     public async Task BeginTransaction_AfterACommitThatWasNeverDisposed_Succeeds()
     {
         // Committing without disposing is a resource leak worth fixing, but it is not a reason to
-        // refuse the next transaction — the previous one is over.
+        // refuse the next transaction â€” the previous one is over.
         await using ServiceProvider provider = fixture.BuildServiceProvider();
         await using AsyncServiceScope scope = provider.CreateAsyncScope();
 
@@ -230,7 +230,7 @@ public sealed class UnitOfWorkTransactionTests(PostgresFixture fixture)
             await savepoint.RollbackAsync(CancellationToken.None);
 
             // The rollback undid the database's view of the second insert but left the entity tracked.
-            // Saving again without discarding would try to re-insert it — which is exactly the caveat
+            // Saving again without discarding would try to re-insert it â€” which is exactly the caveat
             // documented on ISavepoint.RollbackAsync.
             unitOfWork.DiscardChanges();
 

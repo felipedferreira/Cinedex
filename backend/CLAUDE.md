@@ -57,7 +57,7 @@ Scalar API docs and the OpenAPI JSON are served only when `Features:ApiDocumenta
 
 ## EF Core migrations — two contexts, always pass `--context`
 
-Two DbContexts share one database with separate schemas and `__EFMigrationsHistory` tables. Every `dotnet ef` command MUST pass `--context`, or it fails with "More than one DbContext was found". **Nothing applies migrations automatically** — except the integration-test fixture, which migrates itself, and the Aspire AppHost, which runs `Cinedex.DatabaseMigrator` to completion before starting anything else. Everywhere else a fresh database needs both:
+Two DbContexts share one database with separate schemas and `__EFMigrationsHistory` tables. Every `dotnet ef` command MUST pass `--context`, or it fails with "More than one DbContext was found". **`dotnet run` applies nothing** — but the integration-test fixture migrates itself, and both orchestrated paths run `Cinedex.DatabaseMigrator` to completion before starting anything else (compose via `condition: service_completed_successfully`, the Aspire AppHost via `WaitForCompletion`). For a bare `dotnet run` against a fresh database you still need both:
 
 ```bash
 dotnet ef database update --context FilmDbContext \
@@ -77,7 +77,7 @@ JWT bearer (15-minute HS256 access token) + rotating 7-day refresh token stored 
 
 ## Testing
 
-- `tests/Cinedex.Persistence.Tests` covers the `Cinedex.Persistence.*` libraries. Everything outside `Integration/` runs without Docker (`dotnet test --filter "FullyQualifiedName!~Integration"`); the `Integration/` folder shares one `postgres:17-alpine` Testcontainer via `PostgresCollection` and runs sequentially, because several tests assert on total row counts or contend for one advisory-lock key.
+- `tests/FoundryOceanus.Persistence.Tests` covers the `NuGetLibraries/FoundryOceanus.Persistence.*` libraries (**not** the `Cinedex.Persistence.Postgres` adapter, despite the similar names). Everything outside `Integration/` runs without Docker (`dotnet test --filter "FullyQualifiedName!~Integration"`); the `Integration/` folder shares one `postgres:17-alpine` Testcontainer via `PostgresCollection` and runs sequentially, because several tests assert on total row counts or contend for one advisory-lock key.
 - `SmtpEmailSenderTests` starts a pinned Mailpit Testcontainer on random host ports and verifies authenticated HTML/plain-text delivery through the real MailKit adapter and Mailpit API.
 
 - xUnit integration tests in `tests/Cinedex.WebService.IntegrationTests`. `WebApplicationFixture` starts a `postgres:17-alpine` Testcontainer, migrates both contexts, and exposes three clients: `Client` (cookie jar), `CookielessClient` (for tests presenting a specific refresh cookie), and `AuthenticatedClient` (pre-authenticated bearer — use it for catalog endpoints, which are members-only).

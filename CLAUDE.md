@@ -21,7 +21,7 @@ With compose up: UI/proxy at https://localhost:9000 (self-signed cert — `curl 
 
 ## Critical gotchas
 
-- **Migrations are never applied automatically** — not by compose, not by `dotnet run`. A fresh database needs `dotnet ef database update` for BOTH `FilmDbContext` and `AuthDbContext`. Commands in `backend/CLAUDE.md`. **Exception: the Aspire AppHost** runs `Cinedex.DatabaseMigrator` as a run-to-completion resource and gates the other services behind it, so that path needs no manual step.
+- **`dotnet run` never applies migrations.** A fresh database needs `dotnet ef database update` for BOTH `FilmDbContext` and `AuthDbContext` — commands in `backend/CLAUDE.md`. The two orchestrated paths do it for you: compose runs `movies.databasemigrator` and gates the web service and scheduler worker on `condition: service_completed_successfully`, and the Aspire AppHost runs the same `Cinedex.DatabaseMigrator` as a run-to-completion resource behind `WaitForCompletion`. So the manual step is only for a bare `dotnet run` (and for `dotnet ef migrations add`).
 - **Edit only the root `CHANGELOG.md`.** `backend/CHANGELOG.md` is a build-managed copy (a local backend build refreshes it — commit the resulting diff). CI fails if the two files differ.
 - **Naming drift**: product is "Cinedex", API base path is `/movies-svc`, but the catalog entity is `Title` (routes are `/movies-svc/titles`). Older docs may say "Movie"/"Movies" — trust `ApiConstants.cs` and the domain code.
 - Backend treats all warnings as errors (StyleCop + .NET analyzers) — a style violation breaks the build.

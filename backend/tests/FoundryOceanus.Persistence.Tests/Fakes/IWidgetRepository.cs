@@ -1,6 +1,6 @@
-using FoundryOceanus.Persistence.Abstractions;
+﻿using FoundryOceanus.Persistence.Abstractions;
 
-namespace Cinedex.Persistence.Tests.Fakes;
+namespace FoundryOceanus.Persistence.Tests.Fakes;
 
 /// <summary>
 /// A domain-named repository port, shaped the way the library expects them to be written.

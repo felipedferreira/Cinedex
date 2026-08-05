@@ -90,6 +90,11 @@ public sealed class UnitOfWorkBuilder<TContext>
     /// // Consumer:
     /// public sealed class LogoutHandler([FromKeyedServices(PersistenceKeys.Auth)] IUnitOfWork unitOfWork);
     /// </code>
+    /// <para>
+    /// Two contexts cannot share a key. Asking for one another context already holds throws at
+    /// startup rather than being dropped — the keyed registration would otherwise be silently
+    /// discarded, and everything asking for that key would resolve the first context's unit of work.
+    /// </para>
     /// </remarks>
     /// <param name="key">The service key.</param>
     /// <returns>This builder, for chaining.</returns>

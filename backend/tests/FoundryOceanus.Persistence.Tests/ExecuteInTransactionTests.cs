@@ -1,9 +1,9 @@
-using Cinedex.Persistence.Tests.Fakes;
-using FoundryOceanus.Persistence.Abstractions;
+﻿using FoundryOceanus.Persistence.Abstractions;
 using FoundryOceanus.Persistence.Abstractions.Exceptions;
 using FoundryOceanus.Persistence.Abstractions.Transactions;
+using FoundryOceanus.Persistence.Tests.Fakes;
 
-namespace Cinedex.Persistence.Tests;
+namespace FoundryOceanus.Persistence.Tests;
 
 public sealed class ExecuteInTransactionTests
 {
@@ -80,7 +80,7 @@ public sealed class ExecuteInTransactionTests
         Assert.Equal(3, attempts);
 
         // PostgreSQL aborts the whole transaction on a serialization failure, so a retry has to begin
-        // a new one — reusing the aborted transaction would fail on every subsequent statement.
+        // a new one â€” reusing the aborted transaction would fail on every subsequent statement.
         Assert.Equal(3, unitOfWork.Transactions.Count);
         Assert.All(unitOfWork.Transactions.Take(2), transaction => Assert.False(transaction.Committed));
         Assert.True(unitOfWork.Transactions[2].Committed);

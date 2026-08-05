@@ -1,4 +1,4 @@
-namespace Cinedex.Persistence.Tests.Fakes;
+﻿namespace FoundryOceanus.Persistence.Tests.Fakes;
 
 /// <summary>
 /// A row with a unique name, so tests have something to duplicate.

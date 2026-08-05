@@ -1,7 +1,7 @@
-using FoundryOceanus.Persistence.EntityFrameworkCore;
+﻿using FoundryOceanus.Persistence.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore;
 
-namespace Cinedex.Persistence.Tests.Fakes;
+namespace FoundryOceanus.Persistence.Tests.Fakes;
 
 /// <summary>
 /// Implementation of <see cref="IGadgetRepository"/> over the second context.

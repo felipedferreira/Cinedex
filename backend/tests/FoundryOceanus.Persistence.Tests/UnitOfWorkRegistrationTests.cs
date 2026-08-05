@@ -1,16 +1,17 @@
-using Cinedex.Persistence.Tests.Fakes;
-using FoundryOceanus.Persistence.Abstractions;
+﻿using FoundryOceanus.Persistence.Abstractions;
+using FoundryOceanus.Persistence.Abstractions.Exceptions;
 using FoundryOceanus.Persistence.EntityFrameworkCore;
 using FoundryOceanus.Persistence.EntityFrameworkCore.DependencyInjection;
-using FoundryOceanus.Persistence.EntityFrameworkCore.Postgres;
 using FoundryOceanus.Persistence.EntityFrameworkCore.Postgres.DependencyInjection;
+using FoundryOceanus.Persistence.Tests.Fakes;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
+using Npgsql;
 
-namespace Cinedex.Persistence.Tests;
+namespace FoundryOceanus.Persistence.Tests;
 
 /// <summary>
-/// Registration-time behaviour. None of these touch a database — they assert on the shape of the
+/// Registration-time behaviour. None of these touch a database â€” they assert on the shape of the
 /// service collection and on the failures it refuses to accept.
 /// </summary>
 public sealed class UnitOfWorkRegistrationTests
@@ -110,7 +111,7 @@ public sealed class UnitOfWorkRegistrationTests
         using ServiceProvider provider = services.BuildServiceProvider();
         using IServiceScope scope = provider.CreateScope();
 
-        // The first context keeps the plain registration — adding a second context must not silently
+        // The first context keeps the plain registration â€” adding a second context must not silently
         // repoint everything that already asks for IUnitOfWork.
         Assert.IsType<EfUnitOfWork<WidgetDbContext>>(scope.ServiceProvider.GetRequiredService<IUnitOfWork>());
 
@@ -150,23 +151,129 @@ public sealed class UnitOfWorkRegistrationTests
     }
 
     [Fact]
-    public void AddNpgsqlUnitOfWork_PutsTheProviderTranslatorAheadOfTheCatchAll()
+    public void AddNpgsqlUnitOfWork_ClassifiesBySqlState()
     {
-        // Ordering is not cosmetic: reversed, the Entity Framework catch-all claims every
-        // DbUpdateException and no SQLSTATE is ever read. See CompositePersistenceExceptionTranslatorTests.
         ServiceCollection services = CreateServicesWithContext();
         services.AddNpgsqlUnitOfWork<WidgetDbContext>();
 
+        Assert.IsType<DuplicateKeyException>(TranslateUniqueViolation(services));
+    }
+
+    [Fact]
+    public void AddNpgsqlUnitOfWork_AfterAnEarlierAddUnitOfWork_StillClassifiesBySqlState()
+    {
+        // The regression. AddUnitOfWork appends the Entity Framework catch-all on every call, so any
+        // earlier call — a second context, or this same context configured across two modules — put it
+        // in front of the PostgreSQL translator. Duplicate keys then arrived as
+        // UnclassifiedPersistenceException (no 409 to key on) and serialization failures stopped being
+        // transient, so ExecuteInTransactionAsync quietly stopped retrying. Asserted on behaviour
+        // rather than on the order of the registered list, because the list order is no longer what
+        // decides it.
+        ServiceCollection services = CreateServicesWithContext();
+        services.AddDbContext<GadgetDbContext>(options => options.UseNpgsql(ConnectionString));
+
+        services.AddUnitOfWork<GadgetDbContext>();
+        services.AddNpgsqlUnitOfWork<WidgetDbContext>();
+
+        Assert.IsType<DuplicateKeyException>(TranslateUniqueViolation(services));
+    }
+
+    [Fact]
+    public void AddNpgsqlUnitOfWork_AfterAddUnitOfWorkForTheSameContext_StillClassifiesBySqlState()
+    {
+        // Same trap by the route the documentation actively recommends: composition split across
+        // modules, one contributing repositories and one adding the provider.
+        ServiceCollection services = CreateServicesWithContext();
+
+        services.AddUnitOfWork<WidgetDbContext>(uow => uow.AddRepository<IWidgetRepository, WidgetRepository>());
+        services.AddNpgsqlUnitOfWork<WidgetDbContext>();
+
+        Assert.IsType<DuplicateKeyException>(TranslateUniqueViolation(services));
+    }
+
+    [Fact]
+    public void AddUnitOfWork_WhenTheSameContextClaimsTheDefaultTwice_DoesNotThrow()
+    {
+        // Additive composition is documented as supported, so a module that contributes repositories
+        // and a module that asserts the default must be able to coexist. This used to throw blaming
+        // "another persistence context" — which was this same context.
+        ServiceCollection services = CreateServicesWithContext();
+
+        services.AddUnitOfWork<WidgetDbContext>(uow => uow.AddRepository<IWidgetRepository, WidgetRepository>());
+        services.AddUnitOfWork<WidgetDbContext>(uow => uow.AsDefault());
+
         using ServiceProvider provider = services.BuildServiceProvider();
-        List<IPersistenceExceptionTranslator> translators =
-            [.. provider.GetServices<IPersistenceExceptionTranslator>()];
+        using IServiceScope scope = provider.CreateScope();
 
-        int providerIndex = translators.FindIndex(translator => translator is NpgsqlExceptionTranslator);
-        int catchAllIndex = translators.FindIndex(translator => translator is EntityFrameworkExceptionTranslator);
+        Assert.IsType<EfUnitOfWork<WidgetDbContext>>(scope.ServiceProvider.GetRequiredService<IUnitOfWork>());
+    }
 
-        Assert.True(providerIndex >= 0, "The PostgreSQL translator should be registered.");
-        Assert.True(catchAllIndex >= 0, "The Entity Framework translator should be registered.");
-        Assert.True(providerIndex < catchAllIndex, "The PostgreSQL translator must be consulted first.");
+    [Fact]
+    public void AddUnitOfWork_WhenTheSameContextRepeatsItsKey_DoesNotThrow()
+    {
+        ServiceCollection services = CreateServicesWithContext();
+
+        services.AddUnitOfWork<WidgetDbContext>(uow => uow.WithKey("widgets"));
+        services.AddUnitOfWork<WidgetDbContext>(uow => uow.WithKey("widgets"));
+
+        using ServiceProvider provider = services.BuildServiceProvider();
+        using IServiceScope scope = provider.CreateScope();
+
+        Assert.IsType<EfUnitOfWork<WidgetDbContext>>(
+            scope.ServiceProvider.GetRequiredKeyedService<IUnitOfWork>("widgets"));
+    }
+
+    [Fact]
+    public void AddUnitOfWork_WithTwoContextsClaimingOneKey_ThrowsRatherThanDiscardingTheSecond()
+    {
+        // TryAddKeyedScoped used to drop the second registration in silence, so everything asking for
+        // this key resolved the first context — writes landing in the wrong schema, outside whatever
+        // transaction the caller thought it had opened.
+        ServiceCollection services = CreateServicesWithContext();
+        services.AddDbContext<GadgetDbContext>(options => options.UseNpgsql(ConnectionString));
+
+        services.AddUnitOfWork<WidgetDbContext>(uow => uow.WithKey("shared"));
+
+        InvalidOperationException exception = Assert.Throws<InvalidOperationException>(
+            () => services.AddUnitOfWork<GadgetDbContext>(uow => uow.WithKey("shared")));
+
+        Assert.Contains("shared", exception.Message, StringComparison.Ordinal);
+        Assert.Contains(nameof(WidgetDbContext), exception.Message, StringComparison.Ordinal);
+    }
+
+    [Fact]
+    public void AddUnitOfWork_WithTwoContextsTakingTheirDefaultKeys_DoesNotCollide()
+    {
+        // The default key is typeof(TContext), so two contexts can never collide without asking to.
+        ServiceCollection services = CreateServicesWithContext();
+        services.AddDbContext<GadgetDbContext>(options => options.UseNpgsql(ConnectionString));
+
+        services.AddUnitOfWork<WidgetDbContext>();
+        services.AddUnitOfWork<GadgetDbContext>();
+
+        using ServiceProvider provider = services.BuildServiceProvider();
+        using IServiceScope scope = provider.CreateScope();
+
+        Assert.IsType<EfUnitOfWork<WidgetDbContext>>(
+            scope.ServiceProvider.GetRequiredKeyedService<IUnitOfWork>(typeof(WidgetDbContext)));
+        Assert.IsType<EfUnitOfWork<GadgetDbContext>>(
+            scope.ServiceProvider.GetRequiredKeyedService<IUnitOfWork>(typeof(GadgetDbContext)));
+    }
+
+    private static PersistenceException? TranslateUniqueViolation(IServiceCollection services)
+    {
+        using ServiceProvider provider = services.BuildServiceProvider();
+
+        var composite = provider.GetRequiredService<CompositePersistenceExceptionTranslator>();
+
+        return composite.Translate(new DbUpdateException(
+            "An error occurred while saving.",
+            new PostgresException(
+                messageText: "duplicate key value violates unique constraint",
+                severity: "ERROR",
+                invariantSeverity: "ERROR",
+                sqlState: PostgresErrorCodes.UniqueViolation,
+                constraintName: "ix_widgets_name")));
     }
 
     private static ServiceCollection CreateServicesWithContext()

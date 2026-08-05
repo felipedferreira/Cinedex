@@ -32,7 +32,8 @@ public static class UnitOfWorkServiceCollectionExtensions
     /// <para>
     /// Calling this more than once for the same context is additive rather than an error, so
     /// composition can be split across modules. Each call contributes its repositories to the same
-    /// registration.
+    /// registration, and a later call may still take the key or the default for that context —
+    /// re-stating a claim the same context already holds is not a conflict.
     /// </para>
     /// <para>
     /// <b>What gets registered.</b> <see cref="EfUnitOfWork{TContext}"/> and
@@ -56,9 +57,10 @@ public static class UnitOfWorkServiceCollectionExtensions
     /// <returns>The service collection, for chaining.</returns>
     /// <exception cref="ArgumentNullException"><paramref name="services"/> is <see langword="null"/>.</exception>
     /// <exception cref="InvalidOperationException">
-    /// <typeparamref name="TContext"/> is registered with a lifetime other than scoped, or a second
+    /// <typeparamref name="TContext"/> is registered with a lifetime other than scoped; or a second
     /// context has called <see cref="UnitOfWorkBuilder{TContext}.AsDefault"/> when the unkeyed
-    /// registration is already taken.
+    /// registration is already taken; or a second context has asked for a service key another context
+    /// already holds.
     /// </exception>
     public static IServiceCollection AddUnitOfWork<TContext>(
         this IServiceCollection services,
@@ -76,21 +78,28 @@ public static class UnitOfWorkServiceCollectionExtensions
         UnitOfWorkRegistration<TContext> registration = FindExistingRegistration<TContext>(services)
             ?? new UnitOfWorkRegistration<TContext>();
 
+        UnitOfWorkClaims claims = FindExistingClaims(services) ?? new UnitOfWorkClaims();
+
         var builder = new UnitOfWorkBuilder<TContext>(services, registration);
         configure?.Invoke(builder);
 
+        object serviceKey = builder.Key ?? typeof(TContext);
+
+        // Before anything is added, so a rejected key leaves the collection as it found it. The key is
+        // only knowable once `configure` has run, which is why this is not up with the lifetime check.
+        EnsureKeyIsAvailable<TContext>(claims, serviceKey);
+
         services.TryAddSingleton(registration);
+        services.TryAddSingleton(claims);
         services.TryAddSingleton<CompositePersistenceExceptionTranslator>();
 
-        // Appended last so that provider translators registered earlier — by AddNpgsqlUnitOfWork, for
-        // instance — get first refusal on an exception they can classify more precisely.
+        // Position in this list is not what decides precedence — CompositePersistenceExceptionTranslator
+        // sorts this catch-all last however the composition root ordered its registration calls.
         services.TryAddEnumerable(
             ServiceDescriptor.Singleton<IPersistenceExceptionTranslator, EntityFrameworkExceptionTranslator>());
 
         services.TryAddScoped<EfUnitOfWork<TContext>>();
         services.TryAddScoped<EfUnitOfWorkScopeFactory<TContext>>();
-
-        object serviceKey = builder.Key ?? typeof(TContext);
 
         services.TryAddKeyedScoped<IUnitOfWork>(
             serviceKey,
@@ -99,15 +108,44 @@ public static class UnitOfWorkServiceCollectionExtensions
             serviceKey,
             (provider, _) => provider.GetRequiredService<EfUnitOfWorkScopeFactory<TContext>>());
 
-        RegisterDefaultIfAvailable<TContext>(services, builder.DefaultClaimRequested);
+        claims.ClaimKey(serviceKey, typeof(TContext));
+
+        RegisterDefaultIfAvailable<TContext>(services, claims, builder.DefaultClaimRequested);
 
         return services;
     }
 
     private static UnitOfWorkRegistration<TContext>? FindExistingRegistration<TContext>(IServiceCollection services)
         where TContext : DbContext =>
-        services.FirstOrDefault(descriptor => descriptor.ServiceType == typeof(UnitOfWorkRegistration<TContext>))
+        services.FirstOrDefault(descriptor =>
+                descriptor.ServiceType == typeof(UnitOfWorkRegistration<TContext>) && !descriptor.IsKeyedService)
             ?.ImplementationInstance as UnitOfWorkRegistration<TContext>;
+
+    private static UnitOfWorkClaims? FindExistingClaims(IServiceCollection services) =>
+        services.FirstOrDefault(descriptor =>
+                descriptor.ServiceType == typeof(UnitOfWorkClaims) && !descriptor.IsKeyedService)
+            ?.ImplementationInstance as UnitOfWorkClaims;
+
+    private static void EnsureKeyIsAvailable<TContext>(UnitOfWorkClaims claims, object serviceKey)
+        where TContext : DbContext
+    {
+        Type? owner = claims.FindKeyOwner(serviceKey);
+
+        // Same context claiming its own key again is the additive-composition case, not a conflict.
+        if (owner is null || owner == typeof(TContext))
+        {
+            return;
+        }
+
+        // TryAddKeyedScoped would drop this registration on the floor and leave every consumer of the
+        // key resolving the first context's unit of work — writes landing in the wrong schema with
+        // nothing to indicate it. The whole point of keying two contexts apart is that they stay apart.
+        throw new InvalidOperationException(
+            $"The service key '{serviceKey}' is already registered to {owner.Name}, so {typeof(TContext).Name} cannot "
+            + "take it as well. Whichever context a consumer asked for by this key, it would get the first one "
+            + $"registered — and its writes would go to {owner.Name}'s schema, outside any transaction opened on the "
+            + $"unit of work it thought it had. Give {typeof(TContext).Name} a distinct key with WithKey(...).");
+    }
 
     private static void EnsureContextLifetimeIsScoped<TContext>(IServiceCollection services)
         where TContext : DbContext
@@ -133,7 +171,10 @@ public static class UnitOfWorkServiceCollectionExtensions
             + "it with AddDbContext, which is scoped by default.");
     }
 
-    private static void RegisterDefaultIfAvailable<TContext>(IServiceCollection services, bool claimRequested)
+    private static void RegisterDefaultIfAvailable<TContext>(
+        IServiceCollection services,
+        UnitOfWorkClaims claims,
+        bool claimRequested)
         where TContext : DbContext
     {
         bool alreadyClaimed = services.Any(
@@ -141,13 +182,21 @@ public static class UnitOfWorkServiceCollectionExtensions
 
         if (alreadyClaimed)
         {
-            if (claimRequested)
+            // Asking to be the default when you already are is not a conflict. This is the path a
+            // context configured across two modules takes — one contributing repositories, the other
+            // asserting the default — and refusing it made a documented composition pattern throw,
+            // blaming "another persistence context" that did not exist.
+            if (claimRequested && claims.DefaultOwner != typeof(TContext))
             {
+                string owner = claims.DefaultOwner is { } claimedBy
+                    ? $"{claimedBy.Name} has already claimed"
+                    : "something outside this library has already registered";
+
                 throw new InvalidOperationException(
-                    $"AsDefault() was called for {typeof(TContext).Name}, but another persistence context has already "
-                    + "claimed the unkeyed IUnitOfWork registration. Only one context can be the default. Give this one a "
-                    + "key with WithKey(...) and resolve it with [FromKeyedServices(...)], or move AsDefault() to "
-                    + "whichever context should own the plain IUnitOfWork.");
+                    $"AsDefault() was called for {typeof(TContext).Name}, but {owner} the unkeyed IUnitOfWork "
+                    + "registration. Only one context can be the default. Give this one a key with WithKey(...) and "
+                    + "resolve it with [FromKeyedServices(...)], or move AsDefault() to whichever context should own "
+                    + "the plain IUnitOfWork.");
             }
 
             // Silently leaving the default with the first context is the right call when nobody asked
@@ -155,6 +204,8 @@ public static class UnitOfWorkServiceCollectionExtensions
             // would make adding a second context a breaking change for code that never mentioned it.
             return;
         }
+
+        claims.ClaimDefault(typeof(TContext));
 
         services.AddScoped<IUnitOfWork>(provider => provider.GetRequiredService<EfUnitOfWork<TContext>>());
         services.AddScoped<IUnitOfWorkScopeFactory>(

@@ -1,7 +1,7 @@
-using FoundryOceanus.Persistence.EntityFrameworkCore;
+﻿using FoundryOceanus.Persistence.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore;
 
-namespace Cinedex.Persistence.Tests.Fakes;
+namespace FoundryOceanus.Persistence.Tests.Fakes;
 
 /// <summary>
 /// Repository built the recommended way: derived from <see cref="EfRepository{TContext}"/>, taking
@@ -31,7 +31,7 @@ public sealed class WidgetRepository(
     public Task<int> CountAsync(CancellationToken cancellationToken) =>
         ExecuteAsync(token => DbContext.Widgets.CountAsync(token), cancellationToken);
 
-    // Set-based, so it never passes through SaveChanges — which is exactly why it goes through
+    // Set-based, so it never passes through SaveChanges â€” which is exactly why it goes through
     // ExecuteAsync: without that wrapper its failures would arrive as raw Npgsql exceptions.
     public Task<int> SetQuantityAsync(string name, int quantity, CancellationToken cancellationToken) =>
         ExecuteAsync(

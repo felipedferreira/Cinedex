@@ -1,10 +1,10 @@
-using Cinedex.Persistence.Tests.Fakes;
-using FoundryOceanus.Persistence.Abstractions;
+﻿using FoundryOceanus.Persistence.Abstractions;
 using FoundryOceanus.Persistence.Abstractions.Transactions;
 using FoundryOceanus.Persistence.EntityFrameworkCore.Postgres;
+using FoundryOceanus.Persistence.Tests.Fakes;
 using Microsoft.Extensions.DependencyInjection;
 
-namespace Cinedex.Persistence.Tests.Integration;
+namespace FoundryOceanus.Persistence.Tests.Integration;
 
 /// <summary>
 /// Advisory-lock behaviour against real PostgreSQL.
@@ -26,7 +26,7 @@ public sealed class PostgresAdvisoryLockTests(PostgresFixture fixture)
         await using ITransaction holderTransaction = await holderUnitOfWork.BeginTransactionAsync();
         Assert.True(await holderContext.TryAcquireTransactionLockAsync(key, CancellationToken.None));
 
-        // A second scope means a second connection, which is the only way to observe contention —
+        // A second scope means a second connection, which is the only way to observe contention â€”
         // the same session would simply re-acquire its own lock and report success.
         await using AsyncServiceScope contender = provider.CreateAsyncScope();
         var contenderUnitOfWork = contender.ServiceProvider.GetRequiredService<IUnitOfWork>();
@@ -68,7 +68,7 @@ public sealed class PostgresAdvisoryLockTests(PostgresFixture fixture)
     public async Task Acquire_OutsideATransaction_Throws()
     {
         // A transaction-scoped lock taken outside a transaction is released by the statement that took
-        // it — the call would appear to succeed while protecting nothing.
+        // it â€” the call would appear to succeed while protecting nothing.
         await using ServiceProvider provider = fixture.BuildServiceProvider();
         await using AsyncServiceScope scope = provider.CreateAsyncScope();
 

@@ -44,7 +44,7 @@
     <Project Path="src\Domain\Cinedex.Domain.csproj" />
   </Folder>
   <Folder Name="/tests/">
-    <Project Path="tests\Cinedex.Persistence.Tests\Cinedex.Persistence.Tests.csproj" />
+    <Project Path="tests\FoundryOceanus.Persistence.Tests\FoundryOceanus.Persistence.Tests.csproj" />
     <Project Path="tests\Cinedex.WebService.IntegrationTests\Cinedex.WebService.IntegrationTests.csproj" />
   </Folder>
 </Solution>

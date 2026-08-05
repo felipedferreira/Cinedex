@@ -89,6 +89,9 @@ public static class PostgresAdvisoryLockExtensions
         string key,
         CancellationToken cancellationToken = default)
     {
+        // dbContext first, so a null context reports itself rather than surfacing as a complaint
+        // about the key parameter.
+        ArgumentNullException.ThrowIfNull(dbContext);
         ArgumentException.ThrowIfNullOrWhiteSpace(key);
 
         await ExecuteAsync(dbContext, AcquireByTextSql, key, cancellationToken);
@@ -113,6 +116,8 @@ public static class PostgresAdvisoryLockExtensions
         long key,
         CancellationToken cancellationToken = default)
     {
+        ArgumentNullException.ThrowIfNull(dbContext);
+
         await ExecuteAsync(dbContext, AcquireByIdSql, key, cancellationToken);
     }
 
@@ -136,6 +141,7 @@ public static class PostgresAdvisoryLockExtensions
         string key,
         CancellationToken cancellationToken = default)
     {
+        ArgumentNullException.ThrowIfNull(dbContext);
         ArgumentException.ThrowIfNullOrWhiteSpace(key);
 
         return await ExecuteScalarAsync(dbContext, TryAcquireByTextSql, key, cancellationToken);
@@ -156,6 +162,8 @@ public static class PostgresAdvisoryLockExtensions
         long key,
         CancellationToken cancellationToken = default)
     {
+        ArgumentNullException.ThrowIfNull(dbContext);
+
         return await ExecuteScalarAsync(dbContext, TryAcquireByIdSql, key, cancellationToken);
     }
 
@@ -185,8 +193,6 @@ public static class PostgresAdvisoryLockExtensions
 
     private static DbCommand CreateCommand(DbContext dbContext, string sql, object key)
     {
-        ArgumentNullException.ThrowIfNull(dbContext);
-
         // Reading the ambient transaction instead of accepting one as a parameter turns "this only
         // means something inside a transaction" from a comment into an invariant that fails loudly.
         IDbContextTransaction transaction = dbContext.Database.CurrentTransaction

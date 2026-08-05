@@ -1,7 +1,7 @@
-using FoundryOceanus.Persistence.EntityFrameworkCore;
+﻿using FoundryOceanus.Persistence.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore;
 
-namespace Cinedex.Persistence.Tests.Fakes;
+namespace FoundryOceanus.Persistence.Tests.Fakes;
 
 /// <summary>
 /// A repository doing the thing the shared-context check exists to catch: holding a context of its
@@ -9,7 +9,7 @@ namespace Cinedex.Persistence.Tests.Fakes;
 /// </summary>
 /// <remarks>
 /// This is the <c>IDbContextFactory</c> mistake in its most direct form. Its writes would commit on a
-/// separate connection, outside whatever transaction the unit of work opened — and without the check,
+/// separate connection, outside whatever transaction the unit of work opened â€” and without the check,
 /// nothing anywhere would say so.
 /// </remarks>
 public sealed class DetachedWidgetRepository : EfRepository<WidgetDbContext>, IWidgetRepository

@@ -1,9 +1,9 @@
-using FoundryOceanus.Persistence.Abstractions.Exceptions;
+﻿using FoundryOceanus.Persistence.Abstractions.Exceptions;
 using FoundryOceanus.Persistence.EntityFrameworkCore.Postgres;
 using Microsoft.EntityFrameworkCore;
 using Npgsql;
 
-namespace Cinedex.Persistence.Tests;
+namespace FoundryOceanus.Persistence.Tests;
 
 public sealed class NpgsqlExceptionTranslatorTests
 {
@@ -94,7 +94,7 @@ public sealed class NpgsqlExceptionTranslatorTests
     public void Translate_WithOperationCanceledException_ReturnsNull()
     {
         // Cancellation is the caller's token doing its job. Translating it would turn a clean shutdown
-        // into a logged database failure, and — since 57014 can ride along inside it — a retryable one.
+        // into a logged database failure, and â€” since 57014 can ride along inside it â€” a retryable one.
         PersistenceException? translated = _translator.Translate(
             new OperationCanceledException("Cancelled.", CreatePostgresException(PostgresErrorCodes.QueryCanceled)));
 

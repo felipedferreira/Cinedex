@@ -1,18 +1,18 @@
-using Cinedex.Persistence.Tests.Fakes;
-using FoundryOceanus.Persistence.Abstractions;
+﻿using FoundryOceanus.Persistence.Abstractions;
 using FoundryOceanus.Persistence.Abstractions.Exceptions;
 using FoundryOceanus.Persistence.Abstractions.Transactions;
+using FoundryOceanus.Persistence.Tests.Fakes;
 using Microsoft.Extensions.DependencyInjection;
 
-namespace Cinedex.Persistence.Tests.Integration;
+namespace FoundryOceanus.Persistence.Tests.Integration;
 
 /// <summary>
 /// Serializable isolation and the retry path, against real PostgreSQL.
 /// </summary>
 /// <remarks>
 /// These are the tests that justify the whole transient-failure classification. A serialization
-/// failure cannot be simulated convincingly — it depends on PostgreSQL's own predicate locking and
-/// surfaces as SQLSTATE 40001 from either the save or the commit — so the only way to know the
+/// failure cannot be simulated convincingly â€” it depends on PostgreSQL's own predicate locking and
+/// surfaces as SQLSTATE 40001 from either the save or the commit â€” so the only way to know the
 /// classification and the retry loop line up is to provoke a real one.
 /// </remarks>
 [Collection(PostgresCollection.Name)]
@@ -68,7 +68,7 @@ public sealed class SerializationFailureTests(PostgresFixture fixture)
     public async Task ExecuteInTransaction_AfterATransientFailure_CommitsOnTheRetryAgainstRealPostgres()
     {
         // The unit tests prove the retry loop reacts to IsTransient, and the test above proves a real
-        // 40001 sets it. What is left is that a retry works against a real database — that the
+        // 40001 sets it. What is left is that a retry works against a real database â€” that the
         // second attempt gets a genuinely new transaction and that its write actually commits.
         //
         // The failure is raised by the operation rather than provoked by contention on purpose.

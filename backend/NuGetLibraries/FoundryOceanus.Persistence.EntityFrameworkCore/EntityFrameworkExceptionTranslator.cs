@@ -8,8 +8,10 @@ namespace FoundryOceanus.Persistence.EntityFrameworkCore;
 /// </summary>
 /// <remarks>
 /// <para>
-/// Registered last in the chain so that provider translators get first refusal — they can read
-/// driver error codes and classify precisely, where this one can only see EF's own exception types.
+/// Always consulted last, so that provider translators get first refusal — they can read driver error
+/// codes and classify precisely, where this one can only see EF's own exception types.
+/// <see cref="CompositePersistenceExceptionTranslator"/> enforces that by sorting rather than by
+/// trusting registration order; its remarks explain what went wrong when it did trust it.
 /// </para>
 /// <para>
 /// Its final rule is the important one: any remaining <see cref="DbUpdateException"/> becomes an

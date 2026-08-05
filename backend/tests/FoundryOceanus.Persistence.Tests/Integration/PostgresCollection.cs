@@ -1,4 +1,4 @@
-namespace Cinedex.Persistence.Tests.Integration;
+﻿namespace FoundryOceanus.Persistence.Tests.Integration;
 
 /// <summary>
 /// Shares one container across the integration tests, and runs them sequentially.

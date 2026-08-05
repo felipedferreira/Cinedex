@@ -50,10 +50,10 @@ public static class NpgsqlUnitOfWorkServiceCollectionExtensions
     {
         ArgumentNullException.ThrowIfNull(services);
 
-        // Registered before AddUnitOfWork, and the ordering is load-bearing. Translators are consulted
-        // in registration order; AddUnitOfWork appends the Entity Framework translator, whose last rule
-        // turns any remaining DbUpdateException into an unclassified failure. Register this one after
-        // that and it would never see a SQLSTATE — the catch-all would have claimed everything first.
+        // Registered before AddUnitOfWork so the natural order is already right. It is no longer the
+        // only thing keeping it right: CompositePersistenceExceptionTranslator sorts the Entity
+        // Framework catch-all last regardless, because a composition root that called AddUnitOfWork
+        // for any context first used to silently invert this and disable SQLSTATE classification.
         services.TryAddEnumerable(
             ServiceDescriptor.Singleton<IPersistenceExceptionTranslator, NpgsqlExceptionTranslator>());
 

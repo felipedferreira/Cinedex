@@ -90,7 +90,12 @@ public static class PersistenceKeys
 `AsDefault()` moves the unkeyed registration to a context of your choosing. Calling it from two
 contexts throws at startup rather than letting registration order decide, because a default unit of
 work that depends on ordering is the kind of thing that works in tests and writes to the wrong
-database in production.
+database in production. Two contexts asking for the same `WithKey(...)` value throws for the same
+reason — the second registration would otherwise be dropped and every consumer of that key would
+resolve the first context.
+
+Re-stating a claim your own context already holds is not a conflict: a context configured across two
+modules can take its key or the default in either call.
 
 ---
 
@@ -192,7 +197,7 @@ thread-safe — and transient would give every repository a separate context on 
 
 ## Exception translation
 
-Translators are consulted **in registration order**, first non-null wins.
+Translators are consulted in order, first non-null wins.
 
 ```
 NpgsqlExceptionTranslator        (from the .Postgres package — reads SQLSTATE)
@@ -200,8 +205,15 @@ EntityFrameworkExceptionTranslator (this package — DbUpdateConcurrencyExceptio
 ```
 
 Order is load-bearing. The Entity Framework translator's last rule turns any remaining
-`DbUpdateException` into an `UnclassifiedPersistenceException`; register it first and no provider
-translator would ever see a SQLSTATE. `AddNpgsqlUnitOfWork` arranges this correctly.
+`DbUpdateException` into an `UnclassifiedPersistenceException`, so if it ran first no provider
+translator would ever see a SQLSTATE — no `DuplicateKeyException` to answer with a 409, and
+serialization failures no longer marked transient, so `ExecuteInTransactionAsync` would stop retrying
+without saying so.
+
+That is too quiet a failure to leave to registration order, so it is not left to it:
+`CompositePersistenceExceptionTranslator` sorts the catch-all last whatever order the registrations
+happened in. Provider and hand-written translators keep their order relative to each other, so a
+custom translator registered by hand still runs before the catch-all and after Npgsql's.
 
 That catch-all rule exists on purpose: letting an unrecognised `DbUpdateException` through would mean
 an Entity Framework type reaching the application layer on precisely the paths nobody anticipated,
@@ -248,9 +260,9 @@ direct statements opt in. Reads that cannot fail in an interesting way are fine 
 Test against a real database. The in-memory provider has no transactions, no savepoints, no isolation
 levels and no SQLSTATEs, so a suite that passes against it is asserting that the fake works.
 [Testcontainers](https://testcontainers.com/) makes this cheap; this repository's own
-`Cinedex.Persistence.Tests` uses `postgres:17-alpine` and is worth copying.
+`FoundryOceanus.Persistence.Tests` uses `postgres:17-alpine` and is worth copying.
 
-For unit-testing a handler, `IUnitOfWork` is a five-member interface — implementing a recording fake
+For unit-testing a handler, `IUnitOfWork` is a six-member interface — implementing a recording fake
 by hand takes a few minutes and needs no mocking framework. There is one in the test project.
 
 ---

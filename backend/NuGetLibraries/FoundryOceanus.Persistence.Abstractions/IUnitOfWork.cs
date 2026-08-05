@@ -12,7 +12,7 @@ namespace FoundryOceanus.Persistence.Abstractions;
 /// public members — <c>Database.ExecuteSqlRaw</c>, <c>ChangeTracker</c>, <c>Entry</c>,
 /// <c>Model</c>, and every <c>DbSet</c> you have declared, each of them a fully composable
 /// <c>IQueryable</c>. Any application-layer type holding one can do all of that, and over a long
-/// enough timeline some of them will. Five members cannot. That narrowing is the point of this type;
+/// enough timeline some of them will. Six members cannot. That narrowing is the point of this type;
 /// it is not a portability layer, and swapping ORMs is not the reason it is here.
 /// </para>
 /// <para>

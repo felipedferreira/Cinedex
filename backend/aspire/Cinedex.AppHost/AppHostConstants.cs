@@ -73,6 +73,43 @@ internal static class AppHostConstants
     public const string MigrationsEnabledKey = "Features:EnableDatabaseMigrationsSvc";
 
     /// <summary>
+    /// Whether the AppHost runs the SPA's Vite dev server. Committed as <c>true</c> in
+    /// <c>appsettings.json</c>; a developer working only on the backend — or without Node on
+    /// <c>PATH</c> — can turn it off for themselves, see <see cref="AppHost"/>'s remarks for how.
+    /// Nested under <c>Features</c> to match <see cref="MailpitEnabledKey"/>.
+    /// </summary>
+    public const string FrontendUiEnabledKey = "Features:EnableFrontendUiSvc";
+
+    /// <summary>
+    /// The SPA's directory (the one holding its <c>package.json</c>), relative to this project's
+    /// folder: three levels up is the repository root. Deliberately outside <c>backend/</c> and
+    /// outside <c>Cinedex.slnx</c> — Aspire launches it as an external process, it is not a
+    /// <c>ProjectReference</c>.
+    /// </summary>
+    public const string FrontendAppDirectory = "../../../frontend/cinadex-ui";
+
+    /// <summary>
+    /// Fixed host port for the dev server, matching the port <c>vite.config.ts</c> defaults to and
+    /// the one <c>compose.yaml</c> publishes the SPA on. Fixed rather than dynamic so the URL is the
+    /// same in every path, and so it keeps matching the web service's <c>Frontend:BaseUrl</c>, which
+    /// is what password-reset links are built from.
+    /// </summary>
+    public const int FrontendPort = 9000;
+
+    /// <summary>
+    /// Read by <c>vite.config.ts</c> to target its <c>/movies-svc</c> dev proxy. Its default there is
+    /// the bare <c>dotnet run</c> address, which is not where the AppHost puts the web service.
+    /// </summary>
+    public const string ViteApiProxyTargetVariable = "VITE_API_PROXY_TARGET";
+
+    /// <summary>
+    /// The variable Aspire exports the dev server's allocated port to, which <c>vite.config.ts</c>
+    /// reads — Vite does not pick <c>PORT</c> up on its own. <c>AddViteApp</c> separately appends the
+    /// same port to the npm command as <c>--port</c>.
+    /// </summary>
+    public const string FrontendPortVariable = "PORT";
+
+    /// <summary>
     /// Scalar API docs, relative to the web service endpoint. Carries the <c>/movies-svc</c> base that
     /// <c>UsePathBase</c> applies, and is served only because the AppHost forces
     /// <c>Features__ApiDocumentationEnabled</c> on.

@@ -39,7 +39,15 @@ The dev server runs on https://localhost:9000 (configured in [`vite.config.ts`](
 It uses a local HTTPS certificate and proxies `/movies-svc` to the backend's HTTPS dev profile at
 `https://localhost:7201`, so auth cookies use the same secure, same-origin shape as Docker Compose.
 Override the backend target with `VITE_API_PROXY_TARGET` if your API runs somewhere else, for example
-`VITE_API_PROXY_TARGET=https://localhost:7443 npm run dev`.
+`VITE_API_PROXY_TARGET=https://localhost:7443 npm run dev`. The port comes from `PORT` when that is
+set, falling back to 9000.
+
+You do not have to start this yourself: `dotnet run --project aspire/Cinedex.AppHost` (from
+`backend/`) runs this same `npm run dev` as one of its resources. It pins the port to 9000 (passed both as
+`--port` and as `PORT`) and sets `VITE_API_PROXY_TARGET` to the web service it started, rather than
+the `7201` default — so the URL and the proxy are both already correct. It installs dependencies
+first when `node_modules` is missing. Turn the whole resource off there with
+`Features:EnableFrontendUiSvc`.
 
 ## 📜 Scripts
 

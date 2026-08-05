@@ -6,6 +6,12 @@ import babel from '@rolldown/plugin-babel';
 const apiProxyTarget =
   process.env.VITE_API_PROXY_TARGET ?? 'https://localhost:7201';
 
+// PORT is what the Aspire AppHost sets for the endpoint it publishes for this dev server (it also
+// passes `--port` on the command line, which wins over this either way). Vite does not read PORT on
+// its own. The 9000 fallback keeps a bare `npm run dev` — and the URL the compose stack serves the
+// SPA on — unchanged.
+const devServerPort = Number(process.env.PORT ?? 9_000);
+
 // https://vite.dev/config/
 export default defineConfig({
   plugins: [
@@ -14,7 +20,7 @@ export default defineConfig({
     babel({ presets: [reactCompilerPreset()] }),
   ],
   server: {
-    port: 9_000,
+    port: devServerPort,
     strictPort: true,
     open: true,
     proxy: {

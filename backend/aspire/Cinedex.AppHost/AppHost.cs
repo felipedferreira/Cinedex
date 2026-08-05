@@ -1,14 +1,16 @@
 namespace Cinedex.AppHost;
 
 /// <summary>
-/// Aspire orchestration host for the Cinedex backend: Postgres and Mailpit as containers, the
-/// three .NET hosts as local processes.
+/// Aspire orchestration host for the Cinedex stack: Postgres and Mailpit as containers, the three
+/// .NET hosts and the SPA's Vite dev server as local processes.
 /// </summary>
 /// <remarks>
 /// <para>
 /// This is an alternative to <c>docker compose up</c>, not a replacement — <c>compose.yaml</c> stays
-/// the prod-like path (built images, Nginx/HTTPS proxy, Seq, the SPA). This host exists for the inner
-/// loop: no image rebuild per change, and migrations are applied for you.
+/// the prod-like path (built images, Nginx terminating HTTPS in front of the API, Seq, the SPA as a
+/// static bundle). This host exists for the inner loop: no image rebuild per change, migrations are
+/// applied for you, and the SPA runs from the Vite dev server with hot reload instead. Both publish
+/// the SPA on <c>https://localhost:9000</c> and Postgres on 5432, so the two cannot run at once.
 /// </para>
 /// <para>
 /// There is no <c>Cinedex.ServiceDefaults</c> project on purpose. Every host already calls
@@ -52,6 +54,13 @@ namespace Cinedex.AppHost;
 /// day — email delivery already tolerates failure (see <c>EmailDeliveryWorker</c>) — but there is then
 /// nowhere to read a password-reset email, so turn it back on when you need one.
 /// </para>
+/// <para>
+/// <c>Features:EnableFrontendUiSvc</c> (default <c>true</c>) controls whether the SPA's Vite dev
+/// server runs, same override channels again. It is the one resource that needs Node and npm on
+/// <c>PATH</c> — turn it off on a machine without them, or when the session is backend-only. With it
+/// on, the SPA is served at <c>https://localhost:9000</c> (self-signed, so expect the browser
+/// warning) and its <c>/movies-svc</c> proxy already points at this host's web service.
+/// </para>
 /// </remarks>
 public sealed class AppHost
 {
@@ -72,6 +81,7 @@ public sealed class AppHost
         var migrator = builder.AddCinedexMigrator(moviesDb);
         var webservice = builder.AddCinedexWebService(moviesDb, mailpit);
         var schedulerWorker = builder.AddCinedexSchedulerWorker(moviesDb);
+        builder.AddCinedexFrontendUi(webservice);
 
         new[] { webservice, schedulerWorker }.WaitForDatabaseAvailability(migrator, moviesDb);
 

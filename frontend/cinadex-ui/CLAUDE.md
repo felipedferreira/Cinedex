@@ -18,6 +18,7 @@ CI requires lint, format:check, build, and coverage to all pass — run `npm run
 
 ## Notes
 
-- The dev-server API proxy target is overridable via `VITE_API_PROXY_TARGET` (defaults to the local `dotnet run` backend at `https://localhost:7201`).
+- The dev-server API proxy target is overridable via `VITE_API_PROXY_TARGET` (defaults to the local `dotnet run` backend at `https://localhost:7201`); the port is overridable via `PORT` (defaults to 9000). Both are read from `process.env` in `vite.config.ts`, i.e. from the shell — a `.env` file will **not** work for them.
+- The Aspire AppHost (`backend/aspire/Cinedex.AppHost`) runs `npm run dev` as a resource — pinning the port to 9000 (as `--port` and `PORT`) and setting `VITE_API_PROXY_TARGET` to the web service it started — so `dotnet run --project aspire/Cinedex.AppHost` brings the SPA up at https://localhost:9000 already wired to the API, running `npm install` first when `node_modules` is missing. `Features:EnableFrontendUiSvc: false` there omits it.
 - `nginx.conf` serves the SPA and proxies `/movies-svc/` to the `movies.webservice` container — a backend base-path change must be mirrored there and in `vite.config.ts`.
 - Folder name is spelled `cinadex-ui`; the product is "Cinedex".

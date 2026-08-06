@@ -12,6 +12,17 @@ const apiProxyTarget =
 // SPA on — unchanged.
 const devServerPort = Number(process.env.PORT ?? 9_000);
 
+// Whether the dev server pops a browser tab on start. VITE_OPEN_BROWSER wins when it is set; with it
+// unset the answer is `true`, so a bare `npm run dev` is unchanged. The Aspire AppHost sets it to
+// "false" because its dashboard already links here, and a tab per resource on every run is noise.
+// Only the listed literals turn it off — an unrecognised value stays on rather than silently
+// suppressing the tab.
+const openBrowserSetting = process.env.VITE_OPEN_BROWSER;
+const openBrowser =
+  openBrowserSetting === undefined
+    ? true
+    : !/^(false|0|off|no)$/i.test(openBrowserSetting);
+
 // https://vite.dev/config/
 export default defineConfig({
   plugins: [
@@ -22,7 +33,7 @@ export default defineConfig({
   server: {
     port: devServerPort,
     strictPort: true,
-    open: true,
+    open: openBrowser,
     proxy: {
       '/movies-svc': {
         target: apiProxyTarget,

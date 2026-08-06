@@ -90,8 +90,9 @@ public sealed class AppHost
         var migrator = builder.AddCinedexMigrator(moviesDb);
         var webservice = builder.AddCinedexWebService(moviesDb, mailpit);
         var schedulerWorker = builder.AddCinedexSchedulerWorker(moviesDb);
-        builder.AddCinedexFrontendUi(webservice);
-        builder.AddCinedexStorybook();
+        var frontend = builder.AddCinedexFrontendGroup();
+        builder.AddCinedexFrontendUi(webservice, frontend);
+        builder.AddCinedexStorybook(frontend);
 
         new[] { webservice, schedulerWorker }.WaitForDatabaseAvailability(migrator, moviesDb);
 

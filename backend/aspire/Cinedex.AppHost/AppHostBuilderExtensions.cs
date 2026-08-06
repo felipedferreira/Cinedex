@@ -193,23 +193,51 @@ internal static class AppHostBuilderExtensions
     }
 
     /// <summary>
+    /// Adds the dashboard-only <c>frontend</c> node the SPA and Storybook are nested under, unless
+    /// both of them are disabled.
+    /// </summary>
+    /// <param name="builder">Distributed application builder.</param>
+    /// <returns>
+    /// The grouping resource, or <see langword="null"/> when neither child would exist — a parent node
+    /// with nothing under it is worse than no node at all.
+    /// </returns>
+    /// <remarks>
+    /// <see cref="FrontendGroupResource"/> never runs, so nothing publishes a state for it and the
+    /// dashboard would otherwise show a blank row. <c>WithInitialState</c> supplies one instead:
+    /// <c>Running</c> because the node stands for whichever dev servers are underneath it, and an
+    /// empty property list because a grouping node has nothing of its own to show.
+    /// </remarks>
+    public static IResourceBuilder<FrontendGroupResource>? AddCinedexFrontendGroup(
+        this IDistributedApplicationBuilder builder)
+    {
+        if (!builder.IsFrontendUiEnabled() && !builder.IsStorybookEnabled())
+        {
+            return null;
+        }
+
+        return builder.AddResource(new FrontendGroupResource(AppHostConstants.FrontendGroupName))
+            .WithInitialState(new CustomResourceSnapshot
+            {
+                ResourceType = AppHostConstants.FrontendGroupResourceType,
+                State = KnownResourceStates.Running,
+                Properties = [],
+            });
+    }
+
+    /// <summary>
     /// Adds the SPA's Vite dev server, unless <see cref="AppHostConstants.FrontendUiEnabledKey"/>
     /// disables it.
     /// </summary>
     /// <param name="builder">Distributed application builder.</param>
     /// <param name="webservice">The web service the dev server proxies <c>/movies-svc</c> to.</param>
+    /// <param name="frontend">The grouping node to nest under, from <see cref="AddCinedexFrontendGroup"/>.</param>
     /// <returns>The dev server resource, or <see langword="null"/> when the feature flag is off.</returns>
     public static IResourceBuilder<ViteAppResource>? AddCinedexFrontendUi(
         this IDistributedApplicationBuilder builder,
-        IResourceBuilder<ProjectResource> webservice)
+        IResourceBuilder<ProjectResource> webservice,
+        IResourceBuilder<FrontendGroupResource>? frontend)
     {
-        // Defaults to true when the key is absent, same reasoning as the other two flags. Unlike them
-        // this one also needs Node and npm on PATH; turning it off is the escape hatch for a machine
-        // that has neither, or for a backend-only session.
-        var frontendUiEnabled =
-            builder.Configuration.GetValue(AppHostConstants.FrontendUiEnabledKey, defaultValue: true);
-
-        if (!frontendUiEnabled)
+        if (!builder.IsFrontendUiEnabled())
         {
             return null;
         }
@@ -231,7 +259,12 @@ internal static class AppHostBuilderExtensions
         // AddViteApp also appends `--port` to the npm command from the same endpoint. Vite does not
         // read PORT on its own, so vite.config.ts reads it explicitly and falls back to 9000. Unproxied,
         // all three agree; the wiring still holds if the port ever moves.
-        return builder.AddViteApp("ui", AppHostConstants.FrontendAppDirectory)
+        //
+        // VITE_OPEN_BROWSER suppresses the tab Vite would otherwise open. The dashboard already links
+        // to the SPA, so under this host the tab is a duplicate — and with Storybook alongside it, two
+        // of them on every `dotnet run`. Set here rather than committed as `open: false` in
+        // vite.config.ts so a bare `npm run dev` still opens the browser the way it always has.
+        var ui = builder.AddViteApp("ui", AppHostConstants.FrontendAppDirectory)
             .WithHttpsEndpoint(
                 port: AppHostConstants.FrontendPort,
                 targetPort: AppHostConstants.FrontendPort,
@@ -240,7 +273,18 @@ internal static class AppHostBuilderExtensions
             .WithEnvironment(
                 AppHostConstants.ViteApiProxyTargetVariable,
                 webservice.GetEndpoint("http"))
+            .WithEnvironment(
+                AppHostConstants.ViteOpenBrowserVariable,
+                AppHostConstants.OpenBrowserDisabledValue)
             .WaitFor(webservice);
+
+        // Presentational only: the WaitFor above, not this, is what orders startup.
+        if (frontend is not null)
+        {
+            ui.WithParentRelationship(frontend);
+        }
+
+        return ui;
     }
 
     /// <summary>
@@ -248,16 +292,13 @@ internal static class AppHostBuilderExtensions
     /// <see cref="AppHostConstants.StorybookEnabledKey"/> disables it.
     /// </summary>
     /// <param name="builder">Distributed application builder.</param>
+    /// <param name="frontend">The grouping node to nest under, from <see cref="AddCinedexFrontendGroup"/>.</param>
     /// <returns>The Storybook resource, or <see langword="null"/> when the feature flag is off.</returns>
     public static IResourceBuilder<ViteAppResource>? AddCinedexStorybook(
-        this IDistributedApplicationBuilder builder)
+        this IDistributedApplicationBuilder builder,
+        IResourceBuilder<FrontendGroupResource>? frontend)
     {
-        // Defaults to true when the key is absent, same as the other flags. Shares the SPA's
-        // Node-and-npm-on-PATH requirement, so a machine without them turns both off.
-        var storybookEnabled =
-            builder.Configuration.GetValue(AppHostConstants.StorybookEnabledKey, defaultValue: true);
-
-        if (!storybookEnabled)
+        if (!builder.IsStorybookEnabled())
         {
             return null;
         }
@@ -279,14 +320,32 @@ internal static class AppHostBuilderExtensions
         // No WaitFor and no reference to any other resource: Storybook renders @cinedex/components in
         // isolation and talks to nothing, so it is the one resource that can start whenever it likes.
         // That also means it stays useful when the backend half of the stack is switched off.
-        return builder.AddViteApp(
+        //
+        // --no-open suppresses the browser tab, the same call the SPA makes through VITE_OPEN_BROWSER
+        // — but it has to be a CLI flag here, because Storybook opens the tab itself rather than
+        // through Vite's server.open, so this package's vite.config.ts has no say in it. WithArgs
+        // appends after the `--port` AddViteApp adds, which puts it past npm's `--` separator and in
+        // storybook dev's own argv. Passed from here rather than baked into the package's `storybook`
+        // script so a bare `npm run storybook` still opens the browser.
+        var storybook = builder.AddViteApp(
                 "storybook",
                 AppHostConstants.StorybookAppDirectory,
                 AppHostConstants.StorybookRunScript)
             .WithHttpEndpoint(
                 port: AppHostConstants.StorybookPort,
                 targetPort: AppHostConstants.StorybookPort,
-                isProxied: false);
+                isProxied: false)
+            .WithArgs(AppHostConstants.StorybookNoOpenArgument);
+
+        // Presentational only, and specifically not a dependency: nesting Storybook under the frontend
+        // node does not make it wait on anything, which is what keeps it usable with the rest of the
+        // stack switched off.
+        if (frontend is not null)
+        {
+            storybook.WithParentRelationship(frontend);
+        }
+
+        return storybook;
     }
 
     /// <summary>Adds the scheduler worker, wired to Postgres.</summary>
@@ -330,4 +389,29 @@ internal static class AppHostBuilderExtensions
             }
         }
     }
+
+    /// <summary>
+    /// Whether the SPA's Vite dev server is enabled. Defaults to <see langword="true"/> when the key
+    /// is absent, same reasoning as the other flags. Unlike most of them this one also needs Node and
+    /// npm on PATH; turning it off is the escape hatch for a machine that has neither, or for a
+    /// backend-only session.
+    /// </summary>
+    /// <param name="builder">Distributed application builder.</param>
+    /// <returns><see langword="true"/> when the SPA should run.</returns>
+    private static bool IsFrontendUiEnabled(this IDistributedApplicationBuilder builder) =>
+        builder.Configuration.GetValue(AppHostConstants.FrontendUiEnabledKey, defaultValue: true);
+
+    /// <summary>
+    /// Whether Storybook is enabled. Defaults to <see langword="true"/> when the key is absent, and
+    /// shares <see cref="IsFrontendUiEnabled"/>'s Node-and-npm-on-PATH requirement.
+    /// </summary>
+    /// <param name="builder">Distributed application builder.</param>
+    /// <returns><see langword="true"/> when Storybook should run.</returns>
+    /// <remarks>
+    /// Both flags are read through helpers rather than inline so <see cref="AddCinedexFrontendGroup"/>
+    /// — which has to know whether either child will exist before it adds their parent — cannot drift
+    /// from the methods that actually add those resources.
+    /// </remarks>
+    private static bool IsStorybookEnabled(this IDistributedApplicationBuilder builder) =>
+        builder.Configuration.GetValue(AppHostConstants.StorybookEnabledKey, defaultValue: true);
 }

@@ -73,6 +73,20 @@ internal static class AppHostConstants
     public const string MigrationsEnabledKey = "Features:EnableDatabaseMigrationsSvc";
 
     /// <summary>
+    /// Dashboard name of the <see cref="FrontendGroupResource"/> the SPA and Storybook are nested
+    /// under. Deliberately not suffixed <c>-svc</c> like the others: it is a grouping node, not a
+    /// service.
+    /// </summary>
+    public const string FrontendGroupName = "frontend";
+
+    /// <summary>
+    /// The type shown in the dashboard's Type column for <see cref="FrontendGroupName"/>. Aspire
+    /// derives this from the resource for real resources; a custom one has to supply it with the rest
+    /// of its initial snapshot.
+    /// </summary>
+    public const string FrontendGroupResourceType = "Frontend";
+
+    /// <summary>
     /// Whether the AppHost runs the SPA's Vite dev server. Committed as <c>true</c> in
     /// <c>appsettings.json</c>; a developer working only on the backend — or without Node on
     /// <c>PATH</c> — can turn it off for themselves, see <see cref="AppHost"/>'s remarks for how.
@@ -85,8 +99,16 @@ internal static class AppHostConstants
     /// folder: three levels up is the repository root. Deliberately outside <c>backend/</c> and
     /// outside <c>Cinedex.slnx</c> — Aspire launches it as an external process, it is not a
     /// <c>ProjectReference</c>.
+    /// <para>
+    /// This is the app package inside the <c>frontend/</c> npm workspace, not the workspace root.
+    /// That matters: the package's <c>dev</c> script is plain <c>vite</c>, so the <c>--port</c>
+    /// <c>AddViteApp</c> appends reaches it, whereas the root script delegates through
+    /// <c>-w cinadex-app</c> and would swallow it. Installing from here is still correct — npm walks
+    /// up to the workspace root, so the single hoisted lockfile and the <c>@cinedex/components</c> link are
+    /// what a fresh clone gets.
+    /// </para>
     /// </summary>
-    public const string FrontendAppDirectory = "../../../frontend/cinadex-ui";
+    public const string FrontendAppDirectory = "../../../frontend/apps/cinadex-app";
 
     /// <summary>
     /// Fixed host port for the dev server, matching the port <c>vite.config.ts</c> defaults to and
@@ -108,6 +130,64 @@ internal static class AppHostConstants
     /// same port to the npm command as <c>--port</c>.
     /// </summary>
     public const string FrontendPortVariable = "PORT";
+
+    /// <summary>
+    /// Read by <c>vite.config.ts</c> to decide whether the dev server opens a browser tab on start.
+    /// It defaults to opening one when this is unset, which is what a bare <c>npm run dev</c> should
+    /// keep doing; the AppHost sets it to <see cref="OpenBrowserDisabledValue"/> because the dashboard
+    /// already links to the SPA, so a tab per resource on every run is noise.
+    /// </summary>
+    public const string ViteOpenBrowserVariable = "VITE_OPEN_BROWSER";
+
+    /// <summary>
+    /// The value <see cref="ViteOpenBrowserVariable"/> is set to. <c>vite.config.ts</c> also accepts
+    /// <c>0</c>, <c>off</c> and <c>no</c>, but keeping one spelling here means the config's comment and
+    /// this file cannot disagree about which one is in use.
+    /// </summary>
+    public const string OpenBrowserDisabledValue = "false";
+
+    /// <summary>
+    /// Storybook's opt-out from opening a browser tab, which the AppHost appends to the npm command
+    /// for the same reason it sets <see cref="ViteOpenBrowserVariable"/> on the SPA. It has to be a CLI
+    /// flag rather than the environment variable the SPA uses: Storybook opens the tab from its own
+    /// <c>storybook dev</c> command, not through Vite's <c>server.open</c>, so its <c>vite.config.ts</c>
+    /// has no say in it.
+    /// </summary>
+    public const string StorybookNoOpenArgument = "--no-open";
+
+    /// <summary>
+    /// Whether the AppHost runs the component library's Storybook. Committed as <c>true</c> in
+    /// <c>appsettings.json</c>; a developer not touching components can turn it off for themselves —
+    /// see <see cref="AppHost"/>'s remarks for how. Nested under <c>Features</c> to match
+    /// <see cref="FrontendUiEnabledKey"/>, and shares that flag's Node-and-npm-on-PATH requirement.
+    /// </summary>
+    public const string StorybookEnabledKey = "Features:EnableStorybookSvc";
+
+    /// <summary>
+    /// Storybook's directory (the one holding its <c>package.json</c>), relative to this project's
+    /// folder, resolved the same way as <see cref="FrontendAppDirectory"/>.
+    /// <para>
+    /// This is the app package rather than the workspace root for the same reason: the root's
+    /// <c>storybook</c> script delegates through <c>-w @cinedex/storybook</c> and would swallow the
+    /// <c>--port</c> Aspire appends. npm still walks up to <c>frontend/</c> for the hoisted lockfile,
+    /// so the install Aspire runs on a fresh clone is the whole workspace.
+    /// </para>
+    /// </summary>
+    public const string StorybookAppDirectory = "../../../frontend/apps/storybook";
+
+    /// <summary>
+    /// The npm script <c>AddViteApp</c> runs for Storybook. Unlike the SPA, this package has no
+    /// <c>dev</c> script — that is the parameter's default, so it has to be passed explicitly.
+    /// </summary>
+    public const string StorybookRunScript = "storybook";
+
+    /// <summary>
+    /// Fixed host port for Storybook's dev server, matching the <c>-p</c> in the package's own
+    /// <c>storybook</c> script so the AppHost and a bare <c>npm run storybook</c> serve the same URL.
+    /// Also matches the port <c>compose.yaml</c> publishes the built static bundle on — safe to share
+    /// since Aspire and compose already can't run at once (both bind Postgres and the SPA).
+    /// </summary>
+    public const int StorybookPort = 9001;
 
     /// <summary>
     /// Scalar API docs, relative to the web service endpoint. Carries the <c>/movies-svc</c> base that

@@ -1,0 +1,28 @@
+{
+  "compilerOptions": {
+    "tsBuildInfoFile": "./node_modules/.tmp/tsconfig.node.tsbuildinfo",
+    "target": "es2023",
+    // DOM because `.storybook/preview.tsx`'s theme decorator touches `document`.
+    "lib": ["ES2023", "DOM"],
+    "module": "esnext",
+    // `vite/client` supplies the ambient `*.css` declarations that `preview.tsx` needs for its
+    // side-effect style imports.
+    "types": ["node", "vite/client"],
+    "skipLibCheck": true,
+
+    /* Bundler mode */
+    "moduleResolution": "bundler",
+    "allowImportingTsExtensions": true,
+    "verbatimModuleSyntax": true,
+    "moduleDetection": "force",
+    "noEmit": true,
+    "jsx": "react-jsx",
+
+    /* Linting */
+    "noUnusedLocals": true,
+    "noUnusedParameters": true,
+    "erasableSyntaxOnly": true,
+    "noFallthroughCasesInSwitch": true
+  },
+  "include": ["vite.config.ts", ".storybook/**/*.ts", ".storybook/**/*.tsx"]
+}

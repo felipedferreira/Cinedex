@@ -12,7 +12,7 @@ COPY ["src/Application/Cinedex.Application.csproj", "src/Application/"]
 COPY ["src/Domain/Cinedex.Domain.csproj", "src/Domain/"]
 COPY ["src/Adapters/Cinedex.Auth.Identity/Cinedex.Auth.Identity.csproj", "src/Adapters/Cinedex.Auth.Identity/"]
 COPY ["src/Adapters/Cinedex.Persistence.Postgres/Cinedex.Persistence.Postgres.csproj", "src/Adapters/Cinedex.Persistence.Postgres/"]
-COPY ["NuGetLibraries/Cinedex.Observability.OpenTelemetry/Cinedex.Observability.OpenTelemetry.csproj", "NuGetLibraries/Cinedex.Observability.OpenTelemetry/"]
+COPY ["NuGetLibraries/Observability/FoundryOceanus.Observability.OpenTelemetry/FoundryOceanus.Observability.OpenTelemetry.csproj", "NuGetLibraries/Observability/FoundryOceanus.Observability.OpenTelemetry/"]
 RUN dotnet restore "src/Presentation/Cinedex.DatabaseMigrator/Cinedex.DatabaseMigrator.csproj"
 COPY . .
 WORKDIR "/src/src/Presentation/Cinedex.DatabaseMigrator"

@@ -27,8 +27,15 @@
     "EnableMailpitSvc": false,
 
     // false skips the SPA's Vite dev server entirely: nothing serves https://localhost:9000, and the
-    // API is only reachable directly at http://localhost:5187. This is the one resource that needs
-    // Node and npm on PATH, so turn it off on a machine without them or for a backend-only session.
-    "EnableFrontendUiSvc": false
+    // API is only reachable directly at http://localhost:9002. Together with EnableStorybookSvc below
+    // these are the two resources that need Node and npm on PATH, so turn both off on a machine
+    // without them or for a backend-only session.
+    "EnableFrontendUiSvc": false,
+
+    // false skips the component library's Storybook entirely: nothing serves http://localhost:9001.
+    // Independent of EnableFrontendUiSvc — Storybook waits on nothing and calls no API, so it runs
+    // (or not) regardless of what the rest of the stack is doing. Turn it off for a backend-only
+    // session, or when working on the SPA rather than on components.
+    "EnableStorybookSvc": false
   }
 }

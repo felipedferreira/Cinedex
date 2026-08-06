@@ -22,7 +22,7 @@
 
       DockerServiceName must name a service Visual Studio actually models, which means one backed
       by a project in the solution — it creates obj/Docker/<service>/ only for those. Naming the
-      cinadex-ui proxy here, even though it is what publishes port 9000, resolves to nothing and
+      cinadex-app proxy here, even though it is what publishes port 9000, resolves to nothing and
       the browser launch is skipped without an error.
 
       The URL is therefore absolute rather than templated with {Scheme}/{ServicePort}: those

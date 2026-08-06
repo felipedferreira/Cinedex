@@ -63,7 +63,7 @@ flowchart LR
     MIG -- exits 0 --> WEB[Web Service]
     SEQ[Seq] -- healthy --> WEB
     MAIL[Mailpit] -- healthy --> WEB
-    WEB --> UI[Cinadex UI + Nginx proxy]
+    WEB --> UI[Cinadex App + Nginx proxy]
 ```
 
 The one-shot **Database Migrator** applies pending EF Core migrations for both the catalog and
@@ -71,7 +71,8 @@ auth schemas and exits — there's nothing else to run by hand for a fresh datab
 
 | Service | Address | Purpose |
 |---|---|---|
-| `cinadex-ui` | https://localhost:9000 | React SPA + reverse proxy (self-signed cert) |
+| `cinadex-app` | https://localhost:9000 | React SPA + reverse proxy (self-signed cert) |
+| `cinedex-storybook` | http://localhost:9001 | Storybook for the `@cinedex/components` component library (static, plain HTTP) |
 | `movies.webservice` | via the proxy at `/movies-svc` | ASP.NET Core API (not exposed directly) |
 | `postgres` | localhost:5432 | Catalog + auth data |
 | `seq` | http://localhost:5341 | Logs & traces |
@@ -178,6 +179,6 @@ Almost always a missing or incomplete root `.env` — see [step 1](#1-configure-
 | Doc | For |
 |---|---|
 | [Backend README](../backend/README.md) | Architecture, local (non-Docker) dev, EF migrations, testing & coverage |
-| [Frontend README](../frontend/cinadex-ui/README.md) | `cinadex-ui` stack, scripts, linting, testing |
+| [Frontend README](../frontend/README.md) | Workspace layout, scripts, linting, testing; the `cinadex-app` app and the `@cinedex/components` component library |
 | [Auth & Security Model](auth-security-model.md) | JWT design, refresh-token rotation, known gaps |
 | [CONTRIBUTING](../CONTRIBUTING.md) | Workflow, code standards, PR checklist |

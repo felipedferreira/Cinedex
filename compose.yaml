@@ -118,7 +118,7 @@ services:
         condition: service_healthy
     environment:
       ASPNETCORE_ENVIRONMENT: Production
-      # The app sits behind the cinadex-ui Nginx proxy; honor its X-Forwarded-* headers so
+      # The app sits behind the cinadex-app Nginx proxy; honor its X-Forwarded-* headers so
       # the request scheme and client address are the originals, not http and the proxy IP.
       ForwardedHeaders__Enabled: "true"
       Features__ApiDocumentationEnabled: "true"
@@ -160,15 +160,30 @@ services:
       OTEL_EXPORTER_OTLP_HEADERS: "X-Seq-ApiKey=${SEQ_API_KEY}"
       OTEL_SERVICE_NAME: "Cinedex.SchedulerWorker"
 
-  cinadex-ui:
-    image: cinadex-ui
+  cinadex-app:
+    image: cinadex-app
     build:
-      context: ./frontend/cinadex-ui
-    container_name: cinadex-ui
+      # The frontend is an npm workspace: the context has to be the workspace
+      # root so the build can see the hoisted lockfile and the @cinedex/components
+      # package the app depends on.
+      context: ./frontend
+      dockerfile: apps/cinadex-app/Dockerfile
+    container_name: cinadex-app
     ports:
       - "127.0.0.1:9000:443"
     depends_on:
       - movies.webservice
+
+  # The component library's Storybook, served as a static bundle. No depends_on and no API proxy —
+  # it renders @cinedex/components in isolation and calls nothing.
+  cinedex-storybook:
+    image: cinedex-storybook
+    build:
+      context: ./frontend
+      dockerfile: apps/storybook/Dockerfile
+    container_name: cinedex-storybook
+    ports:
+      - "127.0.0.1:9001:80"
 
 volumes:
   postgres_data:

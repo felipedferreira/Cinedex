@@ -24,8 +24,8 @@ COPY ["src/Domain/Cinedex.Domain.csproj", "src/Domain/"]
 COPY ["src/Adapters/Cinedex.Auth.Identity/Cinedex.Auth.Identity.csproj", "src/Adapters/Cinedex.Auth.Identity/"]
 COPY ["src/Adapters/Cinedex.Email.Smtp/Cinedex.Email.Smtp.csproj", "src/Adapters/Cinedex.Email.Smtp/"]
 COPY ["src/Adapters/Cinedex.Persistence.Postgres/Cinedex.Persistence.Postgres.csproj", "src/Adapters/Cinedex.Persistence.Postgres/"]
-COPY ["NuGetLibraries/Cinedex.Observability.OpenTelemetry/Cinedex.Observability.OpenTelemetry.csproj", "NuGetLibraries/Cinedex.Observability.OpenTelemetry/"]
-COPY ["NuGetLibraries/Cinedex.WebService.Contracts/Cinedex.WebService.Contracts.csproj", "NuGetLibraries/Cinedex.WebService.Contracts/"]
+COPY ["NuGetLibraries/Observability/FoundryOceanus.Observability.OpenTelemetry/FoundryOceanus.Observability.OpenTelemetry.csproj", "NuGetLibraries/Observability/FoundryOceanus.Observability.OpenTelemetry/"]
+COPY ["NuGetLibraries/Contracts/FoundryOceanus.WebService.Contracts/FoundryOceanus.WebService.Contracts.csproj", "NuGetLibraries/Contracts/FoundryOceanus.WebService.Contracts/"]
 RUN dotnet restore "src/Presentation/Cinedex.WebService/Cinedex.WebService.csproj"
 COPY . .
 COPY --from=ts-build /work/wwwroot /src/src/Presentation/Cinedex.WebService/wwwroot

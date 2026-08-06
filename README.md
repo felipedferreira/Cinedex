@@ -10,9 +10,9 @@ A full-stack portfolio application for cataloging movie titles and their genres 
 Cinedex/
 ├── backend/      # .NET solution (Web API, application core, persistence, tests)
 │   └── aspire/   # Aspire AppHost — the local dev loop (see below)
-├── frontend/     # Standalone SPA consuming the backend's OpenAPI spec
+├── frontend/     # npm workspace — the SPA, the component library, and its Storybook
 ├── docs/         # Design docs (auth & security model, planned ADRs)
-└── compose.yaml  # Orchestrates PostgreSQL, the web service, the frontend, Seq, and Mailpit
+└── compose.yaml  # Orchestrates PostgreSQL, the web service, the SPA, Storybook, Seq, and Mailpit
 ```
 
 - **[Getting Started](docs/getting-started.md)** — new here? Clone-to-running-app in 5 minutes via Docker Compose
@@ -37,8 +37,9 @@ troubleshooting in **[docs/getting-started.md](docs/getting-started.md)**.
 
 ### 🧪 Or: the Aspire dev loop
 
-For iterating on the backend, the Aspire AppHost is faster — it runs the .NET services as local
-processes instead of rebuilding images, and it applies the database migrations for you:
+For day-to-day work the Aspire AppHost is faster — it runs the .NET services and both frontend dev
+servers as local processes instead of rebuilding images, and it applies the database migrations for
+you:
 
 ```bash
 cd backend/aspire/Cinedex.AppHost
@@ -46,20 +47,37 @@ dotnet user-secrets set "Parameters:postgres-password" "<choose a password>"   #
 dotnet run
 ```
 
-It needs Docker and that one secret, but no `.env`. The password is only applied when the database
-volume is first created — to change it later, `docker volume rm cinedex-aspire-pgdata` first. PostgreSQL and Mailpit come up as containers; the migrator, web
-service and scheduler worker run as processes, with their logs and traces on the Aspire dashboard
-(the console prints a login URL). In JetBrains Rider, the equivalent **Aspire AppHost** entry is
-already in the Run dropdown.
+It needs Docker, Node/npm and that one secret, but no `.env`. The password is only applied when the
+database volume is first created — to change it later, `docker volume rm cinedex-aspire-pgdata`
+first. PostgreSQL and Mailpit come up as containers; the migrator, web service, scheduler worker and
+both frontend dev servers run as processes, with their logs and traces on the Aspire dashboard (the
+console prints a login URL). In JetBrains Rider, the equivalent **Aspire AppHost** entry is already
+in the Run dropdown.
 
-Once your schema is current, you can skip the migration step on subsequent runs — from
-`backend/aspire/Cinedex.AppHost`, either `dotnet user-secrets set "Features:EnableDatabaseMigrationsSvc" "false"`
-or copy `appsettings.Development.json.example` to `appsettings.Development.json` (git-ignored). Both
-are per-developer and neither touches a tracked file. Turn it back on for a run after pulling a new
-migration or against an empty database.
+That covers the whole stack: the SPA at **https://localhost:9000** with its `/movies-svc` proxy
+already pointed at the web service this host started, and Storybook at **http://localhost:6006**.
+
+Each resource can be switched off individually, so you only start what the session needs. From
+`backend/aspire/Cinedex.AppHost`, either `dotnet user-secrets set "<flag>" "false"` or copy
+`appsettings.Development.json.example` to `appsettings.Development.json` (git-ignored). Both are
+per-developer and neither touches a tracked file.
+
+| Flag                                   | Off means                                                                     |
+| -------------------------------------- | ----------------------------------------------------------------------------- |
+| `Features:EnableDatabaseMigrationsSvc` | Nothing applies migrations — faster, but the schema must already be current    |
+| `Features:EnableFrontendUiSvc`         | No SPA on 9000; the API is only reachable directly at `http://localhost:5187`  |
+| `Features:EnableStorybookSvc`          | No Storybook on 6006                                                          |
+| `Features:EnableMailpitSvc`            | Outgoing email has nowhere to land (logged, not fatal)                        |
+
+Turn migrations back on for a run after pulling a new migration or against an empty database. The two
+frontend flags are the ones that need Node and npm on `PATH`, so a machine without them turns both
+off; Storybook waits on nothing and calls no API, so it is unaffected by the rest of the stack in
+either direction. Full detail on every flag is in [`backend/CLAUDE.md`](backend/CLAUDE.md).
 
 This complements Compose rather than replacing it — `docker compose up` is still the prod-like path,
-with built images, the Nginx/HTTPS proxy, Seq and the SPA. **Run one or the other**: both publish
-PostgreSQL on 5432, so the second to start fails to bind. Their data volumes are separate, so neither
-can corrupt the other's database. The AppHost does not serve the SPA, so use Compose or `npm run dev`
-for frontend work.
+with built images, the Nginx/HTTPS proxy, Seq, and both frontends served as static bundles. **Run one
+or the other**: they collide on PostgreSQL's 5432 and the SPA's 9000, so the second to start fails to
+bind. Their data volumes are separate, so neither can corrupt the other's database.
+
+The difference for frontend work is that the AppHost runs the **dev servers**, with hot reload, while
+Compose serves **built bundles** — which is also why Storybook is on 6006 here but 9001 there.

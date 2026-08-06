@@ -2,7 +2,7 @@ namespace Cinedex.AppHost;
 
 /// <summary>
 /// Aspire orchestration host for the Cinedex stack: Postgres and Mailpit as containers, the three
-/// .NET hosts and the SPA's Vite dev server as local processes.
+/// .NET hosts and the two frontend dev servers — the SPA's and Storybook's — as local processes.
 /// </summary>
 /// <remarks>
 /// <para>
@@ -61,6 +61,15 @@ namespace Cinedex.AppHost;
 /// on, the SPA is served at <c>https://localhost:9000</c> (self-signed, so expect the browser
 /// warning) and its <c>/movies-svc</c> proxy already points at this host's web service.
 /// </para>
+/// <para>
+/// <c>Features:EnableStorybookSvc</c> (default <c>true</c>) controls whether the component library's
+/// Storybook runs, same override channels again, and it needs Node and npm on <c>PATH</c> for the
+/// same reason the SPA does. On, it serves at <c>http://localhost:6006</c> — plain http, since a
+/// workbench that calls no API has nothing to terminate TLS for. It references no other resource and
+/// waits on nothing, so it is equally useful with the rest of the stack switched off. Note this is
+/// the dev server with hot reload; <c>compose.yaml</c> publishes the built static bundle on 9001
+/// instead.
+/// </para>
 /// </remarks>
 public sealed class AppHost
 {
@@ -82,6 +91,7 @@ public sealed class AppHost
         var webservice = builder.AddCinedexWebService(moviesDb, mailpit);
         var schedulerWorker = builder.AddCinedexSchedulerWorker(moviesDb);
         builder.AddCinedexFrontendUi(webservice);
+        builder.AddCinedexStorybook();
 
         new[] { webservice, schedulerWorker }.WaitForDatabaseAvailability(migrator, moviesDb);
 

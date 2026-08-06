@@ -243,6 +243,52 @@ internal static class AppHostBuilderExtensions
             .WaitFor(webservice);
     }
 
+    /// <summary>
+    /// Adds the component library's Storybook dev server, unless
+    /// <see cref="AppHostConstants.StorybookEnabledKey"/> disables it.
+    /// </summary>
+    /// <param name="builder">Distributed application builder.</param>
+    /// <returns>The Storybook resource, or <see langword="null"/> when the feature flag is off.</returns>
+    public static IResourceBuilder<ViteAppResource>? AddCinedexStorybook(
+        this IDistributedApplicationBuilder builder)
+    {
+        // Defaults to true when the key is absent, same as the other flags. Shares the SPA's
+        // Node-and-npm-on-PATH requirement, so a machine without them turns both off.
+        var storybookEnabled =
+            builder.Configuration.GetValue(AppHostConstants.StorybookEnabledKey, defaultValue: true);
+
+        if (!storybookEnabled)
+        {
+            return null;
+        }
+
+        // The run script has to be named explicitly: AddViteApp defaults to "dev", and this package
+        // deliberately has no such script — `storybook` is what a developer runs by hand, and keeping
+        // one entry point means the AppHost cannot drift from it.
+        //
+        // Storybook 10 builds on @storybook/react-vite, so this is a Vite app underneath and
+        // AddViteApp's port handling applies: it appends `--port` to the npm command. The package's
+        // own script already carries `-p 6006`, and Storybook's parser takes the last occurrence, so
+        // Aspire's flag wins — pinning both to the same port just makes that a no-op rather than
+        // something to reason about.
+        //
+        // Plain http, unlike the SPA: Storybook serves no TLS of its own, and there is nothing to
+        // terminate for a workbench that calls no API. Unproxied and pinned for the same reason the
+        // SPA is — the dashboard URL then matches the one the README and `npm run storybook` promise.
+        //
+        // No WaitFor and no reference to any other resource: Storybook renders @cinedex/components in
+        // isolation and talks to nothing, so it is the one resource that can start whenever it likes.
+        // That also means it stays useful when the backend half of the stack is switched off.
+        return builder.AddViteApp(
+                "storybook",
+                AppHostConstants.StorybookAppDirectory,
+                AppHostConstants.StorybookRunScript)
+            .WithHttpEndpoint(
+                port: AppHostConstants.StorybookPort,
+                targetPort: AppHostConstants.StorybookPort,
+                isProxied: false);
+    }
+
     /// <summary>Adds the scheduler worker, wired to Postgres.</summary>
     /// <param name="builder">Distributed application builder.</param>
     /// <param name="moviesDb">The database the scheduler worker connects to.</param>

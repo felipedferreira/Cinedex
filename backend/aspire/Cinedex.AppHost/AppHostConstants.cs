@@ -118,6 +118,40 @@ internal static class AppHostConstants
     public const string FrontendPortVariable = "PORT";
 
     /// <summary>
+    /// Whether the AppHost runs the component library's Storybook. Committed as <c>true</c> in
+    /// <c>appsettings.json</c>; a developer not touching components can turn it off for themselves —
+    /// see <see cref="AppHost"/>'s remarks for how. Nested under <c>Features</c> to match
+    /// <see cref="FrontendUiEnabledKey"/>, and shares that flag's Node-and-npm-on-PATH requirement.
+    /// </summary>
+    public const string StorybookEnabledKey = "Features:EnableStorybookSvc";
+
+    /// <summary>
+    /// Storybook's directory (the one holding its <c>package.json</c>), relative to this project's
+    /// folder, resolved the same way as <see cref="FrontendAppDirectory"/>.
+    /// <para>
+    /// This is the app package rather than the workspace root for the same reason: the root's
+    /// <c>storybook</c> script delegates through <c>-w @cinedex/storybook</c> and would swallow the
+    /// <c>--port</c> Aspire appends. npm still walks up to <c>frontend/</c> for the hoisted lockfile,
+    /// so the install Aspire runs on a fresh clone is the whole workspace.
+    /// </para>
+    /// </summary>
+    public const string StorybookAppDirectory = "../../../frontend/apps/storybook";
+
+    /// <summary>
+    /// The npm script <c>AddViteApp</c> runs for Storybook. Unlike the SPA, this package has no
+    /// <c>dev</c> script — that is the parameter's default, so it has to be passed explicitly.
+    /// </summary>
+    public const string StorybookRunScript = "storybook";
+
+    /// <summary>
+    /// Fixed host port for Storybook's dev server, matching the <c>-p</c> in the package's own
+    /// <c>storybook</c> script so the AppHost and a bare <c>npm run storybook</c> serve the same URL.
+    /// Distinct from the 9001 <c>compose.yaml</c> publishes, which serves the built static bundle
+    /// rather than the dev server.
+    /// </summary>
+    public const int StorybookPort = 6006;
+
+    /// <summary>
     /// Scalar API docs, relative to the web service endpoint. Carries the <c>/movies-svc</c> base that
     /// <c>UsePathBase</c> applies, and is served only because the AppHost forces
     /// <c>Features__ApiDocumentationEnabled</c> on.

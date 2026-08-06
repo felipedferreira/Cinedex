@@ -5,10 +5,10 @@ The [Storybook](https://storybook.js.org/) for [`@cinedex/components`](../../pac
 It is a real app in the [`frontend/` workspace](../../README.md) that **depends on the component library**, exactly as the SPA does. The stories import from `@cinedex/components`, so they exercise the public API rather than reaching into the library's internals; if a component isn't exported from the barrel, the Storybook build fails.
 
 ```bash
-npm run storybook        # from frontend/ → http://localhost:6006
+npm run storybook        # from frontend/ → http://localhost:9001
 ```
 
-You do not have to start this yourself: `dotnet run --project aspire/Cinedex.AppHost` (from `backend/`) runs this same script as one of its resources, serving it on the same port 6006 and installing dependencies first when `node_modules` is missing. It references no other resource and waits on nothing — Storybook renders the library in isolation and calls no API — so it comes up even with the rest of the stack switched off. Turn the resource off there with `Features:EnableStorybookSvc`.
+You do not have to start this yourself: `dotnet run --project aspire/Cinedex.AppHost` (from `backend/`) runs this same script as one of its resources, serving it on the same port 9001 and installing dependencies first when `node_modules` is missing. It references no other resource and waits on nothing — Storybook renders the library in isolation and calls no API — so it comes up even with the rest of the stack switched off. Turn the resource off there with `Features:EnableStorybookSvc`.
 
 With the Compose stack running, the built Storybook is also served at **http://localhost:9001**. That is the static bundle on Nginx; the two paths above are the dev server with hot reload.
 
@@ -35,7 +35,7 @@ Run from `frontend/`; both delegate here with `-w @cinedex/storybook`.
 
 | Script                    | Description                                        |
 | ------------------------- | -------------------------------------------------- |
-| `npm run storybook`       | Dev server with HMR on port 6006                   |
+| `npm run storybook`       | Dev server with HMR on port 9001                   |
 | `npm run build-storybook` | Static bundle to `storybook-static/` (git-ignored) |
 
 ## 🎨 Theming

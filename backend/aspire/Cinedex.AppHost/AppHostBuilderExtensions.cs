@@ -144,10 +144,10 @@ internal static class AppHostBuilderExtensions
         // Features__ApiDocumentationEnabled defaults to false in appsettings.json, so Scalar would 404
         // without it. The health path carries the /movies-svc base that UsePathBase applies.
         // WithEndpoint turns the proxy off, so the endpoint is the port the app itself listens on. By
-        // default Aspire publishes the profile's port (5187) from a proxy and moves Kestrel to a
+        // default Aspire publishes the profile's port (9002) from a proxy and moves Kestrel to a
         // dynamic one, which only holds if whoever launches the process honours the port Aspire
         // assigns. Visual Studio launches project resources itself and takes a web project's URLs from
-        // its launch profile, so Kestrel would bind 5187 too and collide with the proxy. Unproxied,
+        // its launch profile, so Kestrel would bind 9002 too and collide with the proxy. Unproxied,
         // the topology is identical under `dotnet run`, Rider and Visual Studio.
         //
         // Smtp__Username/Password stay unconditional even with Mailpit disabled: SmtpOptions
@@ -309,7 +309,7 @@ internal static class AppHostBuilderExtensions
         //
         // Storybook 10 builds on @storybook/react-vite, so this is a Vite app underneath and
         // AddViteApp's port handling applies: it appends `--port` to the npm command. The package's
-        // own script already carries `-p 6006`, and Storybook's parser takes the last occurrence, so
+        // own script already carries `-p 9001`, and Storybook's parser takes the last occurrence, so
         // Aspire's flag wins — pinning both to the same port just makes that a no-op rather than
         // something to reason about.
         //

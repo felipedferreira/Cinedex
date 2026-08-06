@@ -64,11 +64,12 @@ namespace Cinedex.AppHost;
 /// <para>
 /// <c>Features:EnableStorybookSvc</c> (default <c>true</c>) controls whether the component library's
 /// Storybook runs, same override channels again, and it needs Node and npm on <c>PATH</c> for the
-/// same reason the SPA does. On, it serves at <c>http://localhost:6006</c> — plain http, since a
+/// same reason the SPA does. On, it serves at <c>http://localhost:9001</c> — plain http, since a
 /// workbench that calls no API has nothing to terminate TLS for. It references no other resource and
 /// waits on nothing, so it is equally useful with the rest of the stack switched off. Note this is
-/// the dev server with hot reload; <c>compose.yaml</c> publishes the built static bundle on 9001
-/// instead.
+/// the dev server with hot reload; <c>compose.yaml</c> publishes the built static bundle on that same
+/// port — the two never run at once anyway, since Aspire and compose already collide on Postgres and
+/// the SPA.
 /// </para>
 /// </remarks>
 public sealed class AppHost

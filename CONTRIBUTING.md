@@ -67,7 +67,7 @@ The one-shot database migrator applies pending migrations for both `FilmDbContex
    npm run dev
    ```
 
-3. Browse the component library (http://localhost:6006):
+3. Browse the component library (http://localhost:9001):
    ```bash
    npm run storybook
    ```

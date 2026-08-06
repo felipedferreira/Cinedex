@@ -184,10 +184,10 @@ internal static class AppHostConstants
     /// <summary>
     /// Fixed host port for Storybook's dev server, matching the <c>-p</c> in the package's own
     /// <c>storybook</c> script so the AppHost and a bare <c>npm run storybook</c> serve the same URL.
-    /// Distinct from the 9001 <c>compose.yaml</c> publishes, which serves the built static bundle
-    /// rather than the dev server.
+    /// Also matches the port <c>compose.yaml</c> publishes the built static bundle on — safe to share
+    /// since Aspire and compose already can't run at once (both bind Postgres and the SPA).
     /// </summary>
-    public const int StorybookPort = 6006;
+    public const int StorybookPort = 9001;
 
     /// <summary>
     /// Scalar API docs, relative to the web service endpoint. Carries the <c>/movies-svc</c> base that

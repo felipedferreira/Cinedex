@@ -7,7 +7,7 @@ One of two apps in the `frontend/` npm workspace — see [`../../CLAUDE.md`](../
 ## Commands (from `frontend/`, the workspace root)
 
 ```bash
-npm run storybook        # http://localhost:6006
+npm run storybook        # http://localhost:9001
 npm run build-storybook  # static output to apps/storybook/storybook-static/ (also run in CI)
 npm run build            # tsc -b here; typechecks the stories
 ```
@@ -32,7 +32,7 @@ Dockerfile  nginx.conf   # static bundle on Nginx, port 9001 in compose
 
 ## Notes
 
-- **The Aspire AppHost (`backend/aspire/Cinedex.AppHost`) runs this package's `storybook` script as a resource**, so `dotnet run --project aspire/Cinedex.AppHost` brings it up on http://localhost:6006 alongside the rest of the stack. `Features:EnableStorybookSvc: false` there omits it. Its `AppHostConstants.StorybookAppDirectory` points at **this** directory rather than the workspace root, because the root script delegates through `-w @cinedex/storybook` and would swallow the `--port` Aspire appends. The script name is passed explicitly — `AddViteApp` defaults to a `dev` script, which this package deliberately does not have.
+- **The Aspire AppHost (`backend/aspire/Cinedex.AppHost`) runs this package's `storybook` script as a resource**, so `dotnet run --project aspire/Cinedex.AppHost` brings it up on http://localhost:9001 alongside the rest of the stack. `Features:EnableStorybookSvc: false` there omits it. Its `AppHostConstants.StorybookAppDirectory` points at **this** directory rather than the workspace root, because the root script delegates through `-w @cinedex/storybook` and would swallow the `--port` Aspire appends. The script name is passed explicitly — `AddViteApp` defaults to a `dev` script, which this package deliberately does not have.
 - **The theme toolbar works by setting `color-scheme` on the root**, because the library's tokens resolve through `light-dark()`. There is no theme class and no duplicated dark block — see the library's CLAUDE.md.
 - **The decorator renders `<Story key={scheme} />` on purpose — do not drop the key.** Chrome does not re-resolve `light-dark()` for every property on an existing element when `color-scheme` changes at runtime: a form control's `border-color` in particular keeps the old theme's value, while `color` on the same element updates. Remounting on theme change sidesteps it. This is a runtime-toggle quirk only; a page that loads under a theme resolves everything correctly, so the SPA is unaffected.
 - `staticDirs` points at `../../cinadex-app/public` so the `/icons.svg#id` sprite resolves in stories.

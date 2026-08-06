@@ -55,7 +55,7 @@ console prints a login URL). In JetBrains Rider, the equivalent **Aspire AppHost
 in the Run dropdown.
 
 That covers the whole stack: the SPA at **https://localhost:9000** with its `/movies-svc` proxy
-already pointed at the web service this host started, and Storybook at **http://localhost:6006**.
+already pointed at the web service this host started, and Storybook at **http://localhost:9001**.
 
 Each resource can be switched off individually, so you only start what the session needs. From
 `backend/aspire/Cinedex.AppHost`, either `dotnet user-secrets set "<flag>" "false"` or copy
@@ -65,8 +65,8 @@ per-developer and neither touches a tracked file.
 | Flag                                   | Off means                                                                     |
 | -------------------------------------- | ----------------------------------------------------------------------------- |
 | `Features:EnableDatabaseMigrationsSvc` | Nothing applies migrations — faster, but the schema must already be current    |
-| `Features:EnableFrontendUiSvc`         | No SPA on 9000; the API is only reachable directly at `http://localhost:5187`  |
-| `Features:EnableStorybookSvc`          | No Storybook on 6006                                                          |
+| `Features:EnableFrontendUiSvc`         | No SPA on 9000; the API is only reachable directly at `http://localhost:9002`  |
+| `Features:EnableStorybookSvc`          | No Storybook on 9001                                                          |
 | `Features:EnableMailpitSvc`            | Outgoing email has nowhere to land (logged, not fatal)                        |
 
 Turn migrations back on for a run after pulling a new migration or against an empty database. The two
@@ -80,4 +80,5 @@ or the other**: they collide on PostgreSQL's 5432 and the SPA's 9000, so the sec
 bind. Their data volumes are separate, so neither can corrupt the other's database.
 
 The difference for frontend work is that the AppHost runs the **dev servers**, with hot reload, while
-Compose serves **built bundles** — which is also why Storybook is on 6006 here but 9001 there.
+Compose serves **built bundles** — both now on the same ports (9000 for the SPA, 9001 for Storybook),
+since the two stacks are already mutually exclusive.

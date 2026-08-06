@@ -13,7 +13,7 @@ npm **workspace root** for the Cinedex frontend. The lockfile lives here — the
 ```bash
 npm ci
 npm run dev              # app on https://localhost:9000 (basic-ssl, strictPort)
-npm run storybook        # Storybook on http://localhost:6006
+npm run storybook        # Storybook on http://localhost:9001
 npm run build            # every package (--workspaces --if-present)
 npm run build-storybook  # static Storybook, also run in CI
 npm run test:run         # every package

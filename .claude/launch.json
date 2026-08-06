@@ -12,7 +12,7 @@
       "name": "storybook",
       "runtimeExecutable": "npm",
       "runtimeArgs": ["run", "storybook", "--prefix", "frontend"],
-      "port": 6006,
+      "port": 9001,
       "autoPort": false
     },
     {

@@ -10,14 +10,14 @@ A full-stack portfolio application for cataloging movie titles and their genres 
 Cinedex/
 ├── backend/      # .NET solution (Web API, application core, persistence, tests)
 │   └── aspire/   # Aspire AppHost — the local dev loop (see below)
-├── frontend/     # npm workspace — the SPA, the component library, and its Storybook
+├── frontend/     # npm workspace — the SPA, the component library, its Storybook, and a docs site
 ├── docs/         # Design docs (auth & security model, planned ADRs)
 └── compose.yaml  # Orchestrates PostgreSQL, the web service, the SPA, Storybook, Seq, and Mailpit
 ```
 
 - **[Getting Started](docs/getting-started.md)** — new here? Clone-to-running-app in 5 minutes via Docker Compose
 - **[Backend](backend/README.md)** — hexagonal (ports & adapters) .NET solution: architecture guide, build/test/migration instructions
-- **[Frontend](frontend/README.md)** — npm workspace: the React + TypeScript + Vite SPA (`cinadex-app`), the shared component library (`@cinedex/components`), and its Storybook (`@cinedex/storybook`) as a separate app
+- **[Frontend](frontend/README.md)** — npm workspace: the React + TypeScript + Vite SPA (`cinadex-app`), the shared component library (`@cinedex/components`), its Storybook (`@cinedex/storybook`), and a branded Docusaurus docs site (`@cinedex/docs-site`) that renders the changelog at `/changelog`
 - **[Design docs](docs/README.md)** — why the system is shaped this way (auth & security model, planned ADRs)
 - **[Changelog](CHANGELOG.md)** — version history and release notes
 

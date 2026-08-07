@@ -2,7 +2,7 @@
 
 React 19 + TypeScript + Vite SPA (React Compiler enabled via Babel preset). Vitest + Testing Library for tests. The production Docker image doubles as the stack's HTTPS reverse proxy (Nginx).
 
-One of three packages in the `frontend/` npm workspace — see [`../../CLAUDE.md`](../../CLAUDE.md). It consumes [`@cinedex/components`](../../packages/components/CLAUDE.md) for shared components, design tokens and base styling.
+One of four packages in the `frontend/` npm workspace — see [`../../CLAUDE.md`](../../CLAUDE.md). It consumes [`@cinedex/components`](../../packages/components/CLAUDE.md) for shared components, design tokens and base styling.
 
 ## Commands (from `frontend/`, the workspace root)
 

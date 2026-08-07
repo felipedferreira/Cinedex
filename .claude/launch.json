@@ -16,6 +16,13 @@
       "autoPort": false
     },
     {
+      "name": "docs-site",
+      "runtimeExecutable": "npm",
+      "runtimeArgs": ["run", "docs-site", "--prefix", "frontend"],
+      "port": 9004,
+      "autoPort": false
+    },
+    {
       "name": "webservice-api",
       "runtimeExecutable": "dotnet",
       "runtimeArgs": [

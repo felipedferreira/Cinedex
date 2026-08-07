@@ -72,7 +72,12 @@ The one-shot database migrator applies pending migrations for both `FilmDbContex
    npm run storybook
    ```
 
-4. Run tests:
+4. Browse the docs site (http://localhost:9004):
+   ```bash
+   npm run docs-site
+   ```
+
+5. Run tests:
    ```bash
    npm run test:run    # single pass across all packages
    ```
@@ -215,7 +220,8 @@ Key rules:
 - Update CHANGELOG.md for significant changes — **edit only the root `CHANGELOG.md`**.
   `backend/CHANGELOG.md` is a build-managed copy (the web service serves it as the app's
   changelog page, and the Docker build can't see the repo root); a local backend build
-  refreshes it, and CI fails if the two files differ
+  refreshes it, and CI fails if the two files differ. `frontend/apps/docs-site` also
+  renders it, automatically, at `/changelog` — see [its CLAUDE.md](frontend/apps/docs-site/CLAUDE.md)
 - Document API endpoints and their behavior
 
 ## Middleware and Exception Handling

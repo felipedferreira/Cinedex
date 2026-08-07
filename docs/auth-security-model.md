@@ -3,6 +3,14 @@
 How authentication works in Cinedex: JWT access tokens, rotating refresh tokens, and where
 ASP.NET Core Identity is allowed to live.
 
+> **Also published, in adapted form, on the docs site.** This material is the source for the
+> Security section of `@cinedex/docs-site`
+> ([`frontend/apps/docs-site/docs/security/`](../frontend/apps/docs-site/docs/security/) — overview,
+> token lifecycle, storage & retention, password reset, known gaps). That adaptation is curated
+> prose, not a generated copy, so **nothing re-syncs it**: a change here silently leaves those pages
+> stale. Update both, or note the divergence. (Only `/changelog` is mechanically generated — see
+> `frontend/apps/docs-site/scripts/sync-changelog.mjs`.)
+
 ## Layering
 
 Identity is a framework detail, so it is confined to a single adapter behind application-layer

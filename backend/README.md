@@ -6,6 +6,12 @@ A hexagonal (ports & adapters) .NET solution for cataloging movie titles and the
 
 All `dotnet` commands below are run from this folder (`backend/`). Docker Compose commands run from the repository root, where [compose.yaml](../compose.yaml) lives.
 
+> **Also published, in adapted form, on the docs site.** The architecture and catalog material below
+> is the source for the Features section of `@cinedex/docs-site`
+> ([`frontend/apps/docs-site/docs/features/`](../frontend/apps/docs-site/docs/features/)). That
+> adaptation is curated prose, not a generated copy, so **nothing re-syncs it** — a change here
+> silently leaves those pages stale. Update both, or note the divergence.
+
 ## 🏷️ Genres
 
 Genres are their own entity (`Id`, `Name`, `Description`) stored in the `genres` table, and

@@ -19,6 +19,8 @@ export type {
 export { ForgotPasswordScreen } from './screens/ForgotPasswordScreen';
 export type { ForgotPasswordScreenProps } from './screens/ForgotPasswordScreen';
 
+export { HomeScreen } from './screens/HomeScreen';
+
 export { ResetPasswordScreen } from './screens/ResetPasswordScreen';
 export type { ResetPasswordScreenProps } from './screens/ResetPasswordScreen';
 

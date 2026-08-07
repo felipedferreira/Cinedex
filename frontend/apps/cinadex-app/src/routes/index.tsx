@@ -1,14 +1,6 @@
 import { createFileRoute } from '@tanstack/react-router';
-import App from '../App';
+import { HomeScreen } from '@cinedex/solution';
 
 export const Route = createFileRoute('/')({
-  component: RouteComponent,
+  component: HomeScreen,
 });
-
-function RouteComponent() {
-  return (
-    <div className="scaffold-shell">
-      <App />
-    </div>
-  );
-}

@@ -1,8 +1,15 @@
 import type { ComponentType, ReactNode } from 'react';
 
 export interface SolutionLinkProps {
-  /** Destination path, e.g. `/forgot-password`. */
+  /** Destination path, e.g. `/forgot-password`. Pathname only — see `search`. */
   to: string;
+  /**
+   * Query parameters, kept separate from `to` rather than written into it.
+   * Router link components match `to` against their own route table, so a
+   * `to="/login?state=locked"` would not resolve; they take search state as its
+   * own prop, and `AnchorLink` serialises it back onto the href.
+   */
+  search?: Record<string, string>;
   className?: string;
   children?: ReactNode;
 }

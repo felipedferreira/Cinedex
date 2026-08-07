@@ -21,10 +21,10 @@ flowchart LR
     APP --> VITE["vite.config.ts"]
     APP --> PKG["package.json"]
 
-    SRC --> S1["assets/<br/><i>imported assets (images, SVGs)</i>"]
+    SRC --> S1["routes/<br/><i>file-based routes; each one mounts<br/>a screen from @cinedex/solution</i>"]
     SRC --> S2["test/<br/><i>global test setup (jest-dom, jsdom cleanup)</i>"]
-    SRC --> S3["index.css<br/><i>app-only layout; the design system<br/>comes from @cinedex/theme</i>"]
-    SRC --> S4["App.tsx<br/><i>root component</i>"]
+    SRC --> S3["login-routing.test.tsx<br/><i>mounts the real route tree</i>"]
+    SRC --> S4["routeTree.gen.ts<br/><i>generated — do not edit</i>"]
     SRC --> S5["main.tsx<br/><i>entry point</i>"]
 ```
 

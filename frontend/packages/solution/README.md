@@ -13,7 +13,9 @@ npm run coverage -w @cinedex/solution
 
 ## What's in it
 
-Seven auth states across six screens — `SignInScreen` (with its locked-out variant), `TwoFactorScreen`, `CreateAccountScreen`, `ForgotPasswordScreen`, `ResetPasswordScreen`, `SignedOutScreen` — plus `Brand`, `SolutionProvider` and the link components.
+`HomeScreen`, the app's index, plus seven auth states across six screens — `SignInScreen` (with its locked-out variant), `TwoFactorScreen`, `CreateAccountScreen`, `ForgotPasswordScreen`, `ResetPasswordScreen`, `SignedOutScreen` — and `Brand`, `SolutionProvider` and the link components.
+
+**`HomeScreen` earns its place**: three of those states cannot be reached by clicking through the app, because the backend support that would trigger them does not exist. Without an index, reviewing the two-factor step, the signed-out panel or the locked-out sign-in means typing URLs.
 
 ## Presentational only: no router, no `fetch`
 
@@ -27,6 +29,14 @@ The screens _do_ know Cinedex's route paths — `/login`, `/register`, `/forgot-
 ```
 
 With no provider, links fall back to plain anchors — which is what Storybook and the tests get. **A full sign-in screen renders with no router and no mock.** That is the whole reason these live in a package rather than in the app; screen tests are plain `render()` calls.
+
+`to` is pathname-only. Query state travels in `search`, because a router link matches `to` against its own route table and `to="/login?state=locked"` would not resolve:
+
+```tsx
+<SolutionLink to="/login" search={{ state: 'locked' }}>
+```
+
+`AnchorLink` serialises that back onto the href; a router link forwards it to its own search prop.
 
 Submit handlers arrive as optional props (`onSubmit`, `onResend`, …) defaulting to no-ops, so a story renders with zero wiring:
 

@@ -2,6 +2,7 @@ import type { Meta, StoryObj } from '@storybook/react-vite';
 import {
   CreateAccountScreen,
   ForgotPasswordScreen,
+  HomeScreen,
   ResetPasswordScreen,
   SignInScreen,
   SignedOutScreen,
@@ -24,6 +25,11 @@ const meta = {
 
 export default meta;
 type Story = StoryObj<typeof meta>;
+
+/** The app's index — a directory of every screen below. */
+export const Home: Story = {
+  render: () => <HomeScreen />,
+};
 
 export const SignIn: Story = {
   render: () => <SignInScreen />,

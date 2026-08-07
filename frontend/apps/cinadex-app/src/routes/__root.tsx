@@ -11,8 +11,8 @@ import { SolutionProvider, type SolutionLinkProps } from '@cinedex/solution';
  * screens use are real routes — `login-routing.test.tsx` is what keeps that
  * honest.
  */
-function RouterLink({ to, ...rest }: SolutionLinkProps) {
-  return <Link to={to as never} {...rest} />;
+function RouterLink({ to, search, ...rest }: SolutionLinkProps) {
+  return <Link to={to as never} search={search as never} {...rest} />;
 }
 
 export const Route = createRootRoute({

@@ -48,6 +48,8 @@ src/
 
 ## Notes
 
+- **`HomeScreen` is the app's index** — a directory of every screen, and the only way to reach three of them by clicking. The two-factor step, the signed-out panel and the locked-out sign-in all need backend support that does not exist, so nothing in the app links to them. Adding a screen means adding a row to its `SCREENS` list.
+- **`to` is pathname-only; query state goes in `search`.** Router link components match `to` against their own route table, so `to="/login?state=locked"` would not resolve — `SolutionLinkProps` carries `search?: Record<string, string>` instead, which `AnchorLink` serialises back onto the href and a router link passes to its own search prop. The locked-out sign-in is the one entry that needs it.
 - **`SolutionLink.tsx` carries a file-level `eslint-disable react-hooks/static-components`.** A component read from context is stable by construction — `SolutionProvider`'s prop and the `AnchorLink` default are both module-level — but the rule cannot tell a constant context value from one built inline. The file exists to hold that one exemption instead of repeating it at every call site. Do not add a second reader of `LinkContext`.
 - **`TwoFactorScreen` and `SignedOutScreen` are presentational on purpose** — the backend has no MFA and no session-listing/revoke-all endpoint (`docs/auth-security-model.md`, "Known gaps"). `SignInScreen`'s `locked` state is likewise unreachable through normal use; the app exposes it at `/login?state=locked`.
 - Screen tests are plain `render()` — no memory router, no `renderAuthScreen` helper. The app keeps `login-routing.test.tsx`, which mounts the real route tree and is what verifies the paths these screens hardcode are real routes.

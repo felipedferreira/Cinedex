@@ -16,11 +16,16 @@ import type { SolutionLinkProps } from './linkTypes';
  * Renders whatever link component the host injected. Everything in this package
  * that navigates does so through here.
  */
-export function SolutionLink({ to, className, children }: SolutionLinkProps) {
+export function SolutionLink({
+  to,
+  search,
+  className,
+  children,
+}: SolutionLinkProps) {
   const Link = useLinkComponent();
 
   return (
-    <Link to={to} className={className}>
+    <Link to={to} search={search} className={className}>
       {children}
     </Link>
   );

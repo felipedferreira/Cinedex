@@ -6,6 +6,12 @@ A hexagonal (ports & adapters) .NET solution for cataloging movie titles and the
 
 All `dotnet` commands below are run from this folder (`backend/`). Docker Compose commands run from the repository root, where [compose.yaml](../compose.yaml) lives.
 
+> **Also published, in adapted form, on the docs site.** The architecture and catalog material below
+> is the source for the Features section of `@cinedex/docs-site`
+> ([`frontend/apps/docs-site/docs/features/`](../frontend/apps/docs-site/docs/features/)). That
+> adaptation is curated prose, not a generated copy, so **nothing re-syncs it** — a change here
+> silently leaves those pages stale. Update both, or note the divergence.
+
 ## 🏷️ Genres
 
 Genres are their own entity (`Id`, `Name`, `Description`) stored in the `genres` table, and
@@ -383,30 +389,37 @@ curl -s http://localhost:8025/api/v1/messages | jq '.messages[] | {ID, Subject, 
 
 The solution is organized into layers that enforce separation of concerns and dependency direction. Dependencies flow inward—outer layers depend on inner layers, never the reverse.
 
-```
-┌───────────────────────────────────────────────────────┐
-│            Cinedex.WebService (Presentation)          │
-│                (Web API / Entry Point)                │
-└───────────────────────────┬───────────────────────────┘
-                            │
-      ┌─────────────────────┼─────────────────────┐
-      │                     │                     │
-┌─────▼──────────────┐ ┌────▼───────────┐ ┌───────▼──────┐
-│ Persistence.Postgres│ │  Auth.Identity │ │  Email.Smtp  │
-│  (catalog adapter)  │ │  (auth adapter)│ │(email adapter)│
-└─────┬──────────────┘ └────┬───────────┘ └───────┬──────┘
-      │                     │                     │
-      └─────────────────────┼─────────────────────┘
-                            │
-                ┌───────────▼───────────┐
-                │   Cinedex.Application  │
-                │   (Use Cases + Ports)  │
-                └───────────┬───────────┘
-                            │
-                  ┌─────────▼─────────┐
-                  │   Cinedex.Domain  │
-                  │  (Business Logic) │
-                  └───────────────────┘
+Every arrow is a compile-time project reference, and every one of them points **inward**. There is no
+arrow out of Domain, and none back up from Application to an adapter — that absence is the whole
+architecture.
+
+```mermaid
+flowchart TD
+    subgraph presentation ["Presentation — driving adapter"]
+        WEB["<b>Cinedex.WebService</b><br/>Web API, HTTP entry point<br/>composition root"]
+    end
+
+    subgraph adapters ["Adapters — driven"]
+        PG["<b>Cinedex.Persistence.Postgres</b><br/>catalog persistence"]
+        AUTH["<b>Cinedex.Auth.Identity</b><br/>authentication"]
+        MAIL["<b>Cinedex.Email.Smtp</b><br/>email delivery"]
+    end
+
+    subgraph core ["Core — framework-free"]
+        APP["<b>Cinedex.Application</b><br/>use cases + ports"]
+        DOM["<b>Cinedex.Domain</b><br/>entities, business rules"]
+    end
+
+    WEB --> PG
+    WEB --> AUTH
+    WEB --> MAIL
+    WEB -. wires at startup .-> APP
+
+    PG -- implements ports --> APP
+    AUTH -- implements ports --> APP
+    MAIL -- implements ports --> APP
+
+    APP --> DOM
 ```
 
 All three adapters implement ports defined in `Cinedex.Application` and depend inward on it; the
@@ -418,19 +431,25 @@ Projects are grouped on disk by Hexagonal layer. Layers that can have multiple
 projects (Presentation, Adapters) keep a grouping folder; the single Application
 and Domain projects sit directly under `src/`.
 
-```
-backend/
-├── src/
-│   ├── Presentation/
-│   │   └── Cinedex.WebService/            # driving adapter (HTTP entry point)
-│   ├── Adapters/
-│   │   ├── Cinedex.Persistence.Postgres/  # driven adapter: catalog persistence
-│   │   ├── Cinedex.Auth.Identity/         # driven adapter: authentication
-│   │   └── Cinedex.Email.Smtp/            # driven adapter: email delivery
-│   ├── Application/                      # use cases + ports (Abstractions/)
-│   └── Domain/                           # entities, no outward dependencies
-└── NuGetLibraries/
-    └── FoundryOceanus.WebService.Contracts/      # shared API DTOs
+```mermaid
+flowchart LR
+    BE["<b>backend/</b>"]
+
+    BE --> SRC["<b>src/</b>"]
+    BE --> NUG["<b>NuGetLibraries/</b>"]
+
+    SRC --> PRES["<b>Presentation/</b><br/><i>grouping folder</i>"]
+    SRC --> ADAP["<b>Adapters/</b><br/><i>grouping folder</i>"]
+    SRC --> APPD["<b>Application/</b><br/>use cases + ports<br/>(Abstractions/)"]
+    SRC --> DOMD["<b>Domain/</b><br/>entities, no outward<br/>dependencies"]
+
+    PRES --> WS["Cinedex.WebService/<br/><i>driving adapter — HTTP entry point</i>"]
+
+    ADAP --> P1["Cinedex.Persistence.Postgres/<br/><i>driven — catalog persistence</i>"]
+    ADAP --> P2["Cinedex.Auth.Identity/<br/><i>driven — authentication</i>"]
+    ADAP --> P3["Cinedex.Email.Smtp/<br/><i>driven — email delivery</i>"]
+
+    NUG --> CON["FoundryOceanus.WebService.Contracts/<br/><i>shared API DTOs</i>"]
 ```
 
 ## Project Descriptions

@@ -41,6 +41,11 @@ That means no build step for the library, HMR that crosses the package boundary 
 component refreshes the running app), and Storybook, Vitest, and the SPA all compiling the exact
 same source.
 
+Every component below has a live, interactive story — with the theme toolbar and the accessibility
+panel — in [the Storybook workbench](#the-storybook-workbench). If the stack is already running,
+it's at **[http://localhost:9001](http://localhost:9001)**; otherwise `npm run storybook` from
+`frontend/`.
+
 Three primitives ship today:
 
 | Component   | What it does                                                                                                                                                 |

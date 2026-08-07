@@ -112,12 +112,15 @@ to `bodyBuilder.LinkedResources` and assign its `ContentId`. This is the only ad
 
 The resulting MIME structure is:
 
-```
-multipart/alternative
-├── text/plain
-└── multipart/related
-    ├── text/html
-    └── image/png  (Content-ID: cinedex-logo)
+```mermaid
+flowchart LR
+    ALT["<b>multipart/alternative</b>"]
+
+    ALT --> PLAIN["text/plain"]
+    ALT --> REL["<b>multipart/related</b>"]
+
+    REL --> HTML["text/html"]
+    REL --> IMG["image/png<br/><i>Content-ID: cinedex-logo</i>"]
 ```
 
 ### Asset generation

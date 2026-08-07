@@ -22,14 +22,16 @@ The first pass put Storybook *inside* the component library: `packages/component
 
 ## Architecture
 
-```
-frontend/apps/storybook/
-├── .storybook/main.ts        # stories glob, addons, staticDirs
-├── .storybook/preview.tsx    # library styles, a11y params, theme toolbar
-├── src/*.stories.tsx         # flat — one file per component
-├── Dockerfile  nginx.conf
-├── vite.config.ts            # React + React Compiler; Storybook auto-loads it
-└── package.json              # depends on @cinedex/components, react, react-dom
+```mermaid
+flowchart LR
+    SB["<b>frontend/apps/storybook/</b>"]
+
+    SB --> M[".storybook/main.ts<br/><i>stories glob, addons, staticDirs</i>"]
+    SB --> P[".storybook/preview.tsx<br/><i>library styles, a11y params, theme toolbar</i>"]
+    SB --> S["src/*.stories.tsx<br/><i>flat — one file per component</i>"]
+    SB --> D["Dockerfile · nginx.conf"]
+    SB --> V["vite.config.ts<br/><i>React + React Compiler — Storybook auto-loads it</i>"]
+    SB --> K["package.json<br/><i>depends on @cinedex/components, react, react-dom</i>"]
 ```
 
 The app carries its own `vite.config.ts` with the React Compiler Babel preset. Vite applies it to the linked `@cinedex/components` source as well as to the stories, so components compile here exactly as they do in the SPA rather than through an approximation. `staticDirs: ['../../cinadex-app/public']` keeps the `/icons.svg#id` sprite resolving.

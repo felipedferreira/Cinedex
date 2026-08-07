@@ -23,13 +23,15 @@ The goal was a shared component library with a Storybook, consumed by the SPA. S
 
 ## Architecture
 
+```mermaid
+flowchart LR
+    FE["<b>frontend/</b><br/><i>workspace root: lockfile +<br/>all shared tooling config</i>"]
+
+    FE --> APP["apps/cinadex-app/<br/><i>the SPA (moved)</i>"]
+    FE --> COMP["packages/components/<br/><i>@cinedex/components — component library</i>"]
 ```
-frontend/                      # workspace root: lockfile + all shared tooling config
-├── apps/cinadex-app/          # the SPA (moved)
-└── packages/components/       # @cinedex/components — component library
-                               # (Storybook was later split out into apps/storybook —
-                               #  see the follow-up spec)
-```
+
+Storybook was later split out into `apps/storybook/` — see the follow-up spec.
 
 ### Source-consumed package boundary
 

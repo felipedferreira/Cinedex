@@ -6,13 +6,16 @@ A full-stack portfolio application for cataloging movie titles and their genres 
 
 ## 📁 Repository Layout
 
-```
-Cinedex/
-├── backend/      # .NET solution (Web API, application core, persistence, tests)
-│   └── aspire/   # Aspire AppHost — the local dev loop (see below)
-├── frontend/     # npm workspace — the SPA, the component library, its Storybook, and a docs site
-├── docs/         # Design docs (auth & security model, planned ADRs)
-└── compose.yaml  # Orchestrates PostgreSQL, the web service, the SPA, Storybook, Seq, and Mailpit
+```mermaid
+flowchart LR
+    ROOT["<b>Cinedex/</b>"]
+
+    ROOT --> BE["<b>backend/</b><br/>.NET solution — Web API, application core,<br/>persistence, tests"]
+    ROOT --> FE["<b>frontend/</b><br/>npm workspace — the SPA, the component library,<br/>its Storybook, and a docs site"]
+    ROOT --> DOCS["<b>docs/</b><br/>design docs — auth &amp; security model,<br/>planned ADRs"]
+    ROOT --> COMPOSE["<b>compose.yaml</b><br/>orchestrates PostgreSQL, the web service, the SPA,<br/>Storybook, Seq, and Mailpit"]
+
+    BE --> ASP["<b>aspire/</b><br/>Aspire AppHost — the local dev loop (see below)"]
 ```
 
 - **[Getting Started](docs/getting-started.md)** — new here? Clone-to-running-app in 5 minutes via Docker Compose

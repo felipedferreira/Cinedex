@@ -5,20 +5,20 @@
   "scripts": {
     "docusaurus": "docusaurus",
     "sync-changelog": "node scripts/sync-changelog.mjs",
+    "check-diagrams": "node scripts/check-diagrams.mjs",
     "start": "node scripts/sync-changelog.mjs && concurrently -k -n docusaurus,changelog \"docusaurus start --port 9004\" \"node scripts/sync-changelog.mjs --watch\"",
-    "build": "node scripts/sync-changelog.mjs && tsc && docusaurus build",
+    "build": "node scripts/sync-changelog.mjs && node scripts/check-diagrams.mjs && tsc && docusaurus build",
     "swizzle": "docusaurus swizzle",
     "deploy": "docusaurus deploy",
     "clear": "docusaurus clear",
     "serve": "docusaurus serve",
-    "write-translations": "docusaurus write-translations",
-    "write-heading-ids": "docusaurus write-heading-ids",
     "typecheck": "tsc"
   },
   "dependencies": {
     "@docusaurus/core": "3.10.2",
     "@docusaurus/faster": "3.10.2",
     "@docusaurus/preset-classic": "3.10.2",
+    "@docusaurus/theme-mermaid": "3.10.2",
     "@mdx-js/react": "^3.0.0",
     "clsx": "^2.0.0",
     "prism-react-renderer": "^2.3.0",
@@ -29,6 +29,7 @@
     "@docusaurus/module-type-aliases": "3.10.2",
     "@docusaurus/tsconfig": "3.10.2",
     "@docusaurus/types": "3.10.2",
+    "@easyops-cn/docusaurus-search-local": "^0.55.3",
     "@types/react": "^19.0.0",
     "concurrently": "^9.1.2",
     "typescript": "~6.0.2"

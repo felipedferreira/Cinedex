@@ -223,6 +223,15 @@ Key rules:
   refreshes it, and CI fails if the two files differ. `frontend/apps/docs-site` also
   renders it, automatically, at `/changelog` — see [its CLAUDE.md](frontend/apps/docs-site/CLAUDE.md)
 - Document API endpoints and their behavior
+- **Diagrams are Mermaid fences, never ASCII box art.** Both GitHub and Docusaurus render
+  ```` ```mermaid ```` natively, so a diagram versions and diffs with the code instead of drifting
+  out of alignment one character at a time. `CLAUDE.md` files are the one exception — nothing
+  renders them, so their text trees stay as they are. `node scripts/check-diagrams.mjs` enforces
+  this and runs in CI.
+  - Neither renderer errors on a fence language it doesn't recognise — both quietly fall back to a
+    plain code block. **A broken diagram therefore looks exactly like a passing build**, which is
+    why this is a checked rule rather than a convention. Confirm a new or changed diagram by
+    looking at the rendered page, not at a green check.
 
 ## Middleware and Exception Handling
 

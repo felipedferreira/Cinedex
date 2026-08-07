@@ -24,6 +24,15 @@ const config: Config = {
 
   onBrokenLinks: 'throw',
 
+  // Every diagram on this site is a ```mermaid fence — there is deliberately no
+  // ASCII box art left in docs/. Docusaurus does NOT error on a fence whose
+  // language it doesn't recognise; it silently renders it as a code block, so
+  // dropping this flag (or the theme below) turns every diagram back into raw
+  // `flowchart TD ...` text with a green build. Both must stay.
+  markdown: {
+    mermaid: true,
+  },
+
   // Even if you don't use internationalization, you can use this field to set
   // useful metadata like html lang. For example, if your site is Chinese, you
   // may want to replace "en" with "zh-Hans".
@@ -50,10 +59,35 @@ const config: Config = {
     ],
   ],
 
+  themes: [
+    '@docusaurus/theme-mermaid',
+    [
+      // Offline search index, built at `docusaurus build` time — no Algolia
+      // account, no application, no network call from the rendered page.
+      '@easyops-cn/docusaurus-search-local',
+      {
+        // Content-hash the index filename so a rebuilt site never serves a
+        // stale index out of a browser or CDN cache.
+        hashed: true,
+        indexDocs: true,
+        indexPages: true,
+        // There is no blog (`blog: false` in the preset above).
+        indexBlog: false,
+        docsRouteBasePath: '/docs',
+      },
+    ],
+  ],
+
   themeConfig: {
     // No bespoke social card image exists for this project yet.
     colorMode: {
       respectPrefersColorScheme: true,
+    },
+    // Diagrams have to follow the color mode, not just the page around them —
+    // Mermaid's own default palette is built for a light background and turns
+    // near-illegible on the dark theme `respectPrefersColorScheme` can select.
+    mermaid: {
+      theme: { light: 'neutral', dark: 'dark' },
     },
     navbar: {
       title: 'Cinedex',

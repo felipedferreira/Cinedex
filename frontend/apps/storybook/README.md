@@ -14,19 +14,23 @@ With the Compose stack running, the built Storybook is also served at **http://l
 
 ## 📁 Layout
 
-```
-apps/storybook/
-├── .storybook/
-│   ├── main.ts           # stories glob, addons, staticDirs
-│   └── preview.tsx       # global styles, a11y parameters, theme toolbar
-├── src/
-│   ├── Box.stories.tsx
-│   ├── Button.stories.tsx
-│   └── TextField.stories.tsx
-├── Dockerfile            # built from the frontend/ context
-├── nginx.conf            # plain HTTP static serving
-├── vite.config.ts        # React + React Compiler; Storybook auto-loads it
-└── package.json
+```mermaid
+flowchart LR
+    SB["<b>apps/storybook/</b>"]
+
+    SB --> CONF["<b>.storybook/</b>"]
+    SB --> SRC["<b>src/</b>"]
+    SB --> DOCKER["Dockerfile<br/><i>built from the frontend/ context</i>"]
+    SB --> NGINX["nginx.conf<br/><i>plain HTTP static serving</i>"]
+    SB --> VITE["vite.config.ts<br/><i>React + React Compiler — Storybook auto-loads it</i>"]
+    SB --> PKG["package.json"]
+
+    CONF --> C1["main.ts<br/><i>stories glob, addons, staticDirs</i>"]
+    CONF --> C2["preview.tsx<br/><i>global styles, a11y parameters, theme toolbar</i>"]
+
+    SRC --> S1["Box.stories.tsx"]
+    SRC --> S2["Button.stories.tsx"]
+    SRC --> S3["TextField.stories.tsx"]
 ```
 
 ## 📜 Scripts

@@ -33,6 +33,29 @@ function HomepageHeader() {
   );
 }
 
+const STACK = [
+  '.NET 10',
+  'React 19',
+  'PostgreSQL 17',
+  'Docker',
+  'OpenTelemetry',
+] as const;
+
+function StackRow() {
+  return (
+    <section aria-labelledby="stack-label">
+      <p id="stack-label" className={styles.stackLabel}>
+        Built with
+      </p>
+      <ul className={styles.stack}>
+        {STACK.map((item) => (
+          <li key={item}>{item}</li>
+        ))}
+      </ul>
+    </section>
+  );
+}
+
 export default function Home(): ReactNode {
   const { siteConfig } = useDocusaurusContext();
   return (
@@ -40,6 +63,7 @@ export default function Home(): ReactNode {
       <HomepageHeader />
       <main>
         <HomepageFeatures />
+        <StackRow />
       </main>
     </Layout>
   );

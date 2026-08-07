@@ -8,14 +8,21 @@ npm **workspace root** for the Cinedex frontend. The lockfile and all shared too
 | [`@cinedex/storybook`](apps/storybook/README.md)       | `apps/storybook/`      | Storybook for the component library. Depends on `@cinedex/components`; served on port 9001 in Compose. |
 | [`@cinedex/components`](packages/components/README.md) | `packages/components/` | Shared component library — components, design tokens, base styles. No Storybook dependency.            |
 
-```
-frontend/
-├── package.json          # workspaces: apps/*, packages/*
-├── package-lock.json     # the only lockfile
-├── eslint.config.js  .prettierrc.json  .prettierignore  .gitignore  .dockerignore
-├── apps/cinadex-app/
-├── apps/storybook/
-└── packages/components/
+```mermaid
+flowchart LR
+    FE["<b>frontend/</b>"]
+
+    FE --> PKG["package.json<br/><i>workspaces: apps/*, packages/*</i>"]
+    FE --> LOCK["package-lock.json<br/><i>the only lockfile</i>"]
+    FE --> CFG["eslint.config.js · .prettierrc.json<br/>.prettierignore · .gitignore · .dockerignore<br/><i>shared tooling config</i>"]
+    FE --> APPS["<b>apps/</b>"]
+    FE --> PACKAGES["<b>packages/</b>"]
+
+    APPS --> A1["cinadex-app/"]
+    APPS --> A2["storybook/"]
+    APPS --> A3["docs-site/"]
+
+    PACKAGES --> C1["components/"]
 ```
 
 Both apps consume `@cinedex/components`; nothing depends on an app.

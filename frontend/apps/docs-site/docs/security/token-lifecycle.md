@@ -4,26 +4,42 @@ sidebar_position: 2
 
 # Token Lifecycle & Sessions
 
-```
-POST /auth/login
-  ├─ access token   JWT, HS256, 15 min   (Jwt:AccessTokenMinutes)   → response body
-  └─ refresh token  32 random bytes, base64, 7 days   (Jwt:RefreshTokenDays)   → Set-Cookie only
-       FamilyId = new Guid v7   (a login starts a new token family)
+The whole life of one session, from the login that opens it to the logout that closes it. Only the
+access token is ever returned in a response body; the refresh token exists for the browser solely as
+a cookie.
 
-POST /auth/refresh  (refresh token read from the cookie; no request body)
-  ├─ look up by SHA-256 hash
-  ├─ reject if the cookie is missing, or the token is revoked or expired  → 401
-  │    on rejection the cookie is also cleared, so the browser stops re-sending a dead token
-  └─ rotate:
-       old.RevokedAtUtc = now
-       old.ReplacedByTokenHash = hash(new)
-       new.FamilyId = old.FamilyId   (rotation stays in the same family)
-       new token pair issued; the new refresh token is written as a fresh Set-Cookie
-     (both writes committed in one transaction)
+```mermaid
+sequenceDiagram
+    autonumber
+    participant B as Browser (SPA)
+    participant API as API — /movies-svc/auth
+    participant DB as auth.refreshTokens
 
-POST /auth/logout  (refresh token read from the cookie; no request body)
-  └─ RevokedAtUtc = now, and the cookie is cleared.
-     Idempotent: an unknown, already-revoked, or absent cookie is a silent no-op that still clears.
+    Note over B,DB: POST /auth/login — one login starts one token family
+
+    B->>API: credentials
+    API->>DB: insert refresh token, FamilyId = new Guid v7
+    API-->>B: access token in the response body<br/>JWT, HS256, 15 min (Jwt:AccessTokenMinutes)
+    API-->>B: Set-Cookie only — refresh token<br/>32 random bytes, base64, 7 days (Jwt:RefreshTokenDays)
+
+    Note over B,DB: POST /auth/refresh — no request body, the token rides in the cookie
+
+    B->>API: cookie only
+    API->>DB: look up by SHA-256 hash
+
+    alt cookie missing, or token revoked or expired
+        API-->>B: 401, and the cookie is cleared<br/>so the browser stops re-sending a dead token
+    else token valid — rotate
+        API->>DB: old.RevokedAtUtc = now<br/>old.ReplacedByTokenHash = hash(new)<br/>new.FamilyId = old.FamilyId
+        Note right of DB: both writes commit<br/>in one transaction
+        API-->>B: new token pair, fresh Set-Cookie<br/>rotation stays in the same family
+    end
+
+    Note over B,DB: POST /auth/logout — idempotent
+
+    B->>API: cookie only
+    API->>DB: RevokedAtUtc = now
+    API-->>B: 204, and the cookie is cleared<br/>an unknown, already-revoked or absent<br/>cookie is a silent no-op that still clears
 ```
 
 ## The refresh token cookie
@@ -32,7 +48,7 @@ The refresh token is returned to the browser only as a cookie, never in a respon
 cross-site scripting defect can't read it. The access token stays in the body; it's short-lived
 (15 minutes) and the client attaches it as a bearer header.
 
-```
+```http
 Set-Cookie: __Secure-cinedex_refresh_token=<raw token>;
             HttpOnly; Secure; SameSite=Strict; Path=/movies-svc/auth; Expires=<token expiry>
 ```
@@ -101,7 +117,29 @@ that many sequential round-trips on the refresh path.
 
 ## Reuse response
 
-`POST /auth/refresh` applies one state policy to the presented row:
+`POST /auth/refresh` applies one state policy to the presented row. Note the branch order — expiry
+is tested **before** reuse, so an expired token that was also replayed is simply an expired token,
+and raises no reuse event. Every path ends at the same generic `401`; the response never tells the
+caller which branch it took.
+
+```mermaid
+flowchart TD
+    START(["POST /auth/refresh<br/>presents a refresh token"]) --> KNOWN{"known token?"}
+
+    KNOWN -- no --> R401["<b>401</b> generic"]
+    KNOWN -- yes --> EXPIRED{"expired?"}
+
+    EXPIRED -- yes --> R401
+    EXPIRED -- no --> REVOKED{"revoked?"}
+
+    REVOKED -- "no" --> ROTATE["rotate normally<br/><i>see the lifecycle diagram above</i>"]
+    REVOKED -- "yes" --> REPLACED{"has<br/>ReplacedByTokenHash?"}
+
+    REPLACED -- "no — e.g. revoked by logout" --> R401
+    REPLACED -- "yes — an already-rotated<br/>token was replayed" --> REUSE["<b>revoke every active token<br/>in that family</b><br/>log RefreshTokenReuseDetected<br/><i>(revoked count only)</i>"]
+
+    REUSE --> R401
+```
 
 - An unknown or expired token returns the ordinary generic `401`; expiry takes precedence over
   reuse detection.

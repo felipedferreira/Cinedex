@@ -10,19 +10,26 @@ npm run storybook        # from frontend/ → http://localhost:6006 (runs apps/s
 
 ## 📁 Layout
 
-```
-packages/components/
-├── src/
-│   ├── index.ts          # barrel — every public export
-│   ├── styles/
-│   │   ├── tokens.css    # design tokens      → @cinedex/components/tokens.css
-│   │   └── base.css      # base element rules → @cinedex/components/base.css
-│   ├── utils/cx.ts       # tiny className joiner
-│   ├── Box/              # Box.tsx + .module.css + .test.tsx
-│   ├── Button/
-│   └── TextField/
-├── vite.config.ts        # Vitest config (React Compiler preset included)
-└── package.json
+```mermaid
+flowchart LR
+    P["<b>packages/components/</b>"]
+
+    P --> SRC["<b>src/</b>"]
+    P --> VITE["vite.config.ts<br/><i>Vitest config (React Compiler preset included)</i>"]
+    P --> PKG["package.json"]
+
+    SRC --> IDX["index.ts<br/><i>barrel — every public export</i>"]
+    SRC --> STYLES["<b>styles/</b>"]
+    SRC --> CX["utils/cx.ts<br/><i>tiny className joiner</i>"]
+    SRC --> BOX["Box/<br/><i>Box.tsx + .module.css + .test.tsx</i>"]
+    SRC --> BTN["Button/"]
+    SRC --> TF["TextField/"]
+
+    STYLES --> T1["tokens.css<br/><i>design tokens</i>"]
+    STYLES --> T2["base.css<br/><i>base element rules</i>"]
+
+    T1 -. exported as .-> E1["@cinedex/components/tokens.css"]
+    T2 -. exported as .-> E2["@cinedex/components/base.css"]
 ```
 
 ## 🧩 Components

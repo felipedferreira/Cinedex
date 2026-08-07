@@ -6,22 +6,26 @@ One of three packages in the [`frontend/` npm workspace](../../README.md); share
 
 ## 📁 Layout
 
-```
-frontend/                    # workspace root — lockfile and shared config live here
-├── eslint.config.js  .prettierrc.json  .gitignore  .dockerignore
-├── packages/components/     # @cinedex/components — shared component library
-├── apps/storybook/          # @cinedex/storybook — its workbench, a separate app
-└── apps/cinadex-app/        # this package
-    ├── public/              # Static assets (favicon, icons)
-    ├── src/
-    │   ├── assets/          # Imported assets (images, SVGs)
-    │   ├── test/            # Global test setup (jest-dom, jsdom cleanup)
-    │   ├── index.css        # App-only layout; tokens come from @cinedex/components
-    │   ├── App.tsx          # Root component
-    │   └── main.tsx         # Entry point
-    ├── Dockerfile           # built from the frontend/ context, not this one
-    ├── vite.config.ts
-    └── package.json
+```mermaid
+flowchart LR
+    FE["<b>frontend/</b><br/><i>workspace root — lockfile and<br/>shared config live here</i>"]
+
+    FE --> CFG["eslint.config.js · .prettierrc.json<br/>.gitignore · .dockerignore"]
+    FE --> COMP["packages/components/<br/><i>@cinedex/components — shared component library</i>"]
+    FE --> SB["apps/storybook/<br/><i>@cinedex/storybook — its workbench, a separate app</i>"]
+    FE --> APP["<b>apps/cinadex-app/</b><br/><i>this package</i>"]
+
+    APP --> PUB["public/<br/><i>static assets (favicon, icons)</i>"]
+    APP --> SRC["<b>src/</b>"]
+    APP --> DOCKER["Dockerfile<br/><i>built from the frontend/ context, not this one</i>"]
+    APP --> VITE["vite.config.ts"]
+    APP --> PKG["package.json"]
+
+    SRC --> S1["assets/<br/><i>imported assets (images, SVGs)</i>"]
+    SRC --> S2["test/<br/><i>global test setup (jest-dom, jsdom cleanup)</i>"]
+    SRC --> S3["index.css<br/><i>app-only layout; tokens come from<br/>@cinedex/components</i>"]
+    SRC --> S4["App.tsx<br/><i>root component</i>"]
+    SRC --> S5["main.tsx<br/><i>entry point</i>"]
 ```
 
 ## 🧰 Tech Stack

@@ -13,23 +13,29 @@ npm run docs-site        # from frontend/ → http://localhost:9004
 
 ## 📁 Layout
 
-```
-apps/docs-site/
-├── docusaurus.config.ts       # branding, navbar/footer, blog disabled
-├── sidebars.ts
-├── scripts/
-│   └── sync-changelog.mjs     # generates src/pages/changelog.md — see below
-├── src/
-│   ├── css/custom.css         # Infima colors derived from @cinedex/components tokens
-│   ├── pages/index.tsx        # homepage hero + feature cards
-│   ├── pages/changelog.md     # generated, git-ignored — do not edit
-│   ├── components/HomepageFeatures/
-│   └── global.d.ts            # brings in Docusaurus's ambient module types (e.g. *.svg)
-├── docs/
-│   ├── features/               # product/architecture docs
-│   └── security/                # auth/authz docs
-├── static/img/                # Cinedex favicon.svg — the only static asset here
-└── tsconfig.json              # Docusaurus's own single tsconfig — see CLAUDE.md
+```mermaid
+flowchart LR
+    DS["<b>apps/docs-site/</b>"]
+
+    DS --> CFG["docusaurus.config.ts<br/><i>branding, navbar/footer, blog disabled</i>"]
+    DS --> SB["sidebars.ts"]
+    DS --> SCRIPTS["<b>scripts/</b>"]
+    DS --> SRC["<b>src/</b>"]
+    DS --> DOCS["<b>docs/</b>"]
+    DS --> STATIC["static/img/<br/><i>Cinedex favicon.svg — the only static asset</i>"]
+    DS --> TS["tsconfig.json<br/><i>Docusaurus's own single tsconfig — see CLAUDE.md</i>"]
+
+    SCRIPTS --> S1["sync-changelog.mjs<br/><i>generates src/pages/changelog.md — see below</i>"]
+    SCRIPTS --> S2["check-diagrams.mjs<br/><i>fails the build if the Mermaid wiring goes missing</i>"]
+
+    SRC --> R1["css/custom.css<br/><i>Infima colors derived from<br/>@cinedex/components tokens</i>"]
+    SRC --> R2["pages/index.tsx<br/><i>homepage hero + feature cards</i>"]
+    SRC --> R3["pages/changelog.md<br/><i>generated, git-ignored — do not edit</i>"]
+    SRC --> R4["components/HomepageFeatures/"]
+    SRC --> R5["global.d.ts<br/><i>Docusaurus's ambient module types (e.g. *.svg)</i>"]
+
+    DOCS --> D1["features/<br/><i>product/architecture docs</i>"]
+    DOCS --> D2["security/<br/><i>auth/authz docs</i>"]
 ```
 
 ## 📜 Scripts

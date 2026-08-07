@@ -216,7 +216,7 @@ troubleshooting all live there.
 | `movies.databasemigrator` | movies.databasemigrator | None | Applies pending database migrations and exits |
 | `movies.webservice` | movies.webservice | 8080 internal | ASP.NET Core web API |
 | `cinadex-app` | cinadex-app | 9000 HTTPS | React SPA frontend and reverse proxy (Nginx) |
-| `cinedex-storybook` | cinedex-storybook | 9001 HTTP | Storybook for the `@cinedex/components` component library — static bundle on Nginx, calls no backend |
+| `cinedex-storybook` | cinedex-storybook | 9001 HTTP | Storybook for the `@cinedex/*` component libraries — static bundle on Nginx, calls no backend |
 | `seq` | datalust/seq | 5341 | Structured logs + distributed traces (OpenTelemetry/OTLP) |
 | `mailpit` | axllent/mailpit:v1.30.0 | 8025 UI, 1025 SMTP | Dev mail sink — captures outgoing email in a web UI (see [Email](#-email-mailpit-dev-mail-sink)) |
 

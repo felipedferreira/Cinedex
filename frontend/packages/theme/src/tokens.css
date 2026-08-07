@@ -1,0 +1,97 @@
+/**
+ * Design tokens for the Cinedex UI — the whole design system, in one file.
+ *
+ * `@cinedex/atoms`, `@cinedex/compounds` and `@cinedex/solution` all resolve
+ * their colours, type, spacing and radii through these custom properties and
+ * nothing else, so a rebrand is a change to this file alone. Components reach
+ * them as Tailwind utilities (`bg-bg`, `text-label`, `tracking-eyebrow`) via the
+ * `@theme inline` bridge in `tailwind.css` — the utility names and the token
+ * names below are the same vocabulary seen from two sides.
+ *
+ * Colours are declared once with `light-dark()` rather than duplicated under a
+ * `prefers-color-scheme` media query. The pair below is selected by the used
+ * `color-scheme`, so `color-scheme: light dark` follows the OS (the default),
+ * while setting `color-scheme: dark` on the root forces a theme — that is the
+ * hook Storybook's theme toolbar uses. It also makes native form controls
+ * render with matching chrome.
+ *
+ * Note the naming split: raw tokens here are unprefixed (`--accent`, `--bg`),
+ * while the type and tracking scales use `--type-*` / `--track-*` rather than
+ * `--text-*` / `--tracking-*`. That is deliberate — `--text` is already the body
+ * colour, and `--text-*` / `--tracking-*` are Tailwind's own theme namespaces.
+ * Keeping the raw names distinct keeps `tailwind.css`'s bridge readable.
+ */
+
+:root {
+  color-scheme: light dark;
+
+  /* Colour */
+  --text: light-dark(#6b6375, #9ca3af);
+  --text-h: light-dark(#08060d, #f3f4f6);
+  --bg: light-dark(#fff, #16171d);
+  --border: light-dark(#e5e4e7, #2e303a);
+  --code-bg: light-dark(#f4f3ec, #1f2028);
+  --accent: light-dark(#aa3bff, #c084fc);
+  --accent-bg: light-dark(rgba(170, 59, 255, 0.1), rgba(192, 132, 252, 0.15));
+  --accent-border: light-dark(
+    rgba(170, 59, 255, 0.5),
+    rgba(192, 132, 252, 0.5)
+  );
+  --social-bg: light-dark(rgba(244, 243, 236, 0.5), rgba(47, 48, 58, 0.5));
+
+  /* Status colour. Each ramp is a foreground, a tinted fill and a border, so a
+     status surface (`Alert`, `StatPair`, a rejected field) is composed from one
+     set rather than from ad-hoc opacities. */
+  --warning: light-dark(#96590a, #e2a24d);
+  --warning-bg: light-dark(rgba(184, 115, 10, 0.1), rgba(226, 162, 77, 0.15));
+  --warning-border: light-dark(
+    rgba(184, 115, 10, 0.5),
+    rgba(226, 162, 77, 0.5)
+  );
+
+  --success: light-dark(#0a6459, #2dd4bf);
+  --success-bg: light-dark(rgba(13, 122, 111, 0.1), rgba(45, 212, 191, 0.15));
+  --success-border: light-dark(
+    rgba(13, 122, 111, 0.5),
+    rgba(45, 212, 191, 0.5)
+  );
+
+  /* `light-dark()` resolves to a colour, so the shadow is composed from two
+     themed colours rather than being swapped wholesale. */
+  --shadow-near: light-dark(rgba(0, 0, 0, 0.1), rgba(0, 0, 0, 0.4));
+  --shadow-far: light-dark(rgba(0, 0, 0, 0.05), rgba(0, 0, 0, 0.25));
+  --shadow:
+    var(--shadow-near) 0 10px 15px -3px, var(--shadow-far) 0 4px 6px -2px;
+
+  /* Typography */
+  --sans: system-ui, 'Segoe UI', Roboto, sans-serif;
+  --heading: system-ui, 'Segoe UI', Roboto, sans-serif;
+  --mono: ui-monospace, Consolas, monospace;
+
+  /* Type scale. Each step names the role it plays rather than its size, so a
+     component asks for `text-label` and never carries a pixel value. */
+  --type-label: 10px; /* uppercase mono labels, kickers, eyebrows */
+  --type-footnote: 10.5px; /* the note below a card */
+  --type-brand: 11px; /* the wordmark */
+  --type-caption: 11.5px; /* mono body: checklists, checkboxes, inline rows */
+  --type-note: 12.5px; /* alert body */
+  --type-body: 13.5px; /* card description */
+  --type-title: 25px; /* card heading */
+
+  /* Letter-spacing, paired with the uppercase mono steps above. */
+  --track-label: 0.1em;
+  --track-eyebrow: 0.14em;
+
+  /* Spacing scale */
+  --space-0: 0;
+  --space-1: 4px;
+  --space-2: 8px;
+  --space-3: 16px;
+  --space-4: 24px;
+  --space-5: 32px;
+
+  /* Radii */
+  --radius-sm: 4px;
+  --radius-md: 5px;
+  --radius-lg: 6px;
+}

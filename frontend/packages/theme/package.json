@@ -1,0 +1,15 @@
+{
+  "name": "@cinedex/theme",
+  "private": true,
+  "version": "0.8.0",
+  "type": "module",
+  "description": "Cinedex design system: tokens, base element styling and the Tailwind theme bridge. No React.",
+  "exports": {
+    "./tokens.css": "./src/tokens.css",
+    "./base.css": "./src/base.css",
+    "./tailwind.css": "./src/tailwind.css"
+  },
+  "dependencies": {
+    "tailwindcss": "^4.3.3"
+  }
+}

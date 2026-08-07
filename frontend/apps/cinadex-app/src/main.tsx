@@ -1,12 +1,12 @@
 import { StrictMode } from 'react';
 import { createRoot } from 'react-dom/client';
 import { createRouter, RouterProvider } from '@tanstack/react-router';
-// Design tokens and base element styling come from the shared component
-// library, and must load before the app's own rules so those can override.
-import '@cinedex/components/tokens.css';
-import '@cinedex/components/base.css';
-import './styles/tailwind.css';
-import './index.css';
+// The whole design system in one import: @cinedex/theme's `tailwind.css` pulls in
+// the tokens and the base element styling itself, in the cascade-layer order they
+// have to be in. This app has no stylesheet of its own — every screen it renders
+// comes from @cinedex/solution and is styled through the theme's utilities. An
+// app-specific rule would go in a new `./index.css` imported after this line.
+import '@cinedex/theme/tailwind.css';
 import { routeTree } from './routeTree.gen';
 
 const router = createRouter({ routeTree });

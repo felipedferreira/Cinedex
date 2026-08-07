@@ -4,15 +4,18 @@ sidebar_position: 4
 
 # Frontend & Component Library
 
-`frontend/` is an npm workspace holding four packages: the SPA, its Storybook, the shared component
-library, and this docs site.
+`frontend/` is an npm workspace holding seven packages: the SPA, its Storybook, this docs site, and
+four library packages — a design system plus three component tiers.
 
-| Package               | Path                   | What it is                                                                                             |
-| --------------------- | ---------------------- | ------------------------------------------------------------------------------------------------------ |
-| `cinadex-app`         | `apps/cinadex-app/`    | The React 19 + Vite SPA. Its Docker image doubles as the stack's HTTPS reverse proxy (Nginx).          |
-| `@cinedex/storybook`  | `apps/storybook/`      | Storybook for the component library — served on port 9001.                                             |
-| `@cinedex/components` | `packages/components/` | The shared design system — components, design tokens, base styles. No Storybook dependency of its own. |
-| `@cinedex/docs-site`  | `apps/docs-site/`      | This site.                                                                                             |
+| Package              | Path                  | What it is                                                                                    |
+| -------------------- | --------------------- | --------------------------------------------------------------------------------------------- |
+| `cinadex-app`        | `apps/cinadex-app/`   | The React 19 + Vite SPA. Its Docker image doubles as the stack's HTTPS reverse proxy (Nginx). |
+| `@cinedex/storybook` | `apps/storybook/`     | Storybook for all three component tiers — served on port 9001.                                |
+| `@cinedex/docs-site` | `apps/docs-site/`     | This site.                                                                                    |
+| `@cinedex/theme`     | `packages/theme/`     | The design system — tokens, base element styling, the Tailwind theme. **No React.**           |
+| `@cinedex/atoms`     | `packages/atoms/`     | Primitives — Radix-backed, Tailwind-styled, one job each.                                     |
+| `@cinedex/compounds` | `packages/compounds/` | Templates — brand-agnostic assemblies of atoms.                                               |
+| `@cinedex/solution`  | `packages/solution/`  | Cinedex own screens. Presentational: no router, no data fetching.                             |
 
 ## The SPA
 
@@ -24,40 +27,55 @@ The dev server runs at **https://localhost:9000** with a local HTTPS certificate
 shape locally as they do under Docker Compose. In both local modes, browser code calls the API with
 relative paths such as `/movies-svc/auth/login`.
 
-## The component library
+## Three component tiers
 
-`@cinedex/components` is **source-consumed** — its `exports` point straight at `src/`, not a built
-`dist/`:
+Components are split by how fast they change, and each tier is bounded by what it is allowed to know:
+
+- **`@cinedex/atoms`** — one job, no internal arrangement: `Button`, `Input`, `Checkbox`,
+  `PasswordInput`, `OtpInput`. Built on Radix primitives wherever real interaction semantics are
+  involved, styled with Tailwind, variants expressed with [cva](https://cva.style/).
+- **`@cinedex/compounds`** — a named layout assembled from atoms, **with no brand in it**:
+  `AuthCard`, `PasswordField`, `StatPair`.
+- **`@cinedex/solution`** — Cinedex-specific: the auth screens, the copy, the `Brand`. The only tier
+  that names the product.
+
+The clearest illustration is `AuthCard`. It takes `brand` as a prop and never draws the wordmark;
+`@cinedex/solution`’s `Brand` supplies it. Compounds know _where_ a brand goes; solution knows
+_which_. The same idea covers navigation: the screens know the route paths, but not how to navigate
+them, so the host injects a link component — which is why a full sign-in screen renders in Storybook
+with no router and no mock.
+
+All four library packages are **source-consumed** — their `exports` point straight at `src/`, not a
+built `dist/`:
 
 ```jsonc
 "exports": {
-  ".":             { "types": "./src/index.ts", "default": "./src/index.ts" },
-  "./tokens.css":  "./src/styles/tokens.css",
-  "./base.css":    "./src/styles/base.css"
+  ".": { "types": "./src/index.ts", "default": "./src/index.ts" }
 }
 ```
 
-That means no build step for the library, HMR that crosses the package boundary (editing a
-component refreshes the running app), and Storybook, Vitest, and the SPA all compiling the exact
-same source.
+That means no build step, HMR that crosses package boundaries (editing an atom refreshes the running
+app), and Storybook, Vitest, and the SPA all compiling the exact same source.
 
 Every component below has a live, interactive story — with the theme toolbar and the accessibility
 panel — in [the Storybook workbench](#the-storybook-workbench). If the stack is already running,
 it's at **[http://localhost:9001](http://localhost:9001)**; otherwise `npm run storybook` from
 `frontend/`.
 
-Three primitives ship today:
+A selection of the atoms:
 
-| Component   | What it does                                                                                                                                                 |
-| ----------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------ |
-| `Box`       | Layout primitive — a flex container with `direction`, `padding`, `gap`, `align`, `justify` drawn from the spacing tokens.                                    |
-| `Button`    | Action primitive — `variant` (`primary` \| `ghost`) and `size` (`sm` \| `md`). Defaults to `type="button"` so it never submits a form by accident.           |
-| `TextField` | Form-input primitive — label + input + optional error, wired together with a generated id so `htmlFor`, `aria-describedby`, and `aria-invalid` always agree. |
+| Component       | What it does                                                                                                                                                           |
+| --------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `Button`        | Action primitive — four variants across three sizes. Defaults to `type="button"` so it never submits a form by accident; `asChild` renders a link with button styling. |
+| `TextField`     | Form-input primitive — label + input + optional error, wired together with a generated id so `htmlFor`, `aria-describedby`, and `aria-invalid` always agree.           |
+| `Checkbox`      | Radix checkbox — a `<button role="checkbox">` rather than an `<input>`, named via `aria-labelledby`.                                                                   |
+| `PasswordInput` | Masked input with an in-field reveal toggle.                                                                                                                           |
+| `OtpInput`      | One box per digit, behaving like a single input: keyboard navigation, paste, backspace.                                                                                |
 
 ### Theming
 
-Every component resolves colour, spacing, and radii through design tokens — never a hard-coded
-value. Colours are declared once with
+Every component resolves colour, type, spacing, and radii through `@cinedex/theme`’s design tokens —
+never a hard-coded value, and never a raw pixel size where a named type step exists. Colours are declared once with
 [`light-dark()`](https://developer.mozilla.org/en-US/docs/Web/CSS/color_value/light-dark) rather
 than duplicated under a `prefers-color-scheme` media query:
 
@@ -75,11 +93,11 @@ render with matching chrome.
 
 ## The Storybook workbench
 
-`@cinedex/storybook` is its own app, not part of the library — it depends on
-`@cinedex/components` and imports every story through the package's public exports
-(`import { Box, Button } from '@cinedex/components'`), never by relative path into the library's
-source. That keeps the library's public surface honest: a component missing from the barrel export
-fails the Storybook build rather than going unnoticed.
+`@cinedex/storybook` is its own app, not part of any library — it depends on all three tiers and
+imports every story through their public exports (`import { Button } from '@cinedex/atoms'`), never
+by relative path into a package's source. That keeps those public surfaces honest: a component
+missing from a barrel export fails the Storybook build rather than going unnoticed. Stories are
+grouped **Atoms**, **Compounds** and **Solution**, so the sidebar mirrors the tiers.
 
 ```bash
 npm run storybook    # from frontend/ → http://localhost:9001

@@ -1,5 +1,5 @@
 import { createFileRoute } from '@tanstack/react-router';
-import { ResetPasswordScreen } from '../features/auth/screens/ResetPasswordScreen';
+import { ResetPasswordScreen } from '@cinedex/solution';
 
 interface ResetPasswordSearch {
   email?: string;

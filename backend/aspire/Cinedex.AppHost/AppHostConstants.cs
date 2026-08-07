@@ -104,8 +104,8 @@ internal static class AppHostConstants
     /// That matters: the package's <c>dev</c> script is plain <c>vite</c>, so the <c>--port</c>
     /// <c>AddViteApp</c> appends reaches it, whereas the root script delegates through
     /// <c>-w cinadex-app</c> and would swallow it. Installing from here is still correct — npm walks
-    /// up to the workspace root, so the single hoisted lockfile and the <c>@cinedex/components</c> link are
-    /// what a fresh clone gets.
+    /// up to the workspace root, so the single hoisted lockfile and the <c>@cinedex/*</c> library
+    /// links are what a fresh clone gets.
     /// </para>
     /// </summary>
     public const string FrontendAppDirectory = "../../../frontend/apps/cinadex-app";

@@ -124,9 +124,25 @@ jobs:
         name: cinadex-app
         working-directory: frontend/apps/cinadex-app
 
-    - name: Coverage summary (@cinedex/components)
+    # One per library tier. @cinedex/theme is absent on purpose — it ships CSS
+    # and no JavaScript, so it has no test suite to report on.
+    - name: Coverage summary (@cinedex/atoms)
       if: always()
       uses: davelosert/vitest-coverage-report-action@v2
       with:
-        name: '@cinedex/components'
-        working-directory: frontend/packages/components
+        name: '@cinedex/atoms'
+        working-directory: frontend/packages/atoms
+
+    - name: Coverage summary (@cinedex/compounds)
+      if: always()
+      uses: davelosert/vitest-coverage-report-action@v2
+      with:
+        name: '@cinedex/compounds'
+        working-directory: frontend/packages/compounds
+
+    - name: Coverage summary (@cinedex/solution)
+      if: always()
+      uses: davelosert/vitest-coverage-report-action@v2
+      with:
+        name: '@cinedex/solution'
+        working-directory: frontend/packages/solution

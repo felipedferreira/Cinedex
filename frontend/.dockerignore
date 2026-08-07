@@ -4,6 +4,8 @@
 **/dist
 **/coverage
 **/storybook-static
+**/build
+**/.docusaurus
 # NOTE: do not ignore **/.storybook — apps/storybook builds inside its image and needs its config.
 .idea
 .git

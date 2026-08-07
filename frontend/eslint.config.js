@@ -41,6 +41,16 @@ export default defineConfig([
     },
   },
   {
+    // TanStack Router's file-based routes export a `Route` config object
+    // alongside their component, which is the framework's own convention
+    // (see https://tanstack.com/router) and not something to restructure
+    // around.
+    files: ['apps/cinadex-app/src/routes/**'],
+    rules: {
+      'react-refresh/only-export-components': 'off',
+    },
+  },
+  {
     files: ['**/*.test.{ts,tsx}', '**/test/**'],
     languageOptions: {
       globals: globals.vitest,

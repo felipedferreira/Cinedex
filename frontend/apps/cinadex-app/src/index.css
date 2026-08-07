@@ -4,7 +4,10 @@
  * `main.tsx` — only rules specific to this app belong here.
  */
 
-#root {
+/* Scopes the scaffold's fixed-width, bordered layout to the `/` route only —
+   the auth routes render their own full-viewport centered layout and must
+   not inherit this box. */
+.scaffold-shell {
   width: 1126px;
   max-width: 100%;
   margin: 0 auto;

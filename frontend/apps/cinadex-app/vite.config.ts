@@ -2,6 +2,8 @@ import { defineConfig } from 'vitest/config';
 import react, { reactCompilerPreset } from '@vitejs/plugin-react';
 import basicSsl from '@vitejs/plugin-basic-ssl';
 import babel from '@rolldown/plugin-babel';
+import tailwindcss from '@tailwindcss/vite';
+import { tanstackRouter } from '@tanstack/router-plugin/vite';
 
 const apiProxyTarget =
   process.env.VITE_API_PROXY_TARGET ?? 'https://localhost:7201';
@@ -26,6 +28,8 @@ const openBrowser =
 // https://vite.dev/config/
 export default defineConfig({
   plugins: [
+    tanstackRouter({ target: 'react', autoCodeSplitting: true }),
+    tailwindcss(),
     basicSsl({ name: 'Cinedex local development' }),
     react(),
     babel({ presets: [reactCompilerPreset()] }),

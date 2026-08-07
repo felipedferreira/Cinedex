@@ -7,15 +7,37 @@ sidebar_position: 1
 Cinedex is a full-stack portfolio application for cataloging movie titles and their genres —
 inspired by IMDB — with JWT-based authentication in front of a members-only catalog.
 
+:::info Adapted from the repository's READMEs
+This section is a curated adaptation of the root `README.md`,
+[`backend/README.md`](https://github.com/felipedferreira/Cinedex/blob/main/backend/README.md), and
+the frontend package READMEs. It is **not** regenerated from them, so if these pages ever disagree
+with the code, the code and those source docs win.
+:::
+
 ## Repository layout
 
-```
-Cinedex/
-├── backend/      # .NET solution (Web API, application core, persistence, tests)
-│   └── aspire/   # Aspire AppHost — the local dev loop
-├── frontend/     # npm workspace — the SPA, the component library, its Storybook, and this docs site
-├── docs/         # Design docs (auth & security model, planned ADRs)
-└── compose.yaml  # Orchestrates PostgreSQL, the web service, the SPA, Storybook, Seq, and Mailpit
+```mermaid
+flowchart LR
+    ROOT["<b>Cinedex/</b>"]
+
+    ROOT --> BE["<b>backend/</b><br/>.NET solution — Web API,<br/>application core, persistence, tests"]
+    ROOT --> FE["<b>frontend/</b><br/>npm workspace"]
+    ROOT --> DOCS["<b>docs/</b><br/>design docs — auth &amp;<br/>security model, planned ADRs"]
+    ROOT --> COMPOSE["<b>compose.yaml</b><br/>orchestrates Postgres, the web service,<br/>the SPA, Storybook, Seq, Mailpit"]
+
+    BE --> ASP["<b>aspire/</b><br/>AppHost — the local dev loop"]
+
+    subgraph workspace ["workspace members"]
+        APP["apps/cinadex-app/<br/><i>the SPA</i>"]
+        SB["apps/storybook/<br/><i>component workbench</i>"]
+        DS["apps/docs-site/<br/><i>this site</i>"]
+        COMP["packages/components/<br/><i>shared component library</i>"]
+    end
+
+    FE --> APP
+    FE --> SB
+    FE --> DS
+    FE --> COMP
 ```
 
 ## What's in this section

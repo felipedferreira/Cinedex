@@ -29,6 +29,37 @@ endpoint's _latency_ identical for known and unknown accounts. Before this desig
 path additionally awaited a multi-round-trip SMTP conversation that the unknown path skipped, so
 the two were distinguishable from outside despite both returning `202 Accepted`.
 
+The dashed return is the point of the whole design: the response leaves **before** any SMTP work
+starts, so the two paths below rejoin at the same instant regardless of whether the account existed.
+
+```mermaid
+sequenceDiagram
+    autonumber
+    participant C as Caller
+    participant H as ForgotPassword handler
+    participant Q as ChannelEmailDispatcher<br/>(bounded in-memory queue)
+    participant W as EmailDeliveryWorker<br/>(background)
+    participant S as SMTP — Mailpit in dev
+
+    C->>H: POST /auth/password/forgot
+    H->>H: look up the account
+
+    alt account exists
+        H->>H: generate reset token<br/><i>tens of microseconds — the residual signal</i>
+        H->>Q: enqueue the composed message
+    else unknown account
+        Note over H: nothing is queued
+    end
+
+    H-->>C: 202 Accepted<br/><i>identical on both paths</i>
+
+    Note over Q,S: everything below is off the request path
+
+    W->>Q: drain
+    W->>S: SMTP conversation
+    Note over W,S: a delivery failure never reaches the caller —<br/>202 means accepted, not sent
+```
+
 Consequences worth knowing:
 
 - **The queue is in-process and not durable.** A crash, or overflow of the message queue, loses

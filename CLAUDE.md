@@ -30,6 +30,7 @@ With compose up: UI/proxy at https://localhost:9000 (self-signed cert — `curl 
 - **Naming drift**: product is "Cinedex", API base path is `/movies-svc`, but the catalog entity is `Title` (routes are `/movies-svc/titles`). Older docs may say "Movie"/"Movies" — trust `ApiConstants.cs` and the domain code.
 - Backend treats all warnings as errors (StyleCop + .NET analyzers) — a style violation breaks the build.
 - Backend integration tests require Docker running (Testcontainers Postgres).
+- **Diagrams are Mermaid fences, never ASCII box art** — enforced repo-wide by `scripts/check-diagrams.mjs`, which CI runs. `CLAUDE.md` files are the deliberate exception (nothing renders them, so their text trees stay). The trap this guards: **neither GitHub nor Docusaurus errors on a fence language it doesn't recognise** — both render it as a plain code block, so a diagram can stop being a diagram with a completely green build. That shipped once in PR #55. A semicolon inside a `sequenceDiagram` breaks it the same silent way (Mermaid reads `;` as a statement separator, and message/Note text is unquoted); the guard catches that too. Verify a changed diagram by looking at the rendered page.
 
 ## Toolchain & CI
 

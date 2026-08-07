@@ -1,0 +1,40 @@
+/**
+ * Any CSS included here will be global. The classic template
+ * bundles Infima by default. Infima is a CSS framework designed to
+ * work well for content-centric websites.
+ */
+
+/*
+ * Infima's primary-color scale is derived from the Cinedex brand accent in
+ * frontend/packages/components/src/styles/tokens.css
+ * (--accent: light-dark(#aa3bff, #c084fc)) — the same purple the SPA and
+ * Storybook use. Each shade is the base hue/saturation with lightness
+ * shifted by fixed steps (+/-8/16/24, clamped); regenerate with Docusaurus's
+ * own color-generator tool (linked from "Styling your site with Infima" in
+ * the Docusaurus docs) if the brand accent ever changes.
+ */
+:root {
+  --ifm-color-primary: hsl(274, 100%, 62%); /* #aa3bff */
+  --ifm-color-primary-dark: hsl(274, 100%, 54%);
+  --ifm-color-primary-darker: hsl(274, 100%, 46%);
+  --ifm-color-primary-darkest: hsl(274, 100%, 38%);
+  --ifm-color-primary-light: hsl(274, 100%, 70%);
+  --ifm-color-primary-lighter: hsl(274, 100%, 78%);
+  --ifm-color-primary-lightest: hsl(274, 100%, 86%);
+  --ifm-code-font-size: 95%;
+  --ifm-font-family-base: system-ui, 'Segoe UI', Roboto, sans-serif;
+  --ifm-font-family-monospace: ui-monospace, Consolas, monospace;
+  --docusaurus-highlighted-code-line-bg: rgba(0, 0, 0, 0.1);
+}
+
+/* For readability concerns, you should choose a lighter palette in dark mode. */
+[data-theme='dark'] {
+  --ifm-color-primary: hsl(270, 95%, 75%); /* #c084fc */
+  --ifm-color-primary-dark: hsl(270, 95%, 67%);
+  --ifm-color-primary-darker: hsl(270, 95%, 59%);
+  --ifm-color-primary-darkest: hsl(270, 95%, 51%);
+  --ifm-color-primary-light: hsl(270, 95%, 83%);
+  --ifm-color-primary-lighter: hsl(270, 95%, 91%);
+  --ifm-color-primary-lightest: hsl(270, 95%, 95%);
+  --docusaurus-highlighted-code-line-bg: rgba(0, 0, 0, 0.3);
+}

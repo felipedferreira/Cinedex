@@ -6,7 +6,7 @@
       "runtimeExecutable": "npm",
       "runtimeArgs": ["run", "dev", "--prefix", "frontend"],
       "port": 9000,
-      "autoPort": false
+      "autoPort": true
     },
     {
       "name": "storybook",

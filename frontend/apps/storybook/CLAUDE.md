@@ -2,7 +2,7 @@
 
 The Storybook for [`@cinedex/components`](../../packages/components/CLAUDE.md), as its own workspace app. It depends on the library the same way the SPA does — through the package exports — so the stories can only use what `packages/components/src/index.ts` actually exports. A forgotten export breaks this build rather than going unnoticed.
 
-One of two apps in the `frontend/` npm workspace — see [`../../CLAUDE.md`](../../CLAUDE.md).
+One of three apps in the `frontend/` npm workspace — see [`../../CLAUDE.md`](../../CLAUDE.md).
 
 ## Commands (from `frontend/`, the workspace root)
 

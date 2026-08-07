@@ -72,7 +72,7 @@ auth schemas and exits — there's nothing else to run by hand for a fresh datab
 | Service | Address | Purpose |
 |---|---|---|
 | `cinadex-app` | https://localhost:9000 | React SPA + reverse proxy (self-signed cert) |
-| `cinedex-storybook` | http://localhost:9001 | Storybook for the `@cinedex/components` component library (static, plain HTTP) |
+| `cinedex-storybook` | http://localhost:9001 | Storybook for the `@cinedex/*` component libraries (static, plain HTTP) |
 | `movies.webservice` | via the proxy at `/movies-svc` | ASP.NET Core API (not exposed directly) |
 | `postgres` | localhost:5432 | Catalog + auth data |
 | `seq` | http://localhost:5341 | Logs & traces |
@@ -179,6 +179,6 @@ Almost always a missing or incomplete root `.env` — see [step 1](#1-configure-
 | Doc | For |
 |---|---|
 | [Backend README](../backend/README.md) | Architecture, local (non-Docker) dev, EF migrations, testing & coverage |
-| [Frontend README](../frontend/README.md) | Workspace layout, scripts, linting, testing; the `cinadex-app` app and the `@cinedex/components` component library |
+| [Frontend README](../frontend/README.md) | Workspace layout, scripts, linting, testing; the `cinadex-app` app and the `@cinedex/theme`/`atoms`/`compounds`/`solution` packages |
 | [Auth & Security Model](auth-security-model.md) | JWT design, refresh-token rotation, known gaps |
 | [CONTRIBUTING](../CONTRIBUTING.md) | Workflow, code standards, PR checklist |

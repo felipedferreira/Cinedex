@@ -1,19 +1,30 @@
 # Built from the `frontend/` workspace root, not this directory — the lockfile is hoisted there and
-# this app depends on the `@cinedex/components` workspace package. compose.yaml sets `context: ./frontend`
-# and points `dockerfile` at this file.
+# this app depends on the `@cinedex/atoms`, `@cinedex/compounds`, `@cinedex/solution` and
+# `@cinedex/theme` workspace packages. compose.yaml sets `context: ./frontend` and points
+# `dockerfile` at this file.
 FROM node:22-alpine AS build
 WORKDIR /app
-# Copy every workspace manifest before the sources so the `npm ci` layer stays cached until a
-# dependency actually changes. All four are required even though the install is scoped below:
-# `npm ci` validates the lockfile against the whole workspace.
+# Copy EVERY workspace manifest before the sources, so the `npm ci` layer is invalidated exactly
+# when some package's dependencies change and stays cached otherwise.
+#
+# This is a cache-correctness list, not a build-correctness one: `npm ci` here does NOT fail on a
+# missing workspace manifest (verified — the image builds with any single one of these lines
+# removed, because `COPY . .` below fills the directory in afterwards and the workspace symlink
+# then resolves). What a missing line costs is a stale install layer: change that package's
+# dependencies and the cached `npm ci` is reused, so the new dependency never lands in the image.
+# Keep the list complete — including `apps/docs-site`, which nothing in this image consumes.
 #
 # `.npmrc` carries `strict-allow-scripts=true`, so it has to land before `npm ci` rather than with
 # the `COPY . .` below — otherwise the image would install with lifecycle scripts unguarded. It
 # holds config only; never put a token in it.
 COPY package.json package-lock.json .npmrc ./
 COPY apps/cinadex-app/package.json apps/cinadex-app/
+COPY apps/docs-site/package.json apps/docs-site/
 COPY apps/storybook/package.json apps/storybook/
-COPY packages/components/package.json packages/components/
+COPY packages/atoms/package.json packages/atoms/
+COPY packages/compounds/package.json packages/compounds/
+COPY packages/solution/package.json packages/solution/
+COPY packages/theme/package.json packages/theme/
 RUN npm ci --workspace @cinedex/storybook --include-workspace-root
 COPY . .
 RUN npm run build-storybook -w @cinedex/storybook

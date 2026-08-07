@@ -1,5 +1,5 @@
 import { createFileRoute } from '@tanstack/react-router';
-import { CreateAccountScreen } from '../features/auth/screens/CreateAccountScreen';
+import { CreateAccountScreen } from '@cinedex/solution';
 
 export const Route = createFileRoute('/register')({
   component: CreateAccountScreen,

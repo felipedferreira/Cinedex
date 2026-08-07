@@ -13,7 +13,9 @@
     "coverage": "vitest run --coverage"
   },
   "dependencies": {
-    "@cinedex/components": "*",
+    "@cinedex/atoms": "*",
+    "@cinedex/solution": "*",
+    "@cinedex/theme": "*",
     "@tanstack/react-router": "^1.170.21",
     "react": "^19.2.6",
     "react-dom": "^19.2.6"

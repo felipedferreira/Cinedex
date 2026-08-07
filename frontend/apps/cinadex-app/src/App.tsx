@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Button } from '@cinedex/components';
+import { Button } from '@cinedex/atoms';
 import reactLogo from './assets/react.svg';
 import viteLogo from './assets/vite.svg';
 import heroImg from './assets/hero.png';

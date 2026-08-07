@@ -31,7 +31,7 @@ flowchart LR
         APP["apps/cinadex-app/<br/><i>the SPA</i>"]
         SB["apps/storybook/<br/><i>component workbench</i>"]
         DS["apps/docs-site/<br/><i>this site</i>"]
-        COMP["packages/components/<br/><i>shared component library</i>"]
+        COMP["packages/<br/><i>theme · atoms · compounds · solution</i>"]
     end
 
     FE --> APP
@@ -45,8 +45,8 @@ flowchart LR
 - **[Movie Catalog & API](./movie-catalog.md)** — genres, titles, and the request/response contracts.
 - **[Architecture](./architecture.md)** — the hexagonal (ports & adapters) layering and how the six
   projects fit together.
-- **[Frontend & Component Library](./frontend.md)** — the React SPA, the shared `@cinedex/components`
-  design system, and its Storybook workbench.
+- **[Frontend & Component Library](./frontend.md)** — the React SPA, the `@cinedex/theme` design
+  system and the three component tiers built on it, and the Storybook workbench.
 - **[Observability & Local Dev Workflow](./observability-and-dev-workflow.md)** — structured
   logging/tracing via Seq, health checks, the dev mail sink, and the two ways to run the stack
   locally (Docker Compose or the Aspire dev loop).

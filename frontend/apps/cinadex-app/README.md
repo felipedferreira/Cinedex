@@ -2,7 +2,7 @@
 
 The SPA for Cinedex. In Docker Compose, Nginx serves it and reverse-proxies the backend OpenAPI spec at `https://localhost:9000/movies-svc/openapi/v1.json`.
 
-One of three packages in the [`frontend/` npm workspace](../../README.md); shared components, design tokens and base styling come from [`@cinedex/components`](../../packages/components/README.md).
+One of seven packages in the [`frontend/` npm workspace](../../README.md). Its auth screens come from [`@cinedex/solution`](../../packages/solution/README.md), primitives from [`@cinedex/atoms`](../../packages/atoms/README.md), and the design system from [`@cinedex/theme`](../../packages/theme/README.md).
 
 ## 📁 Layout
 
@@ -11,7 +11,7 @@ flowchart LR
     FE["<b>frontend/</b><br/><i>workspace root — lockfile and<br/>shared config live here</i>"]
 
     FE --> CFG["eslint.config.js · .prettierrc.json<br/>.gitignore · .dockerignore"]
-    FE --> COMP["packages/components/<br/><i>@cinedex/components — shared component library</i>"]
+    FE --> COMP["packages/<br/><i>@cinedex/theme · atoms · compounds · solution</i>"]
     FE --> SB["apps/storybook/<br/><i>@cinedex/storybook — its workbench, a separate app</i>"]
     FE --> APP["<b>apps/cinadex-app/</b><br/><i>this package</i>"]
 
@@ -23,7 +23,7 @@ flowchart LR
 
     SRC --> S1["assets/<br/><i>imported assets (images, SVGs)</i>"]
     SRC --> S2["test/<br/><i>global test setup (jest-dom, jsdom cleanup)</i>"]
-    SRC --> S3["index.css<br/><i>app-only layout; tokens come from<br/>@cinedex/components</i>"]
+    SRC --> S3["index.css<br/><i>app-only layout; the design system<br/>comes from @cinedex/theme</i>"]
     SRC --> S4["App.tsx<br/><i>root component</i>"]
     SRC --> S5["main.tsx<br/><i>entry point</i>"]
 ```
@@ -64,19 +64,19 @@ first when `node_modules` is missing. Turn the whole resource off there with
 
 All run from `frontend/`. Build and test scripts fan out across the workspace — add `-w cinadex-app` to scope one to this package.
 
-| Script                    | Description                                            |
-| ------------------------- | ------------------------------------------------------ |
-| `npm run dev`             | Start the Vite dev server with HMR                     |
-| `npm run build`           | Type-check and build every package to `dist/`          |
-| `npm run preview`         | Preview the production build locally                   |
-| `npm run storybook`       | Start Storybook for `@cinedex/components` on port 6006 |
-| `npm run build-storybook` | Build the static Storybook (also run in CI)            |
-| `npm run lint`            | Lint every package with ESLint                         |
-| `npm run lint:fix`        | Lint and auto-fix fixable problems                     |
-| `npm run format`          | Format all files with Prettier                         |
-| `npm run format:check`    | Check formatting without writing (CI-friendly)         |
-| `npm run test:run`        | Run every test suite once (CI-friendly)                |
-| `npm run coverage`        | Run tests once and generate coverage per package       |
+| Script                    | Description                                      |
+| ------------------------- | ------------------------------------------------ |
+| `npm run dev`             | Start the Vite dev server with HMR               |
+| `npm run build`           | Type-check and build every package to `dist/`    |
+| `npm run preview`         | Preview the production build locally             |
+| `npm run storybook`       | Start Storybook on port 9001                     |
+| `npm run build-storybook` | Build the static Storybook (also run in CI)      |
+| `npm run lint`            | Lint every package with ESLint                   |
+| `npm run lint:fix`        | Lint and auto-fix fixable problems               |
+| `npm run format`          | Format all files with Prettier                   |
+| `npm run format:check`    | Check formatting without writing (CI-friendly)   |
+| `npm run test:run`        | Run every test suite once (CI-friendly)          |
+| `npm run coverage`        | Run tests once and generate coverage per package |
 
 Watch mode and the Vitest UI are per-package: `npm run test -w cinadex-app`, `npm run test:ui -w cinadex-app`.
 

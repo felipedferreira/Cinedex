@@ -1,0 +1,106 @@
+/**
+ * Tailwind, wired to the Cinedex tokens.
+ *
+ * This is the only place Tailwind's theme is configured. Every utility a
+ * component reaches for — `bg-bg`, `text-accent`, `text-label`,
+ * `tracking-eyebrow`, `rounded-md`, `shadow` — resolves through the
+ * `light-dark()` custom properties in `tokens.css` rather than a hex value
+ * restated here, so `tokens.css` stays the single file a rebrand touches.
+ *
+ * `@theme inline` is what makes that work: with `inline`, Tailwind writes the
+ * *value* into the utility (`background: var(--bg)`) instead of emitting its own
+ * `--color-bg` on `:root`. That keeps one variable per token — the one
+ * `tokens.css` declares — and it is why the `--color-x: var(--x)` lines below
+ * are a bridge and not a circular definition.
+ *
+ * ─────────────────────────────────────────────────────────────────────────────
+ * This file is the design system's single entry point — it pulls in the tokens
+ * and the base element styling itself, so a consumer imports one stylesheet and
+ * cannot get the order wrong. The order below is not cosmetic:
+ *
+ * `base.css` MUST arrive `layer(base)`, and after `tailwindcss`. Tailwind v4 puts
+ * everything it emits into cascade layers, and **unlayered CSS outranks every
+ * layer** no matter the source order or specificity. Imported bare, `base.css`'s
+ * `h1 { font-size: 56px }` therefore beat `text-title` on the same element and
+ * every auth card rendered its heading at the landing page's size. Inside
+ * `layer(base)` it lands after preflight (so its typography still applies to bare
+ * markup) but below `layer(utilities)` (so a component's own classes win).
+ *
+ * `tokens.css` stays unlayered on purpose: it only declares custom properties,
+ * nothing else declares them, and `var()` lookups are unaffected by layering.
+ *
+ * ─────────────────────────────────────────────────────────────────────────────
+ * The `@source` lines are load-bearing. Tailwind never scans `node_modules`, and
+ * npm workspaces symlink `node_modules/@cinedex/atoms` → `packages/atoms`. Without
+ * these, a class used *only* inside a library package generates no CSS — and it
+ * fails silently: no error, no warning, just an unstyled component. Any new
+ * library package needs a line here.
+ */
+
+@import './tokens.css';
+@import 'tailwindcss';
+@import './base.css' layer(base);
+
+@source "../../atoms/src";
+@source "../../compounds/src";
+@source "../../solution/src";
+
+@theme inline {
+  /* Surface and ink */
+  --color-bg: var(--bg);
+  --color-text: var(--text);
+  --color-text-h: var(--text-h);
+  --color-border: var(--border);
+  --color-code-bg: var(--code-bg);
+  --color-social-bg: var(--social-bg);
+
+  /* Accent */
+  --color-accent: var(--accent);
+  --color-accent-bg: var(--accent-bg);
+  --color-accent-border: var(--accent-border);
+
+  /* Status */
+  --color-warning: var(--warning);
+  --color-warning-bg: var(--warning-bg);
+  --color-warning-border: var(--warning-border);
+  --color-success: var(--success);
+  --color-success-bg: var(--success-bg);
+  --color-success-border: var(--success-border);
+
+  /* Type */
+  --font-sans: var(--sans);
+  --font-mono: var(--mono);
+
+  --text-label: var(--type-label);
+  --text-footnote: var(--type-footnote);
+  --text-brand: var(--type-brand);
+  --text-caption: var(--type-caption);
+  --text-note: var(--type-note);
+  --text-body: var(--type-body);
+  --text-title: var(--type-title);
+
+  --tracking-label: var(--track-label);
+  --tracking-eyebrow: var(--track-eyebrow);
+
+  /* Shape. `rounded-xs` is deliberately not mapped — components that want a
+     hairline radius use Tailwind's own 2px default. */
+  --radius-sm: var(--radius-sm);
+  --radius-md: var(--radius-md);
+  --radius-lg: var(--radius-lg);
+
+  --shadow: var(--shadow);
+
+  --animate-caret: cdx-caret 1.1s steps(1) infinite;
+}
+
+/* The blinking cursor drawn over the focused, empty OTP cell. */
+@keyframes cdx-caret {
+  0%,
+  49% {
+    opacity: 1;
+  }
+  50%,
+  100% {
+    opacity: 0;
+  }
+}

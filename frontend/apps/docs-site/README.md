@@ -28,7 +28,7 @@ flowchart LR
     SCRIPTS --> S1["sync-changelog.mjs<br/><i>generates src/pages/changelog.md — see below</i>"]
     SCRIPTS --> S2["check-diagrams.mjs<br/><i>fails the build if the Mermaid wiring goes missing</i>"]
 
-    SRC --> R1["css/custom.css<br/><i>Infima colors derived from<br/>@cinedex/components tokens</i>"]
+    SRC --> R1["css/custom.css<br/><i>Infima colors derived from<br/>@cinedex/theme tokens</i>"]
     SRC --> R2["pages/index.tsx<br/><i>homepage hero + feature cards</i>"]
     SRC --> R3["pages/changelog.md<br/><i>generated, git-ignored — do not edit</i>"]
     SRC --> R4["components/HomepageFeatures/"]
@@ -65,7 +65,7 @@ extend it.
 
 ## 🎨 Branding
 
-Colors come from [`@cinedex/components`](../../packages/components/CLAUDE.md)'s `--accent` design token — see `src/css/custom.css` for how the Infima color scale is derived from it. The favicon and navbar logo are a copy of `cinadex-app`'s `favicon.svg`.
+Colors come from [`@cinedex/theme`](../../packages/theme/CLAUDE.md)'s `--accent` design token — see `src/css/custom.css` for how the Infima color scale is derived from it. The favicon and navbar logo are a copy of `cinadex-app`'s `favicon.svg`.
 
 ## 🐳 No Docker / Compose / Aspire yet
 

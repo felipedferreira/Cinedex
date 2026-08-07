@@ -1,6 +1,6 @@
 /**
- * App-level layout. Design tokens (`@cinedex/components/tokens.css`) and base element
- * styling (`@cinedex/components/base.css`) are imported ahead of this file in
+ * App-level layout. Design tokens (`@cinedex/theme/tokens.css`) and base element
+ * styling (`@cinedex/theme/base.css`) are imported ahead of this file in
  * `main.tsx` — only rules specific to this app belong here.
  */
 

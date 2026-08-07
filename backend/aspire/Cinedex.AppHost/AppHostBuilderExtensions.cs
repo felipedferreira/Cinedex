@@ -317,8 +317,9 @@ internal static class AppHostBuilderExtensions
         // terminate for a workbench that calls no API. Unproxied and pinned for the same reason the
         // SPA is — the dashboard URL then matches the one the README and `npm run storybook` promise.
         //
-        // No WaitFor and no reference to any other resource: Storybook renders @cinedex/components in
-        // isolation and talks to nothing, so it is the one resource that can start whenever it likes.
+        // No WaitFor and no reference to any other resource: Storybook renders the @cinedex/* component
+        // libraries in isolation and talks to nothing, so it is the one resource that can start whenever
+        // it likes.
         // That also means it stays useful when the backend half of the stack is switched off.
         //
         // --no-open suppresses the browser tab, the same call the SPA makes through VITE_OPEN_BROWSER

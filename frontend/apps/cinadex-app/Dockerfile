@@ -1,23 +1,36 @@
 # Built from the `frontend/` workspace root, not this directory — the lockfile
-# is hoisted there and the app depends on the `@cinedex/components` workspace package.
+# is hoisted there and the app depends on the `@cinedex/solution` workspace package
+# (and, through it, on compounds, atoms and theme).
 # compose.yaml sets `context: ./frontend` and points `dockerfile` at this file.
 FROM node:22-alpine AS build
 WORKDIR /app
-# Copy every workspace manifest before the sources so the `npm ci` layer stays
-# cached until a dependency actually changes. All of them are required even
-# though the install is scoped below: `npm ci` validates the lockfile against
-# the whole workspace, so a missing manifest fails the build.
+# Copy EVERY workspace manifest before the sources, so the `npm ci` layer is
+# invalidated exactly when some package's dependencies change and stays cached
+# otherwise.
+#
+# This is a cache-correctness list, not a build-correctness one: `npm ci` here
+# does NOT fail on a missing workspace manifest (verified — the image builds with
+# any single one of these lines removed, because `COPY . .` below fills the
+# directory in afterwards and the workspace symlink then resolves). What a
+# missing line costs is a stale install layer: change that package's dependencies
+# and the cached `npm ci` is reused, so the new dependency never lands in the
+# image. Keep the list complete — including `apps/docs-site`, which nothing in
+# this image consumes.
 #
 # `.npmrc` carries `strict-allow-scripts=true`, so it has to land before `npm ci`
 # rather than with the `COPY . .` below — otherwise the image would install with
 # lifecycle scripts unguarded. It holds config only; never put a token in it.
 COPY package.json package-lock.json .npmrc ./
 COPY apps/cinadex-app/package.json apps/cinadex-app/
+COPY apps/docs-site/package.json apps/docs-site/
 COPY apps/storybook/package.json apps/storybook/
-COPY packages/components/package.json packages/components/
-# Scoped to the app's workspace so the image build skips the Storybook and
-# test toolchains that only @cinedex/components needs. The workspace link to
-# @cinedex/components is still created, and its source is all the app build consumes.
+COPY packages/atoms/package.json packages/atoms/
+COPY packages/compounds/package.json packages/compounds/
+COPY packages/solution/package.json packages/solution/
+COPY packages/theme/package.json packages/theme/
+# Scoped to the app's workspace so the image build skips the Storybook, docs-site
+# and test toolchains it does not need. The workspace links to the four library
+# packages are still created, and their source is all the app build consumes.
 RUN npm ci --workspace cinadex-app --include-workspace-root
 COPY . .
 RUN npm run build -w cinadex-app

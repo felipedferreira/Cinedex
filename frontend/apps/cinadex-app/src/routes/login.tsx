@@ -1,5 +1,4 @@
-import { createFileRoute } from '@tanstack/react-router';
-import { SignInScreen } from '../features/auth/screens/SignInScreen';
+import { createFileRoute, Outlet } from '@tanstack/react-router';
 
 interface LoginSearch {
   /** `locked` is a review-only toggle for the lockout state — nothing in this
@@ -9,6 +8,9 @@ interface LoginSearch {
   state?: 'locked';
 }
 
+/** Layout only. The sign-in form lives in `login.index.tsx` so that
+ *  `/login/verify` has somewhere to render — a parent that renders a screen
+ *  instead of an `<Outlet />` swallows its children. */
 export const Route = createFileRoute('/login')({
   validateSearch: (search: Record<string, unknown>): LoginSearch => ({
     state: search.state === 'locked' ? 'locked' : undefined,
@@ -17,6 +19,5 @@ export const Route = createFileRoute('/login')({
 });
 
 function RouteComponent() {
-  const { state } = Route.useSearch();
-  return <SignInScreen locked={state === 'locked'} />;
+  return <Outlet />;
 }

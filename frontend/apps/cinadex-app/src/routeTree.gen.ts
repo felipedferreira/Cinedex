@@ -15,6 +15,7 @@ import { Route as LoginRouteImport } from './routes/login'
 import { Route as RegisterRouteImport } from './routes/register'
 import { Route as ResetPasswordRouteImport } from './routes/reset-password'
 import { Route as SignedOutRouteImport } from './routes/signed-out'
+import { Route as LoginIndexRouteImport } from './routes/login.index'
 import { Route as LoginVerifyRouteImport } from './routes/login.verify'
 
 const IndexRoute = IndexRouteImport.update({
@@ -47,6 +48,11 @@ const SignedOutRoute = SignedOutRouteImport.update({
   path: '/signed-out',
   getParentRoute: () => rootRouteImport,
 } as any)
+const LoginIndexRoute = LoginIndexRouteImport.update({
+  id: '/',
+  path: '/',
+  getParentRoute: () => LoginRoute,
+} as any)
 const LoginVerifyRoute = LoginVerifyRouteImport.update({
   id: '/verify',
   path: '/verify',
@@ -61,15 +67,16 @@ export interface FileRoutesByFullPath {
   '/reset-password': typeof ResetPasswordRoute
   '/signed-out': typeof SignedOutRoute
   '/login/verify': typeof LoginVerifyRoute
+  '/login/': typeof LoginIndexRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/forgot-password': typeof ForgotPasswordRoute
-  '/login': typeof LoginRouteWithChildren
   '/register': typeof RegisterRoute
   '/reset-password': typeof ResetPasswordRoute
   '/signed-out': typeof SignedOutRoute
   '/login/verify': typeof LoginVerifyRoute
+  '/login': typeof LoginIndexRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -80,6 +87,7 @@ export interface FileRoutesById {
   '/reset-password': typeof ResetPasswordRoute
   '/signed-out': typeof SignedOutRoute
   '/login/verify': typeof LoginVerifyRoute
+  '/login/': typeof LoginIndexRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -91,15 +99,16 @@ export interface FileRouteTypes {
     | '/reset-password'
     | '/signed-out'
     | '/login/verify'
+    | '/login/'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
     | '/forgot-password'
-    | '/login'
     | '/register'
     | '/reset-password'
     | '/signed-out'
     | '/login/verify'
+    | '/login'
   id:
     | '__root__'
     | '/'
@@ -109,6 +118,7 @@ export interface FileRouteTypes {
     | '/reset-password'
     | '/signed-out'
     | '/login/verify'
+    | '/login/'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -164,6 +174,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof SignedOutRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/login/': {
+      id: '/login/'
+      path: '/'
+      fullPath: '/login/'
+      preLoaderRoute: typeof LoginIndexRouteImport
+      parentRoute: typeof LoginRoute
+    }
     '/login/verify': {
       id: '/login/verify'
       path: '/verify'
@@ -176,10 +193,12 @@ declare module '@tanstack/react-router' {
 
 interface LoginRouteChildren {
   LoginVerifyRoute: typeof LoginVerifyRoute
+  LoginIndexRoute: typeof LoginIndexRoute
 }
 
 const LoginRouteChildren: LoginRouteChildren = {
   LoginVerifyRoute: LoginVerifyRoute,
+  LoginIndexRoute: LoginIndexRoute,
 }
 
 const LoginRouteWithChildren = LoginRoute._addFileChildren(LoginRouteChildren)

@@ -104,7 +104,7 @@ services:
       dockerfile: src/Presentation/Cinedex.WebService/Dockerfile
     container_name: movies-web
     expose:
-      # The API is reached through the HTTPS frontend reverse proxy so Secure auth cookies
+      # The API is reached through the HTTPS edge proxy so Secure auth cookies
       # are set on an HTTPS response and stay same-origin with the SPA.
       - "8080"
     depends_on:
@@ -118,7 +118,7 @@ services:
         condition: service_healthy
     environment:
       ASPNETCORE_ENVIRONMENT: Production
-      # The app sits behind the cinadex-app Nginx proxy; honor its X-Forwarded-* headers so
+      # The app sits behind the Caddy edge proxy; honor its X-Forwarded-* headers so
       # the request scheme and client address are the originals, not http and the proxy IP.
       ForwardedHeaders__Enabled: "true"
       Features__ApiDocumentationEnabled: "true"
@@ -169,9 +169,23 @@ services:
       context: ./frontend
       dockerfile: apps/cinadex-app/Dockerfile
     container_name: cinadex-app
+    expose:
+      - "8080"
+
+  # The local HTTPS edge. Caddy creates its development CA and localhost certificate at runtime
+  # and persists them in caddy_data, so no private key is baked into the frontend image. It also
+  # keeps the SPA and API same-origin, which the Secure, SameSite=Strict refresh cookie requires.
+  cinedex-edge:
+    image: caddy:2.11.4-alpine
+    container_name: cinedex-edge
     ports:
       - "127.0.0.1:9000:443"
+    volumes:
+      - ./frontend/apps/cinadex-app/Caddyfile:/etc/caddy/Caddyfile:ro
+      - caddy_data:/data
+      - caddy_config:/config
     depends_on:
+      - cinadex-app
       - movies.webservice
 
   # The component libraries' Storybook, served as a static bundle. No depends_on and no API proxy —
@@ -188,3 +202,5 @@ services:
 volumes:
   postgres_data:
   seq_data:
+  caddy_data:
+  caddy_config:

@@ -33,7 +33,7 @@ cp .env.example .env       # fill in the database, Seq, and Mailpit values
 docker compose up --build
 ```
 
-Then open **https://localhost:9000** (self-signed cert — trust it or use `curl -k`).
+Then open **https://localhost:9000** (Caddy local-CA certificate — trust it or use `curl -k`).
 
 There's one manual step before logs show up in Seq — full walkthrough, access points, and
 troubleshooting in **[docs/getting-started.md](docs/getting-started.md)**.
@@ -78,7 +78,7 @@ off; Storybook waits on nothing and calls no API, so it is unaffected by the res
 either direction. Full detail on every flag is in [`backend/CLAUDE.md`](backend/CLAUDE.md).
 
 This complements Compose rather than replacing it — `docker compose up` is still the prod-like path,
-with built images, the Nginx/HTTPS proxy, Seq, and both frontends served as static bundles. **Run one
+with built images, the Caddy HTTPS edge, Seq, and both frontends served as static bundles. **Run one
 or the other**: they collide on PostgreSQL's 5432 and the SPA's 9000, so the second to start fails to
 bind. Their data volumes are separate, so neither can corrupt the other's database.
 

@@ -2,15 +2,15 @@
 
 npm **workspace root** for the Cinedex frontend. The lockfile and all shared tooling config live here; the packages hold only what is specific to them.
 
-| Package                                              | Path                  | What it is                                                                                    |
-| ---------------------------------------------------- | --------------------- | --------------------------------------------------------------------------------------------- |
-| [`cinadex-app`](apps/cinadex-app/README.md)          | `apps/cinadex-app/`   | The React 19 + Vite SPA. Its Docker image doubles as the stack's HTTPS reverse proxy (Nginx). |
-| [`@cinedex/storybook`](apps/storybook/README.md)     | `apps/storybook/`     | Storybook for all three component tiers. Owns the stories; served on port 9001 in Compose.    |
-| [`@cinedex/docs-site`](apps/docs-site/README.md)     | `apps/docs-site/`     | Branded Docusaurus site; renders the changelog at `/changelog`. Local dev only.               |
-| [`@cinedex/theme`](packages/theme/README.md)         | `packages/theme/`     | The design system — tokens, base element styling, the Tailwind theme. **No React.**           |
-| [`@cinedex/atoms`](packages/atoms/README.md)         | `packages/atoms/`     | Primitives — Radix-backed, Tailwind-styled, one job each.                                     |
-| [`@cinedex/compounds`](packages/compounds/README.md) | `packages/compounds/` | Templates — brand-agnostic assemblies of atoms.                                               |
-| [`@cinedex/solution`](packages/solution/README.md)   | `packages/solution/`  | Cinedex's own screens. Presentational: no router, no data fetching.                           |
+| Package                                              | Path                  | What it is                                                                                 |
+| ---------------------------------------------------- | --------------------- | ------------------------------------------------------------------------------------------ |
+| [`cinadex-app`](apps/cinadex-app/README.md)          | `apps/cinadex-app/`   | The React 19 + Vite SPA, served by Nginx behind Compose's Caddy HTTPS/API edge.            |
+| [`@cinedex/storybook`](apps/storybook/README.md)     | `apps/storybook/`     | Storybook for all three component tiers. Owns the stories; served on port 9001 in Compose. |
+| [`@cinedex/docs-site`](apps/docs-site/README.md)     | `apps/docs-site/`     | Branded Docusaurus site; renders the changelog at `/changelog`. Local dev only.            |
+| [`@cinedex/theme`](packages/theme/README.md)         | `packages/theme/`     | The design system — tokens, base element styling, the Tailwind theme. **No React.**        |
+| [`@cinedex/atoms`](packages/atoms/README.md)         | `packages/atoms/`     | Primitives — Radix-backed, Tailwind-styled, one job each.                                  |
+| [`@cinedex/compounds`](packages/compounds/README.md) | `packages/compounds/` | Templates — brand-agnostic assemblies of atoms.                                            |
+| [`@cinedex/solution`](packages/solution/README.md)   | `packages/solution/`  | Cinedex's own screens. Presentational: no router, no data fetching.                        |
 
 ```mermaid
 flowchart BT
@@ -134,7 +134,7 @@ docker build -f apps/cinadex-app/Dockerfile -t cinadex-app .
 docker build -f apps/storybook/Dockerfile -t cinedex-storybook .
 ```
 
-`compose.yaml` at the repo root does the same via `context: ./frontend` and an explicit `dockerfile:` per service — the SPA on 9000 (HTTPS, self-signed) and Storybook on 9001 (plain HTTP; it proxies nothing).
+`compose.yaml` at the repo root does the same via `context: ./frontend` and an explicit `dockerfile:` per service. The SPA container serves internal HTTP; the Caddy edge publishes the UI and API on 9000 using its persistent local CA. Storybook remains on 9001 over plain HTTP.
 
 Two things these Dockerfiles depend on, both easy to break:
 

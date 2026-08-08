@@ -66,7 +66,7 @@ This starts:
 - **PostgreSQL 17 Alpine** on port `5432`
 - **Database Migrator** as a one-shot container before the web service starts
 - **Movies WebService** on Docker-network port `8080` only
-- **Cinedex UI / reverse proxy** on `https://localhost:9000`
+- **Caddy HTTPS edge for the Cinedex UI and API** on `https://localhost:9000`
 - Browser auth flows should use the HTTPS proxy URL so `Secure` refresh cookies are accepted and same-origin with the SPA.
 - Data persistence via Docker volume
 
@@ -215,7 +215,8 @@ troubleshooting all live there.
 | `postgres` | postgres:17-alpine | 5432 | PostgreSQL database with persistent storage |
 | `movies.databasemigrator` | movies.databasemigrator | None | Applies pending database migrations and exits |
 | `movies.webservice` | movies.webservice | 8080 internal | ASP.NET Core web API |
-| `cinadex-app` | cinadex-app | 9000 HTTPS | React SPA frontend and reverse proxy (Nginx) |
+| `cinadex-app` | cinadex-app | 8080 internal | React SPA static bundle (Nginx) |
+| `cinedex-edge` | caddy:2.11.4-alpine | 9000 HTTPS | Local TLS termination and same-origin routing for the SPA and API |
 | `cinedex-storybook` | cinedex-storybook | 9001 HTTP | Storybook for the `@cinedex/*` component libraries — static bundle on Nginx, calls no backend |
 | `seq` | datalust/seq | 5341 | Structured logs + distributed traces (OpenTelemetry/OTLP) |
 | `mailpit` | axllent/mailpit:v1.30.0 | 8025 UI, 1025 SMTP | Dev mail sink — captures outgoing email in a web UI (see [Email](#-email-mailpit-dev-mail-sink)) |
@@ -245,8 +246,8 @@ curl -k -s https://localhost:9000/movies-svc/health/ready
 # {"status":"Healthy","checks":[{"name":"postgres","status":"Healthy"}]}
 ```
 
-The public Compose path goes through the HTTPS `cinadex-app` reverse proxy; use `-k` with curl unless
-you have trusted the local self-signed certificate.
+The public Compose path goes through the Caddy HTTPS edge; use `-k` with curl unless you have trusted
+Caddy's local development CA.
 
 ## 📈 Observability (Seq)
 

@@ -63,7 +63,8 @@ flowchart LR
     MIG -- exits 0 --> WEB[Web Service]
     SEQ[Seq] -- healthy --> WEB
     MAIL[Mailpit] -- healthy --> WEB
-    WEB --> UI[Cinadex App + Nginx proxy]
+    WEB --> EDGE[Caddy HTTPS edge]
+    UI[Cinadex App + Nginx] --> EDGE
 ```
 
 The one-shot **Database Migrator** applies pending EF Core migrations for both the catalog and
@@ -71,7 +72,8 @@ auth schemas and exits — there's nothing else to run by hand for a fresh datab
 
 | Service | Address | Purpose |
 |---|---|---|
-| `cinadex-app` | https://localhost:9000 | React SPA + reverse proxy (self-signed cert) |
+| `cinedex-edge` | https://localhost:9000 | Caddy HTTPS edge for the SPA and API (local-CA certificate) |
+| `cinadex-app` | internal only | React SPA served as a static Nginx bundle |
 | `cinedex-storybook` | http://localhost:9001 | Storybook for the `@cinedex/*` component libraries (static, plain HTTP) |
 | `movies.webservice` | via the proxy at `/movies-svc` | ASP.NET Core API (not exposed directly) |
 | `postgres` | localhost:5432 | Catalog + auth data |
@@ -156,8 +158,18 @@ docker compose down -v       # also wipe Postgres and Seq volumes — start clea
 <details>
 <summary><strong>Browser or curl complains about the certificate</strong></summary>
 
-The UI/proxy uses a self-signed TLS cert for local dev. Trust it in your browser on first
-visit, or pass `-k` to curl.
+The Caddy edge issues its localhost certificate from a development CA stored in the persistent
+`caddy_data` volume. Trust that CA in your browser, or pass `-k` to curl.
+
+To import the CA into your host trust store, first copy it out of the running edge container:
+
+```bash
+docker compose cp cinedex-edge:/data/caddy/pki/authorities/local/root.crt ./cinedex-local-ca.crt
+```
+
+Then import `cinedex-local-ca.crt` as a trusted root using your operating system's certificate
+manager. The CA remains stable across ordinary rebuilds and `docker compose down`; deleting volumes
+with `docker compose down -v` creates a new CA that must be trusted again.
 </details>
 
 <details>

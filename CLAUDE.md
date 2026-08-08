@@ -12,7 +12,7 @@ Full-stack movie catalog (IMDB-inspired portfolio app): .NET 10 backend + React 
   - `frontend/apps/docs-site/` — `@cinedex/docs-site`, a Cinedex-branded Docusaurus site. Its `/changelog` page is auto-generated from the root `CHANGELOG.md` (never edited directly). The `docs/` tree holds two hand-curated categories — Features and Security — adapted one-time from this repo's own docs; they do **not** re-sync, so editing a source doc leaves the site stale (see the drift note in `docs/auth-security-model.md` and `backend/README.md`). Every diagram is a Mermaid fence — there is no ASCII box art, and `markdown.mermaid` plus `@docusaurus/theme-mermaid` must both stay wired in `docusaurus.config.ts` or the diagrams silently degrade to code blocks. Local dev only for now — no Docker/Compose/Aspire integration.
   - `frontend/packages/` — four source-consumed packages (`exports` point at `src/`, so no build step and no `dist/`): **`@cinedex/theme`** is the design system (tokens, base styles, the Tailwind theme; no React), and the three component tiers layer on it — **`@cinedex/atoms`** (Radix + Tailwind primitives), **`@cinedex/compounds`** (brand-agnostic templates), **`@cinedex/solution`** (Cinedex's own screens, router-free).
 - `docs/` — design docs (auth & security model); feature specs under `docs/superpowers/specs/`.
-- `compose.yaml` — full stack: Postgres 17, web service, UI + Nginx reverse proxy, Storybook, Seq (logs/traces), Mailpit (dev mail sink).
+- `compose.yaml` — full stack: Postgres 17, web service, UI, Caddy HTTPS edge, Storybook, Seq (logs/traces), Mailpit (dev mail sink).
 
 ## Commands
 
@@ -21,7 +21,7 @@ Full-stack movie catalog (IMDB-inspired portfolio app): .NET 10 backend + React 
 - Full stack (repo root): `docker compose up --build` — requires a root `.env` (`cp .env.example .env`, fill in DB/Seq/Mailpit values) or compose fails.
 - Local dev loop (from `backend/`): `dotnet run --project aspire/Cinedex.AppHost` — Postgres + Mailpit as containers, the three .NET hosts and both frontend dev servers (the SPA's and Storybook's) as processes, migrations applied automatically, telemetry on the Aspire dashboard. The UI comes up at https://localhost:9000 with its `/movies-svc` proxy already pointed at the AppHost's web service, and Storybook at http://localhost:9001, so this path now covers the full stack. Needs Docker, Node/npm, and one User Secret (`Parameters:postgres-password`); needs no `.env`. **Cannot run at the same time as compose** — both bind Postgres on 5432 and the SPA on 9000 — though the data volumes are separate. Skip the migrator with `Features:EnableDatabaseMigrationsSvc=false`, the UI with `Features:EnableFrontendUiSvc=false`, or Storybook with `Features:EnableStorybookSvc=false` (see `backend/CLAUDE.md`).
 
-With compose up: UI/proxy at https://localhost:9000 (self-signed cert — `curl -k`), API at https://localhost:9000/movies-svc, Scalar API docs at `/movies-svc/api-docs/v1`, Storybook at http://localhost:9001, Seq at http://localhost:5341, Mailpit (captured email) at http://localhost:8025.
+With compose up: UI/proxy at https://localhost:9000 (Caddy local-CA cert — `curl -k` unless trusted), API at https://localhost:9000/movies-svc, Scalar API docs at `/movies-svc/api-docs/v1`, Storybook at http://localhost:9001, Seq at http://localhost:5341, Mailpit (captured email) at http://localhost:8025.
 
 ## Critical gotchas
 

@@ -20,6 +20,32 @@ class ResizeObserverStub implements ResizeObserver {
 
 globalThis.ResizeObserver = ResizeObserverStub;
 
+/**
+ * jsdom has no `matchMedia` either, and `Brand`'s animated variants call it to
+ * check `prefers-reduced-motion` before starting a `requestAnimationFrame`
+ * loop — jsdom has no `requestAnimationFrame` at all, so defaulting `matches`
+ * to `true` here keeps every test on the synchronous "settle immediately"
+ * branch unless a test overrides this mock and separately polyfills rAF
+ * itself. This is also the actual scenario the animation tests assert against
+ * — the multi-frame rAF path is exercised by hand in the browser, not here.
+ */
+class MediaQueryListStub implements MediaQueryList {
+  matches = true;
+  media = '';
+  onchange = null;
+  addListener = () => undefined;
+  removeListener = () => undefined;
+  addEventListener = () => undefined;
+  removeEventListener = () => undefined;
+  dispatchEvent = () => false;
+
+  constructor(media: string) {
+    this.media = media;
+  }
+}
+
+globalThis.matchMedia = (query) => new MediaQueryListStub(query);
+
 // Automatically unmount and clean up the DOM after each test.
 afterEach(() => {
   cleanup();

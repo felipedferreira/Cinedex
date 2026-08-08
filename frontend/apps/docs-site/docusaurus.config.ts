@@ -14,10 +14,10 @@ const config: Config = {
     v4: true, // Improve compatibility with the upcoming Docusaurus v4
   },
 
-  // No deployed site exists yet - this app is local-dev only for now.
-  // Update both values together if/when it's actually deployed.
+  // Local npm development serves at `/`; the Docker build sets this to
+  // `/documentation/` because Compose publishes the site behind Caddy there.
   url: 'https://cinedex.example.com',
-  baseUrl: '/',
+  baseUrl: process.env.DOCUSAURUS_BASE_URL ?? '/',
 
   organizationName: 'felipedferreira',
   projectName: 'Cinedex',

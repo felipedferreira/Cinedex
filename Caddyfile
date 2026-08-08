@@ -1,0 +1,15 @@
+https://localhost {
+	tls internal
+
+	redir /movies-svc /movies-svc/ 308
+
+	@api path /movies-svc/*
+	reverse_proxy @api movies.webservice:8080
+
+	redir /documentation /documentation/ 308
+
+	@documentation path /documentation/*
+	reverse_proxy @documentation cinedex-docs-site:80
+
+	reverse_proxy cinadex-app:8080
+}

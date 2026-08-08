@@ -7,15 +7,15 @@ sidebar_position: 4
 `frontend/` is an npm workspace holding seven packages: the SPA, its Storybook, this docs site, and
 four library packages — a design system plus three component tiers.
 
-| Package              | Path                  | What it is                                                                                    |
-| -------------------- | --------------------- | --------------------------------------------------------------------------------------------- |
-| `cinadex-app`        | `apps/cinadex-app/`   | The React 19 + Vite SPA. Its Docker image doubles as the stack's HTTPS reverse proxy (Nginx). |
-| `@cinedex/storybook` | `apps/storybook/`     | Storybook for all three component tiers — served on port 9001.                                |
-| `@cinedex/docs-site` | `apps/docs-site/`     | This site.                                                                                    |
-| `@cinedex/theme`     | `packages/theme/`     | The design system — tokens, base element styling, the Tailwind theme. **No React.**           |
-| `@cinedex/atoms`     | `packages/atoms/`     | Primitives — Radix-backed, Tailwind-styled, one job each.                                     |
-| `@cinedex/compounds` | `packages/compounds/` | Templates — brand-agnostic assemblies of atoms.                                               |
-| `@cinedex/solution`  | `packages/solution/`  | Cinedex own screens. Presentational: no router, no data fetching.                             |
+| Package              | Path                  | What it is                                                                          |
+| -------------------- | --------------------- | ----------------------------------------------------------------------------------- |
+| `cinadex-app`        | `apps/cinadex-app/`   | The React 19 + Vite SPA, served by Nginx behind Compose's Caddy HTTPS/API edge.     |
+| `@cinedex/storybook` | `apps/storybook/`     | Storybook for all three component tiers — served on port 9001.                      |
+| `@cinedex/docs-site` | `apps/docs-site/`     | This site.                                                                          |
+| `@cinedex/theme`     | `packages/theme/`     | The design system — tokens, base element styling, the Tailwind theme. **No React.** |
+| `@cinedex/atoms`     | `packages/atoms/`     | Primitives — Radix-backed, Tailwind-styled, one job each.                           |
+| `@cinedex/compounds` | `packages/compounds/` | Templates — brand-agnostic assemblies of atoms.                                     |
+| `@cinedex/solution`  | `packages/solution/`  | Cinedex own screens. Presentational: no router, no data fetching.                   |
 
 ## The SPA
 

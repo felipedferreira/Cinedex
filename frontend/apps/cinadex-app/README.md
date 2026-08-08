@@ -1,6 +1,6 @@
 # cinadex-app
 
-The SPA for Cinedex. In Docker Compose, Nginx serves it and reverse-proxies the backend OpenAPI spec at `https://localhost:9000/movies-svc/openapi/v1.json`.
+The SPA for Cinedex. In Docker Compose, Nginx serves its static bundle over internal HTTP and Caddy publishes the SPA plus backend under the single `https://localhost:9000` origin.
 
 One of seven packages in the [`frontend/` npm workspace](../../README.md). Its auth screens come from [`@cinedex/solution`](../../packages/solution/README.md), primitives from [`@cinedex/atoms`](../../packages/atoms/README.md), and the design system from [`@cinedex/theme`](../../packages/theme/README.md).
 

@@ -55,7 +55,7 @@ For how authentication and authorization work, see the [Security](../security/ov
 
 ## Two ways to run it
 
-**Docker Compose** — the prod-like path, built images behind an HTTPS reverse proxy:
+**Docker Compose** — the prod-like path, built images behind a Caddy HTTPS edge:
 
 ```bash
 git clone https://github.com/felipedferreira/Cinedex.git
@@ -64,7 +64,7 @@ cp .env.example .env       # fill in the database, Seq, and Mailpit values
 docker compose up --build
 ```
 
-Then open **https://localhost:9000** (self-signed cert — trust it, or use `curl -k`).
+Then open **https://localhost:9000** (Caddy local-CA certificate — trust it, or use `curl -k`).
 
 **The Aspire dev loop** — faster for day-to-day work: runs the .NET services and the frontend dev
 servers as local processes instead of rebuilding images, and applies database migrations for you.

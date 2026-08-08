@@ -18,6 +18,7 @@ flowchart LR
     DS["<b>apps/docs-site/</b>"]
 
     DS --> CFG["docusaurus.config.ts<br/><i>branding, navbar/footer, blog disabled</i>"]
+    DS --> DOCKER["Dockerfile + nginx.conf<br/><i>production build and static runtime</i>"]
     DS --> SB["sidebars.ts"]
     DS --> SCRIPTS["<b>scripts/</b>"]
     DS --> SRC["<b>src/</b>"]
@@ -67,6 +68,6 @@ extend it.
 
 Colors come from [`@cinedex/theme`](../../packages/theme/CLAUDE.md)'s `--accent` design token — see `src/css/custom.css` for how the Infima color scale is derived from it. The favicon and navbar logo are a copy of `cinadex-app`'s `favicon.svg`.
 
-## 🐳 No Docker / Compose / Aspire yet
+## 🐳 Docker and Compose
 
-Unlike `cinadex-app` and `@cinedex/storybook`, this app is **local dev only** for now — no Dockerfile, no `compose.yaml` service, no Aspire AppHost resource. `npm run lint`, `npm run format:check` and `npm run build` already cover it automatically, since those commands run across every workspace package.
+Compose builds the static Docusaurus output and publishes it through Caddy at **https://localhost:9000/documentation/**. The Nginx container is also reachable directly at **http://localhost:9004/documentation/** for diagnostics. The Docker build sets the Docusaurus base URL to `/documentation/`; local `npm run docs-site` remains rooted at `/`. The build context is the repository root because the changelog page is generated from the root `CHANGELOG.md`; the root `.dockerignore` keeps that context small. Aspire does not run the docs site.

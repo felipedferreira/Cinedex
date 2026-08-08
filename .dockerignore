@@ -1,0 +1,24 @@
+# The docs-site image builds from the repository root because its generated
+# /changelog page consumes the root CHANGELOG.md. Keep that context focused on
+# the frontend workspace and the changelog.
+.git
+.github
+.claude
+.superpowers
+.idea
+.vs
+backend
+docs
+scripts
+.env
+.env.*
+
+**/node_modules
+**/dist
+**/coverage
+**/storybook-static
+**/build
+**/.docusaurus
+
+# Always regenerate this from the root CHANGELOG.md inside the image.
+frontend/apps/docs-site/src/pages/changelog.md

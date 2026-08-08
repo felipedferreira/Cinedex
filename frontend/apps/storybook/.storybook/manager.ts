@@ -15,7 +15,7 @@ addons.setConfig({
     base: 'dark',
     brandTitle: 'Cinedex',
     brandUrl: 'https://github.com/felipedferreira/Cinedex',
-    brandImage: '/brand.svg',
+    brandImage: './brand.svg',
     brandTarget: '_self',
   }),
 });

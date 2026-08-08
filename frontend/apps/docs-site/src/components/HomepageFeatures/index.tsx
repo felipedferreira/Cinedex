@@ -1,16 +1,17 @@
 import type { ReactNode } from 'react';
-import clsx from 'clsx';
 import Link from '@docusaurus/Link';
 import Heading from '@theme/Heading';
-import styles from './styles.module.css';
+import { Card } from '@cinedex/atoms';
 
 interface FeatureItem {
+  kicker: string;
   title: string;
   description: ReactNode;
 }
 
 const FeatureList: FeatureItem[] = [
   {
+    kicker: 'Catalog · Stack',
     title: 'Features',
     description: (
       <>
@@ -22,6 +23,7 @@ const FeatureList: FeatureItem[] = [
     ),
   },
   {
+    kicker: 'Session · Auth',
     title: 'Security',
     description: (
       <>
@@ -33,7 +35,8 @@ const FeatureList: FeatureItem[] = [
     ),
   },
   {
-    title: 'Always Up to Date',
+    kicker: 'Repo · Generated',
+    title: 'Always up to date',
     description: (
       <>
         The <Link to="/changelog">Changelog</Link> page is generated straight
@@ -44,26 +47,34 @@ const FeatureList: FeatureItem[] = [
   },
 ];
 
-function Feature({ title, description }: FeatureItem) {
+/**
+ * `Card` is the design system's raised surface and owns no padding of its own,
+ * so the inset here is this component's to supply — same as every other caller.
+ */
+function Feature({ kicker, title, description }: FeatureItem) {
   return (
-    <div className={clsx('col col--4')}>
-      <div className="padding-horiz--md">
-        <Heading as="h3">{title}</Heading>
-        <p>{description}</p>
-      </div>
-    </div>
+    <Card className="flex flex-col gap-2 p-5">
+      <p className="m-0 font-mono text-label font-semibold tracking-eyebrow text-accent uppercase">
+        {kicker}
+      </p>
+      <Heading
+        as="h3"
+        className="m-0 text-body font-bold tracking-tight text-text-h"
+      >
+        {title}
+      </Heading>
+      <p className="m-0 text-body leading-[1.5] text-text">{description}</p>
+    </Card>
   );
 }
 
 export default function HomepageFeatures(): ReactNode {
   return (
-    <section className={styles.features}>
-      <div className="container">
-        <div className="row">
-          {FeatureList.map((props, idx) => (
-            <Feature key={idx} {...props} />
-          ))}
-        </div>
+    <section className="mx-auto max-w-[900px] px-6 py-12">
+      <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+        {FeatureList.map((props) => (
+          <Feature key={props.title} {...props} />
+        ))}
       </div>
     </section>
   );

@@ -1,40 +1,79 @@
 /**
- * Any CSS included here will be global. The classic template
- * bundles Infima by default. Infima is a CSS framework designed to
- * work well for content-centric websites.
+ * Infima, wired to the Cinedex design system.
+ *
+ * Docusaurus's classic theme is built on Infima, which resolves everything
+ * through its own `--ifm-*` custom properties. So rather than restyling
+ * Docusaurus, this file points those variables at `@cinedex/theme`'s tokens —
+ * the same `--accent`, `--bg`, `--text-h`, `--sans` the SPA and Storybook use.
+ * The tokens themselves are imported by `tailwind.css`, the other entry in
+ * `themeConfig.theme.customCss`; `var()` resolves at use time, so which file
+ * declares them does not matter.
+ *
+ * This replaces a hand-transcribed HSL copy of the brand accent that lived here
+ * and had already gone stale — its comment pointed at a package path that no
+ * longer exists. The accent now has exactly one definition, in `tokens.css`.
  */
 
 /*
- * Infima's primary-color scale is derived from the Cinedex brand accent in
- * frontend/packages/components/src/styles/tokens.css
- * (--accent: light-dark(#aa3bff, #c084fc)) — the same purple the SPA and
- * Storybook use. Each shade is the base hue/saturation with lightness
- * shifted by fixed steps (+/-8/16/24, clamped); regenerate with Docusaurus's
- * own color-generator tool (linked from "Styling your site with Infima" in
- * the Docusaurus docs) if the brand accent ever changes.
+ * Infima wants seven primary shades and the design system defines one accent, so
+ * the other six are mixed from it. `color-mix` rather than transcribed hex keeps
+ * a rebrand a one-line change; it needs no wider browser support than the
+ * `light-dark()` the tokens already require.
  */
 :root {
-  --ifm-color-primary: hsl(274, 100%, 62%); /* #aa3bff */
-  --ifm-color-primary-dark: hsl(274, 100%, 54%);
-  --ifm-color-primary-darker: hsl(274, 100%, 46%);
-  --ifm-color-primary-darkest: hsl(274, 100%, 38%);
-  --ifm-color-primary-light: hsl(274, 100%, 70%);
-  --ifm-color-primary-lighter: hsl(274, 100%, 78%);
-  --ifm-color-primary-lightest: hsl(274, 100%, 86%);
+  --ifm-color-primary: var(--accent);
+  --ifm-color-primary-dark: color-mix(in oklab, var(--accent) 90%, black);
+  --ifm-color-primary-darker: color-mix(in oklab, var(--accent) 84%, black);
+  --ifm-color-primary-darkest: color-mix(in oklab, var(--accent) 70%, black);
+  --ifm-color-primary-light: color-mix(in oklab, var(--accent) 90%, white);
+  --ifm-color-primary-lighter: color-mix(in oklab, var(--accent) 84%, white);
+  --ifm-color-primary-lightest: color-mix(in oklab, var(--accent) 70%, white);
+
+  /* Surface and ink. `--text-h` is the heading ink and carries body copy here
+     too: `--text` is the muted token, right for a card description but too low
+     in contrast for long-form documentation. It serves the secondary ramp
+     instead. */
+  --ifm-background-color: var(--bg);
+  --ifm-background-surface-color: var(--bg);
+  --ifm-font-color-base: var(--text-h);
+  --ifm-heading-color: var(--text-h);
+  --ifm-color-content-secondary: var(--text);
+
+  /* Every hairline on the site — table cells, the table of contents, rules,
+     blockquote bars — comes from Infima's emphasis-300 step. */
+  --ifm-color-emphasis-300: var(--border);
+  --ifm-toc-border-color: var(--border);
+  --ifm-hr-border-color: var(--border);
+  --ifm-table-border-color: var(--border);
+  --ifm-blockquote-border-color: var(--accent-border);
+
+  --ifm-font-family-base: var(--sans);
+  --ifm-heading-font-family: var(--heading);
+  --ifm-font-family-monospace: var(--mono);
   --ifm-code-font-size: 95%;
-  --ifm-font-family-base: system-ui, 'Segoe UI', Roboto, sans-serif;
-  --ifm-font-family-monospace: ui-monospace, Consolas, monospace;
-  --docusaurus-highlighted-code-line-bg: rgba(0, 0, 0, 0.1);
+  --ifm-code-background: var(--code-bg);
+
+  --docusaurus-highlighted-code-line-bg: var(--accent-bg);
 }
 
-/* For readability concerns, you should choose a lighter palette in dark mode. */
-[data-theme='dark'] {
-  --ifm-color-primary: hsl(270, 95%, 75%); /* #c084fc */
-  --ifm-color-primary-dark: hsl(270, 95%, 67%);
-  --ifm-color-primary-darker: hsl(270, 95%, 59%);
-  --ifm-color-primary-darkest: hsl(270, 95%, 51%);
-  --ifm-color-primary-light: hsl(270, 95%, 83%);
-  --ifm-color-primary-lighter: hsl(270, 95%, 91%);
-  --ifm-color-primary-lightest: hsl(270, 95%, 95%);
-  --docusaurus-highlighted-code-line-bg: rgba(0, 0, 0, 0.3);
+/*
+ * THE BRIDGE THAT MAKES DARK MODE WORK AT ALL.
+ *
+ * The tokens are declared once with `light-dark()` and selected by the *used*
+ * `color-scheme`; Docusaurus's theme toggle instead sets `data-theme` on the
+ * root and knows nothing about `color-scheme`. Without these two rules the
+ * toggle would flip Infima's own colours while every Cinedex token stayed on
+ * whatever the OS asked for — a half-dark page.
+ *
+ * Written `:root[data-theme=...]` (0,2,0) rather than `[data-theme=...]` (0,1,0)
+ * so it outranks `tokens.css`'s `:root { color-scheme: light dark }` on
+ * specificity rather than on import order, which the two entries in `customCss`
+ * do not otherwise guarantee.
+ */
+:root[data-theme='light'] {
+  color-scheme: light;
+}
+
+:root[data-theme='dark'] {
+  color-scheme: dark;
 }

@@ -33,6 +33,7 @@ Dockerfile  nginx.conf    # static bundle on Nginx, port 9001 in compose
 
 - **Import from the packages, never by relative path into them.** That is the whole point of the split; `import { Button } from '@cinedex/atoms'`.
 - Stories are CSF3 with `satisfies Meta<typeof X>` and `tags: ['autodocs']`.
+- **One component per file, named after it, with `component` set** — `Card.stories.tsx` holds `Atoms/Card` and nothing else. A meta without `component` gets no props table and no controls for anything in it, which is what made the old catch-all `Atoms/Primitives` and `Compounds/Assemblies` files worth splitting. Two components exported from one source folder still get a file each (`PasswordStrengthMeter`, `PasswordChecklist`).
 - **Title by tier** — `Atoms/…`, `Compounds/…`, `Solution/…` — and put the file in the matching `src/` subfolder.
 - Global styles come from one import in `preview.tsx`: `@cinedex/theme/tailwind.css`, which pulls in the tokens and base styling itself. Same single import the SPA's `main.tsx` uses.
 

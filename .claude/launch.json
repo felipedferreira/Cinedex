@@ -23,6 +23,23 @@
       "autoPort": false
     },
     {
+      "name": "docs-site-built",
+      "runtimeExecutable": "npm",
+      "runtimeArgs": [
+        "run",
+        "serve",
+        "-w",
+        "@cinedex/docs-site",
+        "--prefix",
+        "frontend",
+        "--",
+        "--port",
+        "9005"
+      ],
+      "port": 9005,
+      "autoPort": false
+    },
+    {
       "name": "webservice-api",
       "runtimeExecutable": "dotnet",
       "runtimeArgs": [

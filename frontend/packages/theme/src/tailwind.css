@@ -1,22 +1,18 @@
 /**
  * Tailwind, wired to the Cinedex tokens.
  *
- * This is the only place Tailwind's theme is configured. Every utility a
- * component reaches for — `bg-bg`, `text-accent`, `text-label`,
+ * Every utility a component reaches for — `bg-bg`, `text-accent`, `text-label`,
  * `tracking-eyebrow`, `rounded-md`, `shadow` — resolves through the
  * `light-dark()` custom properties in `tokens.css` rather than a hex value
- * restated here, so `tokens.css` stays the single file a rebrand touches.
- *
- * `@theme inline` is what makes that work: with `inline`, Tailwind writes the
- * *value* into the utility (`background: var(--bg)`) instead of emitting its own
- * `--color-bg` on `:root`. That keeps one variable per token — the one
- * `tokens.css` declares — and it is why the `--color-x: var(--x)` lines below
- * are a bridge and not a circular definition.
+ * restated anywhere, so `tokens.css` stays the single file a rebrand touches.
+ * The mapping that does it is `theme.css`'s `@theme inline` block, imported
+ * below; it lives in its own file because `@cinedex/docs-site` needs that bridge
+ * *without* the preflight `@import 'tailwindcss'` brings — see the comment there.
  *
  * ─────────────────────────────────────────────────────────────────────────────
- * This file is the design system's single entry point — it pulls in the tokens
- * and the base element styling itself, so a consumer imports one stylesheet and
- * cannot get the order wrong. The order below is not cosmetic:
+ * This file is the design system's single entry point — it pulls in the tokens,
+ * the base element styling and the theme bridge itself, so a consumer imports one
+ * stylesheet and cannot get the order wrong. The order below is not cosmetic:
  *
  * `base.css` MUST arrive `layer(base)`, and after `tailwindcss`. Tailwind v4 puts
  * everything it emits into cascade layers, and **unlayered CSS outranks every
@@ -40,67 +36,8 @@
 @import './tokens.css';
 @import 'tailwindcss';
 @import './base.css' layer(base);
+@import './theme.css';
 
 @source "../../atoms/src";
 @source "../../compounds/src";
 @source "../../solution/src";
-
-@theme inline {
-  /* Surface and ink */
-  --color-bg: var(--bg);
-  --color-text: var(--text);
-  --color-text-h: var(--text-h);
-  --color-border: var(--border);
-  --color-code-bg: var(--code-bg);
-  --color-social-bg: var(--social-bg);
-
-  /* Accent */
-  --color-accent: var(--accent);
-  --color-accent-bg: var(--accent-bg);
-  --color-accent-border: var(--accent-border);
-
-  /* Status */
-  --color-warning: var(--warning);
-  --color-warning-bg: var(--warning-bg);
-  --color-warning-border: var(--warning-border);
-  --color-success: var(--success);
-  --color-success-bg: var(--success-bg);
-  --color-success-border: var(--success-border);
-
-  /* Type */
-  --font-sans: var(--sans);
-  --font-mono: var(--mono);
-
-  --text-label: var(--type-label);
-  --text-footnote: var(--type-footnote);
-  --text-brand: var(--type-brand);
-  --text-caption: var(--type-caption);
-  --text-note: var(--type-note);
-  --text-body: var(--type-body);
-  --text-title: var(--type-title);
-
-  --tracking-label: var(--track-label);
-  --tracking-eyebrow: var(--track-eyebrow);
-
-  /* Shape. `rounded-xs` is deliberately not mapped — components that want a
-     hairline radius use Tailwind's own 2px default. */
-  --radius-sm: var(--radius-sm);
-  --radius-md: var(--radius-md);
-  --radius-lg: var(--radius-lg);
-
-  --shadow: var(--shadow);
-
-  --animate-caret: cdx-caret 1.1s steps(1) infinite;
-}
-
-/* The blinking cursor drawn over the focused, empty OTP cell. */
-@keyframes cdx-caret {
-  0%,
-  49% {
-    opacity: 1;
-  }
-  50%,
-  100% {
-    opacity: 0;
-  }
-}

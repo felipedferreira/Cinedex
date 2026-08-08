@@ -1,0 +1,82 @@
+/**
+ * The Tailwind theme bridge: every Cinedex token, expressed as the Tailwind
+ * theme namespace a utility resolves through.
+ *
+ * `@theme inline` is what makes this a bridge rather than a second set of
+ * variables: with `inline`, Tailwind writes the *value* into the utility
+ * (`background: var(--bg)`) instead of emitting its own `--color-bg` on
+ * `:root`. That keeps one variable per token — the one `tokens.css` declares —
+ * and it is why the `--color-x: var(--x)` lines below are not circular.
+ *
+ * ─────────────────────────────────────────────────────────────────────────────
+ * This file exists on its own so that a consumer can take the bridge WITHOUT
+ * Tailwind's preflight. `tailwind.css` — the entry an app or Storybook wants —
+ * imports it below its own `@import 'tailwindcss'`. `@cinedex/docs-site` cannot
+ * use that entry: it renders inside Infima, whose element styling preflight
+ * would reset, so it composes `tailwindcss/theme.css` + `tailwindcss/utilities.css`
+ * + this file instead. Both paths therefore share one definition of the bridge;
+ * a new token needs one line here, not two.
+ *
+ * It declares no rules of its own beyond the one `@keyframes` a mapped
+ * `--animate-*` needs, so importing it costs nothing in either cascade layer.
+ */
+
+@theme inline {
+  /* Surface and ink */
+  --color-bg: var(--bg);
+  --color-text: var(--text);
+  --color-text-h: var(--text-h);
+  --color-border: var(--border);
+  --color-code-bg: var(--code-bg);
+  --color-social-bg: var(--social-bg);
+
+  /* Accent */
+  --color-accent: var(--accent);
+  --color-accent-bg: var(--accent-bg);
+  --color-accent-border: var(--accent-border);
+
+  /* Status */
+  --color-warning: var(--warning);
+  --color-warning-bg: var(--warning-bg);
+  --color-warning-border: var(--warning-border);
+  --color-success: var(--success);
+  --color-success-bg: var(--success-bg);
+  --color-success-border: var(--success-border);
+
+  /* Type */
+  --font-sans: var(--sans);
+  --font-mono: var(--mono);
+
+  --text-label: var(--type-label);
+  --text-footnote: var(--type-footnote);
+  --text-brand: var(--type-brand);
+  --text-caption: var(--type-caption);
+  --text-note: var(--type-note);
+  --text-body: var(--type-body);
+  --text-title: var(--type-title);
+
+  --tracking-label: var(--track-label);
+  --tracking-eyebrow: var(--track-eyebrow);
+
+  /* Shape. `rounded-xs` is deliberately not mapped — components that want a
+     hairline radius use Tailwind's own 2px default. */
+  --radius-sm: var(--radius-sm);
+  --radius-md: var(--radius-md);
+  --radius-lg: var(--radius-lg);
+
+  --shadow: var(--shadow);
+
+  --animate-caret: cdx-caret 1.1s steps(1) infinite;
+}
+
+/* The blinking cursor drawn over the focused, empty OTP cell. */
+@keyframes cdx-caret {
+  0%,
+  49% {
+    opacity: 1;
+  }
+  50%,
+  100% {
+    opacity: 0;
+  }
+}

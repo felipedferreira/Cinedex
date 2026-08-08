@@ -1,0 +1,46 @@
+/**
+ * Tailwind utilities for this site, plus the Cinedex tokens everything resolves
+ * through — deliberately assembled by hand rather than taken from
+ * `@cinedex/theme/tailwind.css`.
+ *
+ * THE POINT OF THIS FILE IS WHAT IT DOES NOT IMPORT: `tailwindcss/preflight.css`.
+ * The design system's own entry pulls in all three of Tailwind's parts, and
+ * preflight is a global element reset — it strips heading sizes, list markers and
+ * margins. Everything on this site that is not the homepage is rendered by
+ * Docusaurus through Infima, which styles those same bare elements, so importing
+ * the full entry would restyle every documentation page as the price of styling
+ * three components. Composing the parts keeps `@cinedex/atoms` and
+ * `@cinedex/solution` renderable here while Infima keeps the docs.
+ *
+ * `@cinedex/theme/theme.css` is the same `@theme inline` bridge the SPA and
+ * Storybook get; it lives in its own file in that package precisely so this
+ * import can exist. A new token needs one line there and none here.
+ *
+ * ─────────────────────────────────────────────────────────────────────────────
+ * Utilities are imported UNLAYERED, unlike `@import 'tailwindcss'`, which wraps
+ * them in `@layer utilities`. Infima is unlayered CSS, and **unlayered CSS
+ * outranks every cascade layer** regardless of specificity or order — layered
+ * utilities would lose to Infima's plain `p`/`ul`/`a` rules on our own
+ * components. Unlayered, a Tailwind class (0,1,0) beats an Infima element
+ * selector (0,0,1) normally, and ties against Infima's own classes are settled by
+ * order: Docusaurus injects `customCss` after Infima, and this file is last in
+ * that list. Both halves of that are load-bearing.
+ *
+ * ─────────────────────────────────────────────────────────────────────────────
+ * The `@source` lines are load-bearing and fail SILENTLY. Tailwind never scans
+ * `node_modules`, and npm workspaces symlink `node_modules/@cinedex/atoms` →
+ * `packages/atoms` — without registration, a class used only inside a library
+ * generates no CSS at all: no error, no warning, a green build and an unstyled
+ * component. This site needs its own `src/` listed too, which the design system's
+ * entry does not cover. Paths resolve relative to this file.
+ */
+
+@import '@cinedex/theme/tokens.css';
+@import 'tailwindcss/theme.css' layer(theme);
+@import 'tailwindcss/utilities.css';
+@import '@cinedex/theme/theme.css';
+
+@source '../';
+@source '../../../../packages/atoms/src';
+@source '../../../../packages/compounds/src';
+@source '../../../../packages/solution/src';

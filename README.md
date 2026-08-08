@@ -13,7 +13,7 @@ flowchart LR
     ROOT --> BE["<b>backend/</b><br/>.NET solution — Web API, application core,<br/>persistence, tests"]
     ROOT --> FE["<b>frontend/</b><br/>npm workspace — the SPA, the component library,<br/>its Storybook, and a docs site"]
     ROOT --> DOCS["<b>docs/</b><br/>design docs — auth &amp; security model,<br/>planned ADRs"]
-    ROOT --> COMPOSE["<b>compose.yaml</b><br/>orchestrates PostgreSQL, the web service, the SPA,<br/>Storybook, Seq, and Mailpit"]
+    ROOT --> COMPOSE["<b>compose.yaml</b><br/>orchestrates PostgreSQL, the web service, the SPA,<br/>Storybook, docs site, Seq, and Mailpit"]
 
     BE --> ASP["<b>aspire/</b><br/>Aspire AppHost — the local dev loop (see below)"]
 ```

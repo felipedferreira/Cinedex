@@ -1,7 +1,7 @@
 # Getting Started
 
 This is the fastest path from a fresh clone to a running Cinedex stack — Postgres, the API,
-the SPA, logs/traces, and a dev mail sink — all via Docker Compose.
+the SPA, Storybook, documentation, logs/traces, and a dev mail sink — all via Docker Compose.
 
 > Want to run the backend without Docker, add a migration, or understand the architecture?
 > This guide stops at "it's running." For everything after that, see
@@ -75,6 +75,7 @@ auth schemas and exits — there's nothing else to run by hand for a fresh datab
 | `cinedex-edge` | https://localhost:9000 | Caddy HTTPS edge for the SPA and API (local-CA certificate) |
 | `cinadex-app` | internal only | React SPA served as a static Nginx bundle |
 | `cinedex-storybook` | http://localhost:9001 | Storybook for the `@cinedex/*` component libraries (static, plain HTTP) |
+| `cinedex-docs-site` | https://localhost:9000/documentation/ | Built Docusaurus documentation and changelog site, routed through Caddy |
 | `movies.webservice` | via the proxy at `/movies-svc` | ASP.NET Core API (not exposed directly) |
 | `postgres` | localhost:5432 | Catalog + auth data |
 | `seq` | http://localhost:5341 | Logs & traces |

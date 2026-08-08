@@ -89,15 +89,16 @@ flowchart LR
     UI[Cinadex App + Nginx] --> EDGE
 ```
 
-| Service             | Address                        | Purpose                                 |
-| ------------------- | ------------------------------ | --------------------------------------- |
-| `cinedex-edge`      | https://localhost:9000         | Caddy HTTPS edge for the SPA and API    |
-| `cinadex-app`       | internal only                  | React SPA static bundle on Nginx        |
-| `cinedex-storybook` | http://localhost:9001          | Storybook — static, plain HTTP          |
-| `movies.webservice` | via the proxy at `/movies-svc` | ASP.NET Core API (not exposed directly) |
-| `postgres`          | localhost:5432                 | Catalog + auth data                     |
-| `seq`               | http://localhost:5341          | Logs & traces                           |
-| `mailpit`           | http://localhost:8025          | Captured dev email                      |
+| Service             | Address                               | Purpose                                 |
+| ------------------- | ------------------------------------- | --------------------------------------- |
+| `cinedex-edge`      | https://localhost:9000                | Caddy HTTPS edge for the SPA and API    |
+| `cinadex-app`       | internal only                         | React SPA static bundle on Nginx        |
+| `cinedex-storybook` | http://localhost:9001                 | Storybook — static, plain HTTP          |
+| `cinedex-docs-site` | https://localhost:9000/documentation/ | Docusaurus through the Caddy edge       |
+| `movies.webservice` | via the proxy at `/movies-svc`        | ASP.NET Core API (not exposed directly) |
+| `postgres`          | localhost:5432                        | Catalog + auth data                     |
+| `seq`               | http://localhost:5341                 | Logs & traces                           |
+| `mailpit`           | http://localhost:8025                 | Captured dev email                      |
 
 The one-shot **Database Migrator** applies pending EF Core migrations for both the catalog and auth
 schemas and exits — there's nothing else to run by hand for a fresh database.

@@ -181,11 +181,12 @@ services:
     ports:
       - "127.0.0.1:9000:443"
     volumes:
-      - ./frontend/apps/cinadex-app/Caddyfile:/etc/caddy/Caddyfile:ro
+      - ./Caddyfile:/etc/caddy/Caddyfile:ro
       - caddy_data:/data
       - caddy_config:/config
     depends_on:
       - cinadex-app
+      - cinedex-docs-site
       - movies.webservice
 
   # The component libraries' Storybook, served as a static bundle. No depends_on and no API proxy —
@@ -198,6 +199,17 @@ services:
     container_name: cinedex-storybook
     ports:
       - "127.0.0.1:9001:80"
+
+  # The built Docusaurus documentation and changelog site. Its image build uses the repository
+  # root as context because /changelog is generated from the root CHANGELOG.md.
+  cinedex-docs-site:
+    image: cinedex-docs-site
+    build:
+      context: .
+      dockerfile: frontend/apps/docs-site/Dockerfile
+    container_name: cinedex-docs-site
+    ports:
+      - "127.0.0.1:9004:80"
 
 volumes:
   postgres_data:

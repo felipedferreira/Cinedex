@@ -9,7 +9,8 @@ const config: StorybookConfig = {
   },
   // The SPA references its icon sprite as `/icons.svg#id`, and components documented here may do
   // the same, so serve that app's public/ directory to keep those absolute paths resolving.
-  staticDirs: ['../../cinadex-app/public'],
+  // `./public` is this app's own — just the brand lockup manager.ts points `brandImage` at.
+  staticDirs: ['../../cinadex-app/public', './public'],
 };
 
 export default config;

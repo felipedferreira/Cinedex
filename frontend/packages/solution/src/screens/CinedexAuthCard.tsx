@@ -1,12 +1,17 @@
 import { AuthCard, type AuthCardProps } from '@cinedex/compounds';
 import { Brand } from '../Brand/Brand';
 
-export type CinedexAuthCardProps = Omit<AuthCardProps, 'brand'>;
+export type CinedexAuthCardProps = AuthCardProps;
 
 /**
  * `AuthCard` with the Cinedex brand already in it. Internal to this package —
- * every screen uses it so none of them repeats `brand={<Brand />}`.
+ * every screen but `HomeScreen` uses this without passing `brand`, so none of
+ * them repeats `brand={<Brand />}`. `HomeScreen` overrides it with an animated
+ * intro, since it's the app's one landing moment.
  */
-export function CinedexAuthCard(props: CinedexAuthCardProps) {
-  return <AuthCard brand={<Brand />} {...props} />;
+export function CinedexAuthCard({
+  brand = <Brand />,
+  ...props
+}: CinedexAuthCardProps) {
+  return <AuthCard brand={brand} {...props} />;
 }

@@ -1,20 +1,11 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 200" style="color-scheme: light dark" role="img" aria-label="Cinedex">
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 812 200" width="812" height="200" role="img" aria-label="Cinedex">
   <title>Cinedex</title>
   <defs>
-    <!-- Each stop is a light-dark() pair rather than a fixed colour: on a
-         light OS theme all three collapse to the same near-black (a flat
-         mark), on dark they stay distinct (a metal sheen). Needs
-         `color-scheme` set above — a standalone favicon has no ancestor to
-         inherit it from, unlike the same gradient used inside the app. -->
     <linearGradient id="cdxRing" x1="0" y1="0" x2="1" y2="1">
-      <stop offset="0" stop-color="light-dark(#16171B, #8E949C)"/>
-      <stop offset=".45" stop-color="light-dark(#16171B, #5A5F66)"/>
-      <stop offset="1" stop-color="light-dark(#16171B, #2A2D32)"/>
+      <stop offset="0" stop-color="#8E949C"/>
+      <stop offset=".45" stop-color="#5A5F66"/>
+      <stop offset="1" stop-color="#2A2D32"/>
     </linearGradient>
-    <!-- userSpaceOnUse: resolves in each blade's own rotated frame (origin =
-         its pivot), so the six facets catch light differently. With the
-         default objectBoundingBox every blade samples the same corner of its
-         150x150 quad and the iris flattens into one uniform disc. -->
     <linearGradient id="cdxBlade" gradientUnits="userSpaceOnUse" x1="0" y1="0" x2="-72" y2="-72">
       <stop offset="0" stop-color="#565C65"/>
       <stop offset=".55" stop-color="#2F343A"/>
@@ -30,18 +21,11 @@
     </clipPath>
   </defs>
 
-  <!-- barrel interior -->
-  <circle cx="100" cy="100" r="47" fill="light-dark(#16171B, #08090B)"/>
-
-  <!-- lens dome + speculars -->
+  <circle cx="100" cy="100" r="47" fill="#08090B"/>
   <circle cx="100" cy="100" r="22.5" fill="url(#cdxDome)"/>
   <circle cx="92.2" cy="92.2" r="3.6" fill="#fff"/>
   <circle cx="107" cy="105.6" r="1.8" fill="#8A9099" opacity=".75"/>
 
-  <!-- six-blade iris. Each blade is a half-plane hinged at its own pivot on
-       the r=47 circle and clipped to it, so the leading edges always meet as
-       a hexagon of inradius 47*sin(phi). rotate(30) here = fully open, the
-       mark's resting state. -->
   <g clip-path="url(#cdxIris)" fill="url(#cdxBlade)" stroke="#6B7178" stroke-width="1.1">
     <g transform="translate(100,100) rotate(0) translate(47,0)">
       <g transform="rotate(30)"><path d="M0 0L-150 0L-150 -150L0 -150Z"/></g></g>
@@ -57,9 +41,23 @@
       <g transform="rotate(30)"><path d="M0 0L-150 0L-150 -150L0 -150Z"/></g></g>
   </g>
 
-  <!-- the C: two concentric arcs, gap facing right -->
   <g fill="none" stroke="url(#cdxRing)" stroke-linecap="butt">
     <path d="M166.32 55.26A80 80 0 1 0 166.32 144.74" stroke-width="15"/>
     <path d="M146.49 63.68A59 59 0 1 0 146.49 136.32" stroke-width="9"/>
+  </g>
+
+  <!-- Wordmark as monoline paths, not text: no font dependency anywhere.
+       Geometric construction — x-height 40, stroke 6, circular bowls at r=17,
+       uniform 13u sidebearing. Recolour by changing `color` on this group. -->
+  <g transform="translate(238,136) scale(1.8)" color="#F2F3F5">
+    <g fill="none" stroke="currentColor" stroke-width="6" stroke-linecap="butt" stroke-linejoin="round">
+      <g transform="translate(0,0)"><path d="M29.75 -33.93A17 17 0 1 0 29.75 -6.07"/></g>
+      <g transform="translate(46,0)"><path d="M3 0L3 -40"/><circle cx="3" cy="-51" r="3" fill="currentColor" stroke="none"/></g>
+      <g transform="translate(65,0)"><path d="M3 0L3 -23A17 17 0 0 1 37 -23L37 0"/></g>
+      <g transform="translate(118,0)"><path d="M3 -20L37 -20A17 17 0 1 0 30.47 -6.6"/></g>
+      <g transform="translate(171,0)"><path d="M37 -58L37 0"/><circle cx="20" cy="-20" r="17"/></g>
+      <g transform="translate(224,0)"><path d="M3 -20L37 -20A17 17 0 1 0 30.47 -6.6"/></g>
+      <g transform="translate(277,0)"><path d="M3 0L35 -40M3 -40L35 0"/></g>
+    </g>
   </g>
 </svg>

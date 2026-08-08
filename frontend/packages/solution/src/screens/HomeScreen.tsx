@@ -1,5 +1,6 @@
 import { Separator } from '@cinedex/atoms';
 import { AuthLayout } from '@cinedex/compounds';
+import { BrandApertureAnimation } from '../Brand/BrandApertureAnimation';
 import { SolutionLink } from '../link/SolutionLink';
 import { CinedexAuthCard } from './CinedexAuthCard';
 
@@ -75,6 +76,7 @@ export function HomeScreen() {
   return (
     <AuthLayout>
       <CinedexAuthCard
+        brand={<BrandApertureAnimation />}
         eyebrow="CIN · Index"
         kicker="Catalog · Screens"
         title="Cinedex"

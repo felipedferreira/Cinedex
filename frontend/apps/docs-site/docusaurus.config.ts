@@ -1,3 +1,4 @@
+import tailwindcss from '@tailwindcss/postcss';
 import { themes as prismThemes } from 'prism-react-renderer';
 import type { Config } from '@docusaurus/types';
 import type * as Preset from '@docusaurus/preset-classic';
@@ -53,10 +54,34 @@ const config: Config = {
         // No blog content or editorial workflow exists for this project yet.
         blog: false,
         theme: {
-          customCss: './src/css/custom.css',
+          // Order matters. `custom.css` points Infima's variables at
+          // @cinedex/theme's tokens; `tailwind.css` brings the tokens themselves
+          // and the utility classes @cinedex/atoms and @cinedex/solution are
+          // built from. Utilities go last so that, unlayered, they win ties
+          // against Infima's own classes on source order — see the comment in
+          // `tailwind.css` for why they are unlayered in the first place.
+          customCss: ['./src/css/custom.css', './src/css/tailwind.css'],
         },
       } satisfies Preset.Options,
     ],
+  ],
+
+  plugins: [
+    // Tailwind v4 as a PostCSS pass. The SPA and Storybook use
+    // `@tailwindcss/vite`; Docusaurus is webpack, and `configurePostCss` is the
+    // supported seam for adding to its pipeline. Without this, `tailwind.css`
+    // ships to the browser as literal `@import` and `@source` lines and every
+    // library component renders with correct markup and no styling — the same
+    // silent failure `frontend/packages/theme/CLAUDE.md` documents.
+    function cinedexTailwindPlugin() {
+      return {
+        name: 'cinedex-tailwind',
+        configurePostCss(postCssOptions: { plugins: unknown[] }) {
+          postCssOptions.plugins.push(tailwindcss());
+          return postCssOptions;
+        },
+      };
+    },
   ],
 
   themes: [

@@ -7,7 +7,7 @@ npm **workspace root** for the Cinedex frontend. The lockfile lives here — the
 | `cinadex-app`        | `apps/cinadex-app/`   | The React 19 + Vite SPA. Nginx serves its static bundle over internal HTTP; Compose's Caddy edge owns HTTPS and API routing. |
 | `@cinedex/storybook` | `apps/storybook/`     | Storybook for all three component tiers. Owns the stories. Served on 9001 in compose.                                        |
 | `@cinedex/docs-site` | `apps/docs-site/`     | Cinedex-branded Docusaurus site. Renders the root `CHANGELOG.md`; Compose publishes it through Caddy at `/documentation/`.   |
-| `@cinedex/theme`     | `packages/theme/`     | The design system: tokens, base element styling, the Tailwind theme. **No React** — three stylesheets.                       |
+| `@cinedex/theme`     | `packages/theme/`     | The design system: tokens, base element styling, the Tailwind theme. **No React** — four stylesheets.                        |
 | `@cinedex/atoms`     | `packages/atoms/`     | Primitives — Radix-backed, Tailwind-styled, one job each.                                                                    |
 | `@cinedex/compounds` | `packages/compounds/` | Templates — brand-agnostic assemblies of atoms.                                                                              |
 | `@cinedex/solution`  | `packages/solution/`  | Cinedex's own screens. Presentational: no router, no data fetching.                                                          |

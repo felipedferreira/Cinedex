@@ -17,7 +17,7 @@ export function Label({ tone = 'default', className, ...rest }: LabelProps) {
     <LabelPrimitive.Root
       className={cn(
         'font-mono text-label font-medium tracking-label uppercase',
-        tone === 'error' ? 'text-warning' : 'text-text',
+        tone === 'error' ? 'text-danger' : 'text-text',
         className,
       )}
       {...rest}

@@ -108,7 +108,7 @@ export function OtpInput({
                 'h-14 w-full rounded-sm border text-center font-mono text-xl font-semibold text-text-h focus-visible:outline-2 focus-visible:outline-accent',
                 isNextEmpty
                   ? 'border-accent bg-accent-bg'
-                  : 'border-border bg-bg',
+                  : 'border-border-strong bg-bg',
               )}
             />
             {isNextEmpty ? (

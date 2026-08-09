@@ -3,8 +3,18 @@ import { cn } from '@cinedex/atoms';
 import { SolutionLink } from './SolutionLink';
 import type { SolutionLinkProps } from './linkTypes';
 
+/**
+ * `text-caption` is not decoration — it is the reason this link has a size at
+ * all. Nothing else here sets a type step, so without it the link falls through
+ * to `base.css`'s `:root` font (18px, 16px under 1024px). That is invisible
+ * wherever a parent already sets one — "Create one" sits inside
+ * `InlineActionRow`'s `text-caption` and looked correct — but "Forgot?" sits in
+ * `Field`'s label row, which sets none, and rendered at 16px next to its own
+ * 10px `PASSWORD` label. Stating the step here makes the link self-sufficient
+ * rather than dependent on where it happens to be mounted.
+ */
 const inlineLinkClass =
-  'border-b border-accent-border text-accent no-underline hover:border-accent';
+  'border-b border-accent-border text-caption text-accent no-underline hover:border-accent';
 
 /** An inline underlined link, navigating through whatever the host injected. */
 export function AuthLink({ to, className, children }: SolutionLinkProps) {

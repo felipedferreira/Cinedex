@@ -23,7 +23,7 @@ export const buttonVariants = cva(
         solid:
           'rounded-sm border border-text-h bg-text-h text-bg transition-colors hover:not-disabled:border-text hover:not-disabled:bg-text disabled:opacity-35',
         outline:
-          'rounded-sm border border-border bg-transparent text-text transition-colors hover:not-disabled:border-text-h hover:not-disabled:text-text-h disabled:opacity-35',
+          'rounded-sm border border-border-strong bg-transparent text-text transition-colors hover:not-disabled:border-text-h hover:not-disabled:text-text-h disabled:opacity-35',
       },
       size: {
         sm: 'px-2 py-[3px] text-sm',

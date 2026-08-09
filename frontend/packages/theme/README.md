@@ -29,7 +29,7 @@ import '@cinedex/theme/tailwind.css';
 ```css
 :root {
   color-scheme: light dark;
-  --accent: light-dark(#aa3bff, #c084fc);
+  --accent: light-dark(#6d41a9, #bc98f9);
 }
 ```
 

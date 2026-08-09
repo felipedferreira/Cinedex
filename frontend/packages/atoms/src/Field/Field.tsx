@@ -53,7 +53,7 @@ export function Field({
         {error ? (
           <span
             id={value.errorId}
-            className="font-mono text-caption text-warning"
+            className="font-mono text-caption text-danger"
           >
             {error}
           </span>

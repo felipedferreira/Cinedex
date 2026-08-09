@@ -63,13 +63,17 @@ describe('TextField', () => {
 
   it('styles the input as invalid only when there is an error', () => {
     const { rerender } = render(<TextField label="Email" />);
-    expect(screen.getByLabelText('Email').className).toContain('border-border');
+    // `toContain` would also pass on `border-border`, which is the hairline the
+    // resting control deliberately does NOT use — assert the exact class.
+    expect(screen.getByLabelText('Email').className).toContain(
+      'border-border-strong',
+    );
 
     rerender(<TextField label="Email" error="Required" />);
 
     const input = screen.getByLabelText('Email');
-    expect(input.className).toContain('border-warning-border');
-    expect(input.className).not.toContain('border-border');
+    expect(input.className).toContain('border-danger-border');
+    expect(input.className).not.toContain('border-border-strong');
   });
 
   it('renders labelExtra in the label row', () => {

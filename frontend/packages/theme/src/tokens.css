@@ -5,8 +5,9 @@
  * their colours, type, spacing and radii through these custom properties and
  * nothing else, so a rebrand is a change to this file alone. Components reach
  * them as Tailwind utilities (`bg-bg`, `text-label`, `tracking-eyebrow`) via the
- * `@theme inline` bridge in `tailwind.css` — the utility names and the token
- * names below are the same vocabulary seen from two sides.
+ * `@theme inline` bridge in `theme.css` — the utility names and the token
+ * names below are the same vocabulary seen from two sides. A new token here
+ * needs a matching line there, or the utility silently never generates.
  *
  * Colours are declared once with `light-dark()` rather than duplicated under a
  * `prefers-color-scheme` media query. The pair below is selected by the used
@@ -19,42 +20,76 @@
  * while the type and tracking scales use `--type-*` / `--track-*` rather than
  * `--text-*` / `--tracking-*`. That is deliberate — `--text` is already the body
  * colour, and `--text-*` / `--tracking-*` are Tailwind's own theme namespaces.
- * Keeping the raw names distinct keeps `tailwind.css`'s bridge readable.
+ * Keeping the raw names distinct keeps `theme.css`'s bridge readable.
+ *
+ * ─────────────────────────────────────────────────────────────────────────────
+ * The palette is built in OKLCH and stated here as sRGB hex. Two rules hold it
+ * together, and both are easy to break by eye:
+ *
+ * 1. CHROMA IS SEASONING. The neutrals sit under chroma 0.03 and the accent at
+ *    0.16. An accent much past that stops reading as an accent and starts
+ *    reading as the brand shouting — and it must never out-saturate `--danger`,
+ *    which is the loudest thing in the system by design.
+ * 2. THE STATUS FOREGROUNDS SHARE A LIGHTNESS. `--accent`, `--danger`,
+ *    `--warning` and `--success` are all near OKLCH L 0.48–0.50 in light and
+ *    L 0.70–0.76 in dark, so they read as siblings rather than a soloist and a
+ *    backing group. Shifting one alone breaks the set.
+ *
+ * The neutrals carry a deliberate violet cast (hue ≈ 300, the accent's own hue)
+ * in BOTH themes. Reaching for a stock grey ramp here — Tailwind's `gray-400`
+ * and friends sit at hue ≈ 261, blue — is what previously made dark mode feel
+ * bought rather than authored.
  */
 
 :root {
   color-scheme: light dark;
 
   /* Colour */
-  --text: light-dark(#6b6375, #9ca3af);
-  --text-h: light-dark(#08060d, #f3f4f6);
-  --bg: light-dark(#fff, #16171d);
-  --border: light-dark(#e5e4e7, #2e303a);
-  --code-bg: light-dark(#f4f3ec, #1f2028);
-  --accent: light-dark(#aa3bff, #c084fc);
-  --accent-bg: light-dark(rgba(170, 59, 255, 0.1), rgba(192, 132, 252, 0.15));
+  --text: light-dark(#605b6a, #a6a2b0);
+  --text-h: light-dark(#120f18, #f2f1f5);
+  --bg: light-dark(#fff, #17151b);
+  --code-bg: light-dark(#f5f3ee, #201e25);
+
+  /* Two border weights, and the distinction is functional rather than
+     decorative. `--border` is the hairline (1.27:1 against the ground) that
+     draws card edges, separators and table rules — deliberately almost
+     invisible. `--border-strong` (3.14:1) draws the edge of anything the user
+     has to FIND and click into: text inputs, OTP cells, outline buttons. The
+     hairline reads as elegant on a bright monitor and as "where do I type" on a
+     dim laptop, which is the whole reason these are two tokens and not one. */
+  --border: light-dark(#e5e4e8, #34313a);
+  --border-strong: light-dark(#93909a, #57535f);
+
+  /* Accent. Deep amethyst — OKLCH L 0.48 / C 0.16 in light. The tinted fill and
+     border derive from a LIGHTER, slightly more chromatic sibling (#8e57d8)
+     rather than from `--accent` itself: a 10% wash of a foreground this dark
+     comes out muddy grey, not violet. `--warning`, `--success` and `--danger`
+     below all follow the same foreground/tint-base split. */
+  --accent: light-dark(#6d41a9, #bc98f9);
+  --accent-bg: light-dark(rgba(142, 87, 216, 0.1), rgba(188, 152, 249, 0.15));
   --accent-border: light-dark(
-    rgba(170, 59, 255, 0.5),
-    rgba(192, 132, 252, 0.5)
+    rgba(142, 87, 216, 0.5),
+    rgba(188, 152, 249, 0.5)
   );
-  --social-bg: light-dark(rgba(244, 243, 236, 0.5), rgba(47, 48, 58, 0.5));
+  --social-bg: light-dark(rgba(245, 243, 238, 0.5), rgba(52, 49, 58, 0.5));
 
   /* Status colour. Each ramp is a foreground, a tinted fill and a border, so a
      status surface (`Alert`, `StatPair`, a rejected field) is composed from one
      set rather than from ad-hoc opacities. */
-  --warning: light-dark(#96590a, #e2a24d);
-  --warning-bg: light-dark(rgba(184, 115, 10, 0.1), rgba(226, 162, 77, 0.15));
+  --danger: light-dark(#a83630, #e8796e);
+  --danger-bg: light-dark(rgba(203, 71, 63, 0.1), rgba(232, 121, 110, 0.15));
+  --danger-border: light-dark(rgba(203, 71, 63, 0.5), rgba(232, 121, 110, 0.5));
+
+  --warning: light-dark(#8a5619, #dea45f);
+  --warning-bg: light-dark(rgba(177, 111, 35, 0.1), rgba(222, 164, 95, 0.15));
   --warning-border: light-dark(
-    rgba(184, 115, 10, 0.5),
-    rgba(226, 162, 77, 0.5)
+    rgba(177, 111, 35, 0.5),
+    rgba(222, 164, 95, 0.5)
   );
 
-  --success: light-dark(#0a6459, #2dd4bf);
-  --success-bg: light-dark(rgba(13, 122, 111, 0.1), rgba(45, 212, 191, 0.15));
-  --success-border: light-dark(
-    rgba(13, 122, 111, 0.5),
-    rgba(45, 212, 191, 0.5)
-  );
+  --success: light-dark(#037465, #5fc6b3);
+  --success-bg: light-dark(rgba(0, 142, 125, 0.1), rgba(95, 198, 179, 0.15));
+  --success-border: light-dark(rgba(0, 142, 125, 0.5), rgba(95, 198, 179, 0.5));
 
   /* `light-dark()` resolves to a colour, so the shadow is composed from two
      themed colours rather than being swapped wholesale. */

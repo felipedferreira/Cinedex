@@ -27,6 +27,7 @@
   --color-text: var(--text);
   --color-text-h: var(--text-h);
   --color-border: var(--border);
+  --color-border-strong: var(--border-strong);
   --color-code-bg: var(--code-bg);
   --color-social-bg: var(--social-bg);
 
@@ -36,6 +37,9 @@
   --color-accent-border: var(--accent-border);
 
   /* Status */
+  --color-danger: var(--danger);
+  --color-danger-bg: var(--danger-bg);
+  --color-danger-border: var(--danger-border);
   --color-warning: var(--warning);
   --color-warning-bg: var(--warning-bg);
   --color-warning-border: var(--warning-border);

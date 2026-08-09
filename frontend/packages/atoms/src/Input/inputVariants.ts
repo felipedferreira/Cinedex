@@ -14,8 +14,8 @@ export const inputVariants = cva(
   {
     variants: {
       invalid: {
-        true: 'border-warning-border bg-warning-bg',
-        false: 'border-border bg-bg',
+        true: 'border-danger-border bg-danger-bg',
+        false: 'border-border-strong bg-bg',
       },
     },
     defaultVariants: {

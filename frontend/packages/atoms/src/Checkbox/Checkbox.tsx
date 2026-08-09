@@ -33,7 +33,7 @@ export function Checkbox({ label, className, ...rest }: CheckboxProps) {
         id={id}
         aria-labelledby={labelId}
         className={cn(
-          'mt-0.5 grid size-[15px] flex-none cursor-pointer place-items-center rounded-xs border border-border bg-bg',
+          'mt-0.5 grid size-[15px] flex-none cursor-pointer place-items-center rounded-xs border border-border-strong bg-bg',
           'data-[state=checked]:border-text-h data-[state=checked]:bg-text-h',
           'focus-visible:outline-2 focus-visible:outline-accent focus-visible:outline-offset-1',
           'disabled:cursor-not-allowed disabled:opacity-50',

@@ -18,7 +18,7 @@ WORKDIR /app
 # the `COPY . .` below — otherwise the image would install with lifecycle scripts unguarded. It
 # holds config only; never put a token in it.
 COPY package.json package-lock.json .npmrc ./
-COPY apps/cinadex-app/package.json apps/cinadex-app/
+COPY apps/cinedex-app/package.json apps/cinedex-app/
 COPY apps/docs-site/package.json apps/docs-site/
 COPY apps/storybook/package.json apps/storybook/
 COPY packages/atoms/package.json packages/atoms/

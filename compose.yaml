@@ -160,15 +160,15 @@ services:
       OTEL_EXPORTER_OTLP_HEADERS: "X-Seq-ApiKey=${SEQ_API_KEY}"
       OTEL_SERVICE_NAME: "Cinedex.SchedulerWorker"
 
-  cinadex-app:
-    image: cinadex-app
+  cinedex-app:
+    image: cinedex-app
     build:
       # The frontend is an npm workspace: the context has to be the workspace
       # root so the build can see the hoisted lockfile and the @cinedex/*
       # library packages the app depends on.
       context: ./frontend
-      dockerfile: apps/cinadex-app/Dockerfile
-    container_name: cinadex-app
+      dockerfile: apps/cinedex-app/Dockerfile
+    container_name: cinedex-app
     expose:
       - "8080"
 
@@ -185,7 +185,7 @@ services:
       - caddy_data:/data
       - caddy_config:/config
     depends_on:
-      - cinadex-app
+      - cinedex-app
       - cinedex-docs-site
       - movies.webservice
 

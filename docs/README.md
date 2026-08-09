@@ -26,7 +26,7 @@ Compose, plus the one manual setup step (Seq), a "try it out" walkthrough, and t
 |---|---|
 | [Root README](../README.md) | Repository layout, quick start teaser. |
 | [Backend README](../backend/README.md) | Architecture guide, migrations, health checks, observability reference, coverage. |
-| [Frontend README](../frontend/README.md) | Workspace layout, scripts, linting, testing; links to the `cinadex-app` app and the `@cinedex/theme`/`atoms`/`compounds`/`solution` packages. |
+| [Frontend README](../frontend/README.md) | Workspace layout, scripts, linting, testing; links to the `cinedex-app` app and the `@cinedex/theme`/`atoms`/`compounds`/`solution` packages. |
 | [Contracts README](../backend/NuGetLibraries/FoundryOceanus.WebService.Contracts/README.md) | Shared request/response DTOs. |
 | [CONTRIBUTING](../CONTRIBUTING.md) | Workflow, code standards, PR checklist. |
 | [CHANGELOG](../CHANGELOG.md) | Version history. |
@@ -43,8 +43,7 @@ Not yet written. Listed so the gaps are visible rather than forgotten:
   at `/movies-svc/api-docs/v1`.)
 - **Frontend ↔ backend contract** — CORS or reverse proxy, where the access token is stored,
   refresh-on-401 retry semantics.
-- **Domain glossary** — `Title` vs. "Movie". Two naming questions are already decided and
-  just need writing up: the `movies-svc` base path / `movies.webservice` image / `movies`
+- **Domain glossary** — `Title` vs. "Movie". One naming question is already decided and
+  just needs writing up: the `movies-svc` base path / `movies.webservice` image / `movies`
   database naming is **intentional legacy and stays** (renaming the base path would be a
-  breaking API change touching the auth cookie path, the reverse proxy, and every client),
-  and the frontend's `cinadex-app` spelling is **deliberate**, not a typo.
+  breaking API change touching the auth cookie path, the reverse proxy, and every client).

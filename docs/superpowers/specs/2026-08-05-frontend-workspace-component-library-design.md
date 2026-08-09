@@ -5,7 +5,7 @@
 
 ## Problem
 
-`frontend/cinadex-ui/` was a single standalone npm project containing an essentially untouched Vite scaffold — `App.tsx`, `main.tsx`, two global CSS files, one test. It had **no reusable components at all**.
+`frontend/cinedex-ui/` was a single standalone npm project containing an essentially untouched Vite scaffold — `App.tsx`, `main.tsx`, two global CSS files, one test. It had **no reusable components at all**.
 
 The goal was a shared component library with a Storybook, consumed by the SPA. Since there was nothing to extract, this is a greenfield library plus the structural work to give it a home.
 
@@ -13,8 +13,8 @@ The goal was a shared component library with a Storybook, consumed by the SPA. S
 
 | Decision | Choice | Why |
 | --- | --- | --- |
-| Layout | `frontend/apps/*` + `frontend/packages/*` | Conventional monorepo shape; scales if a second app appears. Costs a one-time update of every hardcoded `frontend/cinadex-ui` path. |
-| Names | `@cinedex/components`, `@cinedex/storybook`, `cinadex-app` | Each package is named for what it *is* rather than for the layer it sits in — `ui` said nothing useful once three packages existed, and `cinadex-ui` and `@cinedex/ui` were easy to confuse in prose. Folder names match package names. The SPA keeps the `cinadex` spelling, which is [deliberate](../../README.md). |
+| Layout | `frontend/apps/*` + `frontend/packages/*` | Conventional monorepo shape; scales if a second app appears. Costs a one-time update of every hardcoded `frontend/cinedex-ui` path. |
+| Names | `@cinedex/components`, `@cinedex/storybook`, `cinedex-app` | Each package is named for what it *is* rather than for the layer it sits in — `ui` said nothing useful once three packages existed, and `cinedex-ui` and `@cinedex/ui` were easy to confuse in prose. Folder names match package names. |
 | Consumption | Source-consumed (`exports` → `src/`) | No library build to sequence in Docker or CI, no `composite: true`, HMR across the boundary, one compiled source for app/Storybook/Vitest. |
 | Styling | CSS Modules + shared tokens | Scoped with zero config in Vite; keeps the existing custom-property theming rather than replacing it with a new toolchain. |
 | v1 scope | Box, Button, TextField | Smallest slice that proves the workspace, the package boundary and Storybook end to end. |
@@ -27,7 +27,7 @@ The goal was a shared component library with a Storybook, consumed by the SPA. S
 flowchart LR
     FE["<b>frontend/</b><br/><i>workspace root: lockfile +<br/>all shared tooling config</i>"]
 
-    FE --> APP["apps/cinadex-app/<br/><i>the SPA (moved)</i>"]
+    FE --> APP["apps/cinedex-app/<br/><i>the SPA (moved)</i>"]
     FE --> COMP["packages/components/<br/><i>@cinedex/components — component library</i>"]
 ```
 
@@ -45,7 +45,7 @@ Storybook was later split out into `apps/storybook/` — see the follow-up spec.
 
 `moduleResolution: "bundler"` (already set in the app) follows the `exports` map to the TypeScript source. The library's `build` script is `tsc -b` — a typecheck, not an emit.
 
-The tradeoff, stated plainly: `tsc -b` in the app also typechecks library source under the app's compiler flags, so `apps/cinadex-app/tsconfig.app.json` and `packages/components/tsconfig.lib.json` must stay in step.
+The tradeoff, stated plainly: `tsc -b` in the app also typechecks library source under the app's compiler flags, so `apps/cinedex-app/tsconfig.app.json` and `packages/components/tsconfig.lib.json` must stay in step.
 
 ### Styling and theming
 
@@ -77,7 +77,7 @@ All three take `ref` as a plain prop (React 19 — no `forwardRef`), spread unkn
 - `npm run coverage` — app 2/2 (the pre-existing `App.test.tsx` passes unchanged, proving the `<Button>` swap preserved the accessible name), library 25/25.
 - Storybook at 6006, verified in a real browser: `Button` computes to `rgb(170, 59, 255)` on `rgba(170, 59, 255, 0.1)`, radius 5px, padding 5px 10px, mono font — identical to the `.counter` rule it replaced. Forcing `color-scheme: dark` repaints to `#c084fc` / `#16171d`, matching the original dark tokens exactly. `TextField` label association, `aria-invalid` and `aria-describedby` all correct. `/icons.svg` returns 200, confirming `staticDirs`. No console errors.
 - Dev server: Vite serves library source across the package boundary (HTTP 200) with `createHotContext` present — **HMR crosses packages and no `server.fs.allow` config is needed**, which was the main open risk in the plan. The React Compiler runtime appears in the transformed library output, confirming library and app components compile identically.
-- `docker build -f apps/cinadex-app/Dockerfile -t cinadex-app frontend` — succeeds from the widened context.
+- `docker build -f apps/cinedex-app/Dockerfile -t cinedex-app frontend` — succeeds from the widened context.
 - `dotnet build` from `backend/`, then `git diff --no-index CHANGELOG.md backend/CHANGELOG.md` — no drift.
 
 ## Notes / follow-ups

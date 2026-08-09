@@ -12,8 +12,8 @@ public static class DependencyInjection
     {
         services.AddDbContext<FilmDbContext>((sp, options) =>
         {
-            var configuation = sp.GetRequiredService<IConfiguration>();
-            var connectionString = configuation.GetConnectionString("DefaultConnection");
+            var configuration = sp.GetRequiredService<IConfiguration>();
+            var connectionString = configuration.GetConnectionString("DefaultConnection");
             options
                 .UseNpgsql(connectionString)
                 .UseCamelCaseNamingConvention();

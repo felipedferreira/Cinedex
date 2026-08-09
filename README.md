@@ -20,7 +20,7 @@ flowchart LR
 
 - **[Getting Started](docs/getting-started.md)** — new here? Clone-to-running-app in 5 minutes via Docker Compose
 - **[Backend](backend/README.md)** — hexagonal (ports & adapters) .NET solution: architecture guide, build/test/migration instructions
-- **[Frontend](frontend/README.md)** — npm workspace: the React + TypeScript + Vite SPA (`cinadex-app`), the design system and three component tiers (`@cinedex/theme`, `atoms`, `compounds`, `solution`), their Storybook (`@cinedex/storybook`), and a branded Docusaurus docs site (`@cinedex/docs-site`) that renders the changelog at `/changelog`
+- **[Frontend](frontend/README.md)** — npm workspace: the React + TypeScript + Vite SPA (`cinedex-app`), the design system and three component tiers (`@cinedex/theme`, `atoms`, `compounds`, `solution`), their Storybook (`@cinedex/storybook`), and a branded Docusaurus docs site (`@cinedex/docs-site`) that renders the changelog at `/changelog`
 - **[Design docs](docs/README.md)** — why the system is shaped this way (auth & security model, planned ADRs)
 - **[Changelog](CHANGELOG.md)** — version history and release notes
 

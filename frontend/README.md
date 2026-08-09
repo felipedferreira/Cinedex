@@ -4,7 +4,7 @@ npm **workspace root** for the Cinedex frontend. The lockfile and all shared too
 
 | Package                                              | Path                  | What it is                                                                                 |
 | ---------------------------------------------------- | --------------------- | ------------------------------------------------------------------------------------------ |
-| [`cinadex-app`](apps/cinadex-app/README.md)          | `apps/cinadex-app/`   | The React 19 + Vite SPA, served by Nginx behind Compose's Caddy HTTPS/API edge.            |
+| [`cinedex-app`](apps/cinedex-app/README.md)          | `apps/cinedex-app/`   | The React 19 + Vite SPA, served by Nginx behind Compose's Caddy HTTPS/API edge.            |
 | [`@cinedex/storybook`](apps/storybook/README.md)     | `apps/storybook/`     | Storybook for all three component tiers. Owns the stories; served on port 9001 in Compose. |
 | [`@cinedex/docs-site`](apps/docs-site/README.md)     | `apps/docs-site/`     | Branded Docusaurus site; Compose publishes it through Caddy at `/documentation/`.          |
 | [`@cinedex/theme`](packages/theme/README.md)         | `packages/theme/`     | The design system — tokens, base element styling, the Tailwind theme. **No React.**        |
@@ -18,7 +18,7 @@ flowchart BT
     ATOMS["<b>@cinedex/atoms</b><br/><i>Radix + Tailwind primitives</i>"]
     COMPOUNDS["<b>@cinedex/compounds</b><br/><i>brand-agnostic templates</i>"]
     SOLUTION["<b>@cinedex/solution</b><br/><i>Cinedex screens, router-free</i>"]
-    APP["<b>cinadex-app</b><br/><i>routes · router · API</i>"]
+    APP["<b>cinedex-app</b><br/><i>routes · router · API</i>"]
     SB["<b>@cinedex/storybook</b><br/><i>stories for all three tiers</i>"]
 
     ATOMS --> THEME
@@ -58,7 +58,7 @@ All run from this directory.
 | `npm run lint`            | Lint every package with ESLint                       |
 | `npm run format:check`    | Check formatting without writing (CI-friendly)       |
 
-Scope any of them to one package with `-w cinadex-app`, `-w @cinedex/atoms`, `-w @cinedex/compounds`, `-w @cinedex/solution`, `-w @cinedex/storybook` or `-w @cinedex/docs-site` — for example `npm run test -w @cinedex/atoms` for watch mode. `@cinedex/theme` has no scripts; it ships CSS.
+Scope any of them to one package with `-w cinedex-app`, `-w @cinedex/atoms`, `-w @cinedex/compounds`, `-w @cinedex/solution`, `-w @cinedex/storybook` or `-w @cinedex/docs-site` — for example `npm run test -w @cinedex/atoms` for watch mode. `@cinedex/theme` has no scripts; it ships CSS.
 
 ## 🧩 Three tiers, and where a component goes
 
@@ -127,7 +127,7 @@ npm run format:check  # verify formatting (used in CI)
 The SPA and Storybook images build from **this** directory, because the lockfile is here:
 
 ```bash
-docker build -f apps/cinadex-app/Dockerfile -t cinadex-app .
+docker build -f apps/cinedex-app/Dockerfile -t cinedex-app .
 ```
 
 ```bash

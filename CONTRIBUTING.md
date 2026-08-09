@@ -81,7 +81,7 @@ The one-shot database migrator applies pending migrations for both `FilmDbContex
    ```bash
    npm run test:run    # single pass across all packages
    ```
-   Watch mode is per-package: `npm run test -w cinadex-app`, `-w @cinedex/atoms`, `-w @cinedex/compounds` or `-w @cinedex/solution`.
+   Watch mode is per-package: `npm run test -w cinedex-app`, `-w @cinedex/atoms`, `-w @cinedex/compounds` or `-w @cinedex/solution`.
 
 ## Development Workflow
 

@@ -1,4 +1,4 @@
-# cinadex-app
+# cinedex-app
 
 React 19 + TypeScript + Vite SPA (React Compiler enabled via Babel preset). Vitest + Testing Library for tests. Its Docker image serves the static bundle over internal HTTP with Nginx; Compose's Caddy edge owns HTTPS and API routing.
 
@@ -16,7 +16,7 @@ npm run lint         # eslint (`npm run lint:fix` to autofix)
 npm run format:check # prettier (`npm run format` to write)
 ```
 
-Scope to this package with `-w cinadex-app` (e.g. `npm run test -w cinadex-app` for watch mode). Lint and format are workspace-wide only.
+Scope to this package with `-w cinedex-app` (e.g. `npm run test -w cinedex-app` for watch mode). Lint and format are workspace-wide only.
 
 CI requires lint, format:check, build, build-storybook, and coverage to all pass — run `npm run format` before pushing to avoid format:check failures.
 
@@ -29,4 +29,3 @@ CI requires lint, format:check, build, build-storybook, and coverage to all pass
 - **This app is routes and nothing else.** `src/` holds `routes/`, the generated `routeTree.gen.ts`, `main.tsx` and one test. There is no `App.tsx` — the Vite scaffold landing page (hero image, counter, Vite/React links) was replaced by `@cinedex/solution`'s `HomeScreen`, which indexes every screen in the flow.
 - **`routes/__root.tsx` holds `RouterLink`, the entire coupling between the screen library and the router.** `@cinedex/solution` navigates through an injected link component so it can stay router-free and storyable; this app adapts TanStack Router's `Link` to that contract, with one cast where the two type systems meet. `login-routing.test.tsx` mounts the real route tree and is what verifies the paths the screens hardcode are real routes.
 - The `Dockerfile` here builds from the **`frontend/` context**, not this directory — the workspace lockfile lives one level up.
-- Folder name is spelled `cinadex-app`; the product is "Cinedex".

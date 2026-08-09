@@ -45,7 +45,7 @@ export default defineConfig([
     // alongside their component, which is the framework's own convention
     // (see https://tanstack.com/router) and not something to restructure
     // around.
-    files: ['apps/cinadex-app/src/routes/**'],
+    files: ['apps/cinedex-app/src/routes/**'],
     rules: {
       'react-refresh/only-export-components': 'off',
     },

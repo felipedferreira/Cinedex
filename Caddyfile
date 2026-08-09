@@ -11,5 +11,5 @@ https://localhost {
 	@documentation path /documentation/*
 	reverse_proxy @documentation cinedex-docs-site:80
 
-	reverse_proxy cinadex-app:8080
+	reverse_proxy cinedex-app:8080
 }

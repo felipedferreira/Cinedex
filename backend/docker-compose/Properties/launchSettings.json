@@ -10,7 +10,7 @@
         "movies.databasemigrator": "StartWithoutDebugging",
         "movies.webservice": "StartWithoutDebugging",
         "movies.schedulerworker": "StartWithoutDebugging",
-        "cinadex-app": "StartWithoutDebugging"
+        "cinedex-app": "StartWithoutDebugging"
       },
       "launchBrowser": true,
       "launchUrl": "https://localhost:9000/movies-svc/api-docs/v1"

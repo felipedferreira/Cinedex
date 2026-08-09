@@ -4,7 +4,7 @@ npm **workspace root** for the Cinedex frontend. The lockfile lives here — the
 
 | Package              | Path                  | What it is                                                                                                                   |
 | -------------------- | --------------------- | ---------------------------------------------------------------------------------------------------------------------------- |
-| `cinadex-app`        | `apps/cinadex-app/`   | The React 19 + Vite SPA. Nginx serves its static bundle over internal HTTP; Compose's Caddy edge owns HTTPS and API routing. |
+| `cinedex-app`        | `apps/cinedex-app/`   | The React 19 + Vite SPA. Nginx serves its static bundle over internal HTTP; Compose's Caddy edge owns HTTPS and API routing. |
 | `@cinedex/storybook` | `apps/storybook/`     | Storybook for all three component tiers. Owns the stories. Served on 9001 in compose.                                        |
 | `@cinedex/docs-site` | `apps/docs-site/`     | Cinedex-branded Docusaurus site. Renders the root `CHANGELOG.md`; Compose publishes it through Caddy at `/documentation/`.   |
 | `@cinedex/theme`     | `packages/theme/`     | The design system: tokens, base element styling, the Tailwind theme. **No React** — four stylesheets.                        |
@@ -19,7 +19,7 @@ flowchart BT
     ATOMS["@cinedex/atoms"] --> THEME["@cinedex/theme"]
     COMPOUNDS["@cinedex/compounds"] --> ATOMS
     SOLUTION["@cinedex/solution"] --> COMPOUNDS
-    APP["cinadex-app"] --> SOLUTION
+    APP["cinedex-app"] --> SOLUTION
     SB["@cinedex/storybook"] --> SOLUTION
 ```
 
@@ -38,7 +38,7 @@ npm run lint             # eslint . — one pass across all packages
 npm run format:check     # prettier — run `npm run format` before pushing
 ```
 
-Target one package with `-w cinadex-app`, `-w @cinedex/atoms`, `-w @cinedex/compounds`, `-w @cinedex/solution`, `-w @cinedex/storybook` or `-w @cinedex/docs-site`, e.g. `npm run test -w @cinedex/atoms` for watch mode. `@cinedex/theme` has no scripts at all — it ships CSS.
+Target one package with `-w cinedex-app`, `-w @cinedex/atoms`, `-w @cinedex/compounds`, `-w @cinedex/solution`, `-w @cinedex/storybook` or `-w @cinedex/docs-site`, e.g. `npm run test -w @cinedex/atoms` for watch mode. `@cinedex/theme` has no scripts at all — it ships CSS.
 
 ## Where does a component go?
 
@@ -67,4 +67,3 @@ The sharpest illustration is `AuthCard`: it takes `brand` as a prop and never dr
 - **`.npmrc` must be `COPY`d before `npm ci` in both Dockerfiles**, or images install with the guard off. It holds config only — never put a token in it, since it is committed and copied into build contexts.
 - **`@cinedex/docs-site`'s `/changelog` page is generated, not written.** `apps/docs-site/scripts/sync-changelog.mjs` copies the root `CHANGELOG.md` into `apps/docs-site/src/pages/changelog.md` (git-ignored) before every `start`/`build`, rewriting its repo-relative links to absolute GitHub URLs since the site doesn't host the rest of the repo. Edit only the root `CHANGELOG.md` — never that generated file. This is unrelated to `backend/CHANGELOG.md`'s sync (a committed, CI-verified copy the web service serves): two different mechanisms solving two different problems, same source file.
 - **`apps/docs-site` keeps Docusaurus's own single `tsconfig.json`** (`extends: "@docusaurus/tsconfig"`) rather than the `tsconfig.json` + `tsconfig.*.json` split the other packages use. Docusaurus's own bundler doesn't read tsconfig for compilation the way Vite does — that file exists only for editor support and the standalone `typecheck` script — so the split buys nothing here. `projectService: true` still resolves it as the nearest tsconfig, same as everywhere else.
-- The SPA is spelled `cinadex-app` — an "a", not an "e". The product is "Cinedex" and the scoped packages use that correct spelling. The mismatch is deliberate and long-standing; see [`docs/README.md`](../docs/README.md).

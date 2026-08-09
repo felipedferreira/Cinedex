@@ -8,7 +8,7 @@ WORKDIR /app/frontend
 # npm ci while ordinary documentation and source edits reuse it. `.npmrc` must
 # be present here because it enforces the install-script allowlist.
 COPY frontend/package.json frontend/package-lock.json frontend/.npmrc ./
-COPY frontend/apps/cinadex-app/package.json apps/cinadex-app/
+COPY frontend/apps/cinedex-app/package.json apps/cinedex-app/
 COPY frontend/apps/docs-site/package.json apps/docs-site/
 COPY frontend/apps/storybook/package.json apps/storybook/
 COPY frontend/packages/atoms/package.json packages/atoms/

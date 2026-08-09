@@ -21,7 +21,7 @@ WORKDIR /app
 # rather than with the `COPY . .` below — otherwise the image would install with
 # lifecycle scripts unguarded. It holds config only; never put a token in it.
 COPY package.json package-lock.json .npmrc ./
-COPY apps/cinadex-app/package.json apps/cinadex-app/
+COPY apps/cinedex-app/package.json apps/cinedex-app/
 COPY apps/docs-site/package.json apps/docs-site/
 COPY apps/storybook/package.json apps/storybook/
 COPY packages/atoms/package.json packages/atoms/
@@ -31,11 +31,11 @@ COPY packages/theme/package.json packages/theme/
 # Scoped to the app's workspace so the image build skips the Storybook, docs-site
 # and test toolchains it does not need. The workspace links to the four library
 # packages are still created, and their source is all the app build consumes.
-RUN npm ci --workspace cinadex-app --include-workspace-root
+RUN npm ci --workspace cinedex-app --include-workspace-root
 COPY . .
-RUN npm run build -w cinadex-app
+RUN npm run build -w cinedex-app
 
 FROM nginx:alpine AS final
-COPY --from=build /app/apps/cinadex-app/dist /usr/share/nginx/html
-COPY apps/cinadex-app/nginx.conf /etc/nginx/conf.d/default.conf
+COPY --from=build /app/apps/cinedex-app/dist /usr/share/nginx/html
+COPY apps/cinedex-app/nginx.conf /etc/nginx/conf.d/default.conf
 EXPOSE 8080

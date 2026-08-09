@@ -22,7 +22,7 @@ npm run coverage -w @cinedex/solution
 The screens _do_ know Cinedex's route paths — `/login`, `/register`, `/forgot-password` are Cinedex facts and belong here. What they do not know is how to navigate. Only the link component is injected:
 
 ```tsx
-// cinadex-app/src/routes/__root.tsx
+// cinedex-app/src/routes/__root.tsx
 <SolutionProvider linkComponent={RouterLink}>
   <Outlet />
 </SolutionProvider>

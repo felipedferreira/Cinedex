@@ -1,4 +1,4 @@
-# cinadex-app
+# cinedex-app
 
 The SPA for Cinedex. In Docker Compose, Nginx serves its static bundle over internal HTTP and Caddy publishes the SPA plus backend under the single `https://localhost:9000` origin.
 
@@ -13,7 +13,7 @@ flowchart LR
     FE --> CFG["eslint.config.js · .prettierrc.json<br/>.gitignore · .dockerignore"]
     FE --> COMP["packages/<br/><i>@cinedex/theme · atoms · compounds · solution</i>"]
     FE --> SB["apps/storybook/<br/><i>@cinedex/storybook — its workbench, a separate app</i>"]
-    FE --> APP["<b>apps/cinadex-app/</b><br/><i>this package</i>"]
+    FE --> APP["<b>apps/cinedex-app/</b><br/><i>this package</i>"]
 
     APP --> PUB["public/<br/><i>static assets (favicon, icons)</i>"]
     APP --> SRC["<b>src/</b>"]
@@ -62,7 +62,7 @@ first when `node_modules` is missing. Turn the whole resource off there with
 
 ## 📜 Scripts
 
-All run from `frontend/`. Build and test scripts fan out across the workspace — add `-w cinadex-app` to scope one to this package.
+All run from `frontend/`. Build and test scripts fan out across the workspace — add `-w cinedex-app` to scope one to this package.
 
 | Script                    | Description                                      |
 | ------------------------- | ------------------------------------------------ |
@@ -78,7 +78,7 @@ All run from `frontend/`. Build and test scripts fan out across the workspace �
 | `npm run test:run`        | Run every test suite once (CI-friendly)          |
 | `npm run coverage`        | Run tests once and generate coverage per package |
 
-Watch mode and the Vitest UI are per-package: `npm run test -w cinadex-app`, `npm run test:ui -w cinadex-app`.
+Watch mode and the Vitest UI are per-package: `npm run test -w cinedex-app`, `npm run test:ui -w cinedex-app`.
 
 ## 🎨 Linting & Formatting
 

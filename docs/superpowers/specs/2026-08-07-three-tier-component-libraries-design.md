@@ -8,7 +8,7 @@
 
 `3b7aa36` ("Updated auth UI", #57) shipped seven auth screens and eleven Tailwind-styled building
 blocks — `AuthCard`, `AuthButton`, `PasswordField`, `OtpInput`, `Checkbox`, `Alert`, `StatPair` and
-friends — but put every one of them **inside the app**, at `apps/cinadex-app/src/features/auth/`.
+friends — but put every one of them **inside the app**, at `apps/cinedex-app/src/features/auth/`.
 That was the right call at the time and the wrong place to leave them:
 
 - **`@cinedex/components` is CSS-Modules-only by its own convention**, so the new components had
@@ -17,7 +17,7 @@ That was the right call at the time and the wrong place to leave them:
 - **The design system is split in two.** Colour, spacing and radii tokens live in the library's
   `tokens.css`; the `warning`/`success` ramps and the whole Tailwind `@theme inline` bridge live in
   the app's `styles/tailwind.css`. There is no one file a rebrand touches.
-- **Tailwind is scoped to the app alone.** `@tailwindcss/vite` is only in `cinadex-app`'s
+- **Tailwind is scoped to the app alone.** `@tailwindcss/vite` is only in `cinedex-app`'s
   devDependencies, so `apps/storybook` — which exists precisely to review components in isolation —
   cannot render any of the eleven. Storybook still only knows `Box`, `Button` and `TextField`.
 - **Two styling systems, no path between them.** CSS Modules in the library, Tailwind in the app.
@@ -43,7 +43,7 @@ flowchart BT
     ATOMS["<b>@cinedex/atoms</b><br/><i>packages/atoms</i><br/>Radix primitives + cva variants"]
     COMPOUNDS["<b>@cinedex/compounds</b><br/><i>packages/compounds</i><br/>brand-agnostic templates"]
     SOLUTION["<b>@cinedex/solution</b><br/><i>packages/solution</i><br/>Cinedex screens, router-free"]
-    APP["<b>cinadex-app</b><br/><i>routes · router · API</i>"]
+    APP["<b>cinedex-app</b><br/><i>routes · router · API</i>"]
     SB["<b>@cinedex/storybook</b><br/><i>stories for all three tiers</i>"]
 
     ATOMS --> THEME
@@ -74,7 +74,7 @@ export const SolutionProvider: ({ linkComponent, children }) => ReactNode  // de
 export function useLinkComponent(): ElementType
 ```
 
-`cinadex-app` supplies TanStack Router's `Link` once in `routes/__root.tsx`; Storybook supplies
+`cinedex-app` supplies TanStack Router's `Link` once in `routes/__root.tsx`; Storybook supplies
 nothing and gets a plain `<a>`. This replaces `AuthInlineAction.tsx`, the single file that currently
 imports `@tanstack/react-router` into what is otherwise presentational code.
 
@@ -176,7 +176,7 @@ assertions are rewritten against behaviour.
 | app `components/{AuthButton,Checkbox,OtpInput,Alert,StatPair}` | `atoms` | 13 |
 | app `components/{PasswordField,PasswordStrength}` | `compounds` | 6 |
 | app `screens/*` | `solution` (no memory router needed any more) | 15 |
-| app `login-routing.test.tsx`, `App.test.tsx` | stay in `cinadex-app` | 4 |
+| app `login-routing.test.tsx`, `App.test.tsx` | stay in `cinedex-app` | 4 |
 
 ## Verification performed
 
@@ -206,7 +206,7 @@ assertions are rewritten against behaviour.
   single navigation entry — client-side routing through the injected `RouterLink`, not a page load.
   No console errors. (Done over a temporary plain-HTTP Vite config: the dev server's `basic-ssl`
   certificate is rejected by the automation browser.)
-- **`docker compose build cinadex-app cinedex-storybook`** — both images build.
+- **`docker compose build cinedex-app cinedex-storybook`** — both images build.
 - **`node scripts/check-diagrams.mjs`** — 20 Mermaid diagrams, no ASCII box art.
 - **`dotnet build` from `backend/`** — 0 warnings (warnings are errors), and
   `git diff --no-index CHANGELOG.md backend/CHANGELOG.md` reports no drift.

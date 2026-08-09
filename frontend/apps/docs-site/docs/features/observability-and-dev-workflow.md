@@ -86,13 +86,13 @@ flowchart LR
     SEQ[Seq] -- healthy --> WEB
     MAIL[Mailpit] -- healthy --> WEB
     WEB --> EDGE[Caddy HTTPS edge]
-    UI[Cinadex App + Nginx] --> EDGE
+    UI[Cinedex App + Nginx] --> EDGE
 ```
 
 | Service             | Address                               | Purpose                                 |
 | ------------------- | ------------------------------------- | --------------------------------------- |
 | `cinedex-edge`      | https://localhost:9000                | Caddy HTTPS edge for the SPA and API    |
-| `cinadex-app`       | internal only                         | React SPA static bundle on Nginx        |
+| `cinedex-app`       | internal only                         | React SPA static bundle on Nginx        |
 | `cinedex-storybook` | http://localhost:9001                 | Storybook — static, plain HTTP          |
 | `cinedex-docs-site` | https://localhost:9000/documentation/ | Docusaurus through the Caddy edge       |
 | `movies.webservice` | via the proxy at `/movies-svc`        | ASP.NET Core API (not exposed directly) |

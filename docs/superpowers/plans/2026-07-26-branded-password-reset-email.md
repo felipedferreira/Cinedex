@@ -716,4 +716,4 @@ git commit -m "docs: changelog entry for the branded password-reset email"
 
 ## Out of scope
 
-The `/reset-password` SPA page. The link in this email still lands on the untouched Vite starter page, because `frontend/cinadex-ui/src/` has no router. The email is only half the flow — the page is tracked separately and is the larger remaining gap.
+The `/reset-password` SPA page. The link in this email still lands on the untouched Vite starter page, because `frontend/cinedex-ui/src/` has no router. The email is only half the flow — the page is tracked separately and is the larger remaining gap.

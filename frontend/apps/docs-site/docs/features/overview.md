@@ -28,7 +28,7 @@ flowchart LR
     BE --> ASP["<b>aspire/</b><br/>AppHost — the local dev loop"]
 
     subgraph workspace ["workspace members"]
-        APP["apps/cinadex-app/<br/><i>the SPA</i>"]
+        APP["apps/cinedex-app/<br/><i>the SPA</i>"]
         SB["apps/storybook/<br/><i>component workbench</i>"]
         DS["apps/docs-site/<br/><i>this site</i>"]
         COMP["packages/<br/><i>theme · atoms · compounds · solution</i>"]

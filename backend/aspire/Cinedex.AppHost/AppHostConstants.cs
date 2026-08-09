@@ -103,12 +103,12 @@ internal static class AppHostConstants
     /// This is the app package inside the <c>frontend/</c> npm workspace, not the workspace root.
     /// That matters: the package's <c>dev</c> script is plain <c>vite</c>, so the <c>--port</c>
     /// <c>AddViteApp</c> appends reaches it, whereas the root script delegates through
-    /// <c>-w cinadex-app</c> and would swallow it. Installing from here is still correct — npm walks
+    /// <c>-w cinedex-app</c> and would swallow it. Installing from here is still correct — npm walks
     /// up to the workspace root, so the single hoisted lockfile and the <c>@cinedex/*</c> library
     /// links are what a fresh clone gets.
     /// </para>
     /// </summary>
-    public const string FrontendAppDirectory = "../../../frontend/apps/cinadex-app";
+    public const string FrontendAppDirectory = "../../../frontend/apps/cinedex-app";
 
     /// <summary>
     /// Fixed host port for the dev server, matching the port <c>vite.config.ts</c> defaults to and

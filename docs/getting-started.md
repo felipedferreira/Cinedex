@@ -64,7 +64,7 @@ flowchart LR
     SEQ[Seq] -- healthy --> WEB
     MAIL[Mailpit] -- healthy --> WEB
     WEB --> EDGE[Caddy HTTPS edge]
-    UI[Cinadex App + Nginx] --> EDGE
+    UI[Cinedex App + Nginx] --> EDGE
 ```
 
 The one-shot **Database Migrator** applies pending EF Core migrations for both the catalog and
@@ -73,7 +73,7 @@ auth schemas and exits — there's nothing else to run by hand for a fresh datab
 | Service | Address | Purpose |
 |---|---|---|
 | `cinedex-edge` | https://localhost:9000 | Caddy HTTPS edge for the SPA and API (local-CA certificate) |
-| `cinadex-app` | internal only | React SPA served as a static Nginx bundle |
+| `cinedex-app` | internal only | React SPA served as a static Nginx bundle |
 | `cinedex-storybook` | http://localhost:9001 | Storybook for the `@cinedex/*` component libraries (static, plain HTTP) |
 | `cinedex-docs-site` | https://localhost:9000/documentation/ | Built Docusaurus documentation and changelog site, routed through Caddy |
 | `movies.webservice` | via the proxy at `/movies-svc` | ASP.NET Core API (not exposed directly) |
@@ -192,6 +192,6 @@ Almost always a missing or incomplete root `.env` — see [step 1](#1-configure-
 | Doc | For |
 |---|---|
 | [Backend README](../backend/README.md) | Architecture, local (non-Docker) dev, EF migrations, testing & coverage |
-| [Frontend README](../frontend/README.md) | Workspace layout, scripts, linting, testing; the `cinadex-app` app and the `@cinedex/theme`/`atoms`/`compounds`/`solution` packages |
+| [Frontend README](../frontend/README.md) | Workspace layout, scripts, linting, testing; the `cinedex-app` app and the `@cinedex/theme`/`atoms`/`compounds`/`solution` packages |
 | [Auth & Security Model](auth-security-model.md) | JWT design, refresh-token rotation, known gaps |
 | [CONTRIBUTING](../CONTRIBUTING.md) | Workflow, code standards, PR checklist |

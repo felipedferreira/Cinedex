@@ -34,7 +34,7 @@ flowchart LR
     SB --> K["package.json<br/><i>depends on @cinedex/components, react, react-dom</i>"]
 ```
 
-The app carries its own `vite.config.ts` with the React Compiler Babel preset. Vite applies it to the linked `@cinedex/components` source as well as to the stories, so components compile here exactly as they do in the SPA rather than through an approximation. `staticDirs: ['../../cinadex-app/public']` keeps the `/icons.svg#id` sprite resolving.
+The app carries its own `vite.config.ts` with the React Compiler Babel preset. Vite applies it to the linked `@cinedex/components` source as well as to the stories, so components compile here exactly as they do in the SPA rather than through an approximation. `staticDirs: ['../../cinedex-app/public']` keeps the `/icons.svg#id` sprite resolving.
 
 The image is a two-stage build from the `frontend/` context (the lockfile is there): Node builds the static bundle, Nginx serves it on port 80, published on 9001. Plain HTTP — this container is not the stack's reverse proxy and Storybook calls no API, so there is nothing to terminate TLS for.
 

@@ -123,7 +123,7 @@ shot:
 3. Every `frontend/**/package.json` that isn't under `node_modules`. The
    frontend is an npm workspace, so today that is eight files, all bumped in
    lockstep with the product version: the workspace root
-   `frontend/package.json`; the three apps (`apps/cinadex-app`,
+   `frontend/package.json`; the three apps (`apps/cinedex-app`,
    `apps/storybook`, `apps/docs-site`); and the three component-library
    packages plus the design system (`packages/atoms`, `packages/compounds`,
    `packages/solution`, `packages/theme`).

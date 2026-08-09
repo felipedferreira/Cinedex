@@ -215,7 +215,7 @@ troubleshooting all live there.
 | `postgres` | postgres:17-alpine | 5432 | PostgreSQL database with persistent storage |
 | `movies.databasemigrator` | movies.databasemigrator | None | Applies pending database migrations and exits |
 | `movies.webservice` | movies.webservice | 8080 internal | ASP.NET Core web API |
-| `cinadex-app` | cinadex-app | 8080 internal | React SPA static bundle (Nginx) |
+| `cinedex-app` | cinedex-app | 8080 internal | React SPA static bundle (Nginx) |
 | `cinedex-edge` | caddy:2.11.4-alpine | 9000 HTTPS | Local TLS termination and same-origin routing for the SPA and API |
 | `cinedex-storybook` | cinedex-storybook | 9001 HTTP | Storybook for the `@cinedex/*` component libraries — static bundle on Nginx, calls no backend |
 | `seq` | datalust/seq | 5341 | Structured logs + distributed traces (OpenTelemetry/OTLP) |

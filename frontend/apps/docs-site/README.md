@@ -66,7 +66,7 @@ extend it.
 
 ## 🎨 Branding
 
-Colors come from [`@cinedex/theme`](../../packages/theme/CLAUDE.md)'s `--accent` design token — see `src/css/custom.css` for how the Infima color scale is derived from it. The favicon and navbar logo are a copy of `cinadex-app`'s `favicon.svg`.
+Colors come from [`@cinedex/theme`](../../packages/theme/CLAUDE.md)'s `--accent` design token — see `src/css/custom.css` for how the Infima color scale is derived from it. The favicon and navbar logo are a copy of `cinedex-app`'s `favicon.svg`.
 
 ## 🐳 Docker and Compose
 

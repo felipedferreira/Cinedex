@@ -9,7 +9,7 @@ four library packages — a design system plus three component tiers.
 
 | Package              | Path                  | What it is                                                                          |
 | -------------------- | --------------------- | ----------------------------------------------------------------------------------- |
-| `cinadex-app`        | `apps/cinadex-app/`   | The React 19 + Vite SPA, served by Nginx behind Compose's Caddy HTTPS/API edge.     |
+| `cinedex-app`        | `apps/cinedex-app/`   | The React 19 + Vite SPA, served by Nginx behind Compose's Caddy HTTPS/API edge.     |
 | `@cinedex/storybook` | `apps/storybook/`     | Storybook for all three component tiers — served on port 9001.                      |
 | `@cinedex/docs-site` | `apps/docs-site/`     | This site.                                                                          |
 | `@cinedex/theme`     | `packages/theme/`     | The design system — tokens, base element styling, the Tailwind theme. **No React.** |

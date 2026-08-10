@@ -120,7 +120,7 @@ jobs:
 
   frontend-compounds:
     name: Frontend · compounds
-    needs: frontend-atoms
+    needs: frontend
     runs-on: [self-hosted, cinedex, production]
 
     permissions:
@@ -149,7 +149,7 @@ jobs:
 
   frontend-solution:
     name: Frontend · solution
-    needs: frontend-compounds
+    needs: frontend
     runs-on: [self-hosted, cinedex, production]
 
     permissions:
@@ -178,7 +178,7 @@ jobs:
 
   frontend-app:
     name: Frontend · cinedex-app
-    needs: frontend-solution
+    needs: frontend
     runs-on: [self-hosted, cinedex, production]
 
     permissions:

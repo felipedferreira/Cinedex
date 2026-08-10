@@ -25,11 +25,6 @@ jobs:
             exit 1
           fi
 
-      - name: Setup Node.js
-        uses: actions/setup-node@v6
-        with:
-          node-version: 22
-
       - name: Check diagrams (no ASCII box art)
         run: node scripts/check-diagrams.mjs
 
@@ -43,18 +38,6 @@ jobs:
 
     steps:
       - uses: actions/checkout@v6
-
-      - name: Setup .NET
-        uses: actions/setup-dotnet@v5
-        with:
-          global-json-file: backend/global.json
-
-      - name: Setup Node.js
-        uses: actions/setup-node@v6
-        with:
-          node-version: 22
-          cache: npm
-          cache-dependency-path: backend/src/Presentation/Cinedex.WebService/package-lock.json
 
       - name: Install web dependencies
         working-directory: backend/src/Presentation/Cinedex.WebService
@@ -87,19 +70,6 @@ jobs:
 
     steps:
       - uses: actions/checkout@v6
-
-      - name: Setup .NET
-        uses: actions/setup-dotnet@v5
-        with:
-          global-json-file: backend/global.json
-
-      - name: Setup Node.js
-        if: matrix.needs_web_dependencies
-        uses: actions/setup-node@v6
-        with:
-          node-version: 22
-          cache: npm
-          cache-dependency-path: backend/src/Presentation/Cinedex.WebService/package-lock.json
 
       - name: Install web dependencies
         if: matrix.needs_web_dependencies
@@ -141,13 +111,6 @@ jobs:
     steps:
       - uses: actions/checkout@v6
 
-      - name: Setup Node.js
-        uses: actions/setup-node@v6
-        with:
-          node-version: 22
-          cache: npm
-          cache-dependency-path: frontend/package-lock.json
-
       - name: Install dependencies
         run: npm ci
 
@@ -183,13 +146,6 @@ jobs:
 
     steps:
       - uses: actions/checkout@v6
-
-      - name: Setup Node.js
-        uses: actions/setup-node@v6
-        with:
-          node-version: 22
-          cache: npm
-          cache-dependency-path: frontend/package-lock.json
 
       - name: Install dependencies
         run: npm ci
@@ -228,13 +184,6 @@ jobs:
 
     steps:
       - uses: actions/checkout@v6
-
-      - name: Setup Node.js
-        uses: actions/setup-node@v6
-        with:
-          node-version: 22
-          cache: npm
-          cache-dependency-path: frontend/package-lock.json
 
       - name: Install dependencies
         run: npm ci

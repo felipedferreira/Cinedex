@@ -2,12 +2,39 @@ name: Build and Test
 
 on:
   push:
-    branches: [ main ]
+    branches: [main]
   pull_request:
-    branches: [ main ]
+    branches: [main]
 
 jobs:
-  backend:
+  repository-checks:
+    name: Repository checks
+    runs-on: [self-hosted, linux, x64, vps]
+
+    steps:
+      - uses: actions/checkout@v6
+
+      # backend/CHANGELOG.md is a build-managed copy of the root CHANGELOG.md (the Docker build
+      # context is ./backend, so the image build cannot see the root file). Only the root file is
+      # edited by hand; a local backend build refreshes the copy. Fail if they have drifted.
+      - name: Verify backend/CHANGELOG.md matches root CHANGELOG.md
+        run: |
+          if ! cmp -s CHANGELOG.md backend/CHANGELOG.md; then
+            echo "::error file=backend/CHANGELOG.md::backend/CHANGELOG.md is out of sync with the root CHANGELOG.md. Edit only the root file, then run 'cp CHANGELOG.md backend/CHANGELOG.md' (or a local backend build) and commit."
+            diff -u CHANGELOG.md backend/CHANGELOG.md || true
+            exit 1
+          fi
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v6
+        with:
+          node-version: 22
+
+      - name: Check diagrams (no ASCII box art)
+        run: node scripts/check-diagrams.mjs
+
+  backend-build:
+    name: Backend build
     runs-on: [self-hosted, linux, x64, vps]
 
     defaults:
@@ -15,134 +42,209 @@ jobs:
         working-directory: backend
 
     steps:
-    - uses: actions/checkout@v6
+      - uses: actions/checkout@v6
 
-    # backend/CHANGELOG.md is a build-managed copy of the root CHANGELOG.md (the Docker build
-    # context is ./backend, so the image build cannot see the root file). Only the root file is
-    # edited by hand; a local backend build refreshes the copy. Fail fast if they have drifted.
-    - name: Verify backend/CHANGELOG.md matches root CHANGELOG.md
-      working-directory: .
-      run: |
-        if ! cmp -s CHANGELOG.md backend/CHANGELOG.md; then
-          echo "::error file=backend/CHANGELOG.md::backend/CHANGELOG.md is out of sync with the root CHANGELOG.md. Edit only the root file, then run 'cp CHANGELOG.md backend/CHANGELOG.md' (or a local backend build) and commit."
-          diff -u CHANGELOG.md backend/CHANGELOG.md || true
-          exit 1
-        fi
+      - name: Setup .NET
+        uses: actions/setup-dotnet@v5
+        with:
+          global-json-file: backend/global.json
 
-    - name: Setup .NET
-      uses: actions/setup-dotnet@v5
-      with:
-        global-json-file: backend/global.json
+      - name: Setup Node.js
+        uses: actions/setup-node@v6
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: backend/src/Presentation/Cinedex.WebService/package-lock.json
 
-    - name: Setup Node.js
-      uses: actions/setup-node@v6
-      with:
-        node-version: 22
-        cache: npm
-        cache-dependency-path: backend/src/Presentation/Cinedex.WebService/package-lock.json
+      - name: Install web dependencies
+        working-directory: backend/src/Presentation/Cinedex.WebService
+        run: npm ci
 
-    - name: Install web dependencies
-      working-directory: backend/src/Presentation/Cinedex.WebService
-      run: npm ci
+      - name: Restore dependencies
+        run: dotnet restore
 
-    - name: Restore dependencies
-      run: dotnet restore
+      - name: Build
+        run: dotnet build --no-restore --configuration Release
 
-    - name: Build
-      run: dotnet build --no-restore --configuration Release
+  backend-tests:
+    name: Backend tests (${{ matrix.name }})
+    runs-on: [self-hosted, linux, x64, vps]
 
-    - name: Run tests
-      run: >
-        dotnet test --no-build --configuration Release --verbosity normal
-        --logger "liquid.md;LogFileName=test-results.md"
-        --results-directory TestResults
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - name: persistence
+            project: tests/FoundryOceanus.Persistence.Tests/FoundryOceanus.Persistence.Tests.csproj
+            needs_web_dependencies: false
+          - name: web-service
+            project: tests/Cinedex.WebService.IntegrationTests/Cinedex.WebService.IntegrationTests.csproj
+            needs_web_dependencies: true
 
-    - name: Publish test summary
-      if: always()
-      run: |
-        if [ -f TestResults/test-results.md ]; then
-          cat TestResults/test-results.md >> "$GITHUB_STEP_SUMMARY"
-        else
-          echo "No test report was generated." >> "$GITHUB_STEP_SUMMARY"
-        fi
+    defaults:
+      run:
+        working-directory: backend
 
-  frontend:
+    steps:
+      - uses: actions/checkout@v6
+
+      - name: Setup .NET
+        uses: actions/setup-dotnet@v5
+        with:
+          global-json-file: backend/global.json
+
+      - name: Setup Node.js
+        if: matrix.needs_web_dependencies
+        uses: actions/setup-node@v6
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: backend/src/Presentation/Cinedex.WebService/package-lock.json
+
+      - name: Install web dependencies
+        if: matrix.needs_web_dependencies
+        working-directory: backend/src/Presentation/Cinedex.WebService
+        run: npm ci
+
+      - name: Run tests
+        run: >
+          dotnet test ${{ matrix.project }} --configuration Release --verbosity normal
+          --logger "liquid.md;LogFileName=test-results.md"
+          --results-directory TestResults
+
+      - name: Publish test summary
+        if: always()
+        run: |
+          if [ -f TestResults/test-results.md ]; then
+            cat TestResults/test-results.md >> "$GITHUB_STEP_SUMMARY"
+          else
+            echo "No test report was generated." >> "$GITHUB_STEP_SUMMARY"
+          fi
+
+  frontend-quality:
+    name: Frontend quality (${{ matrix.name }})
+    runs-on: [self-hosted, linux, x64, vps]
+
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - name: lint
+            command: npm run lint
+          - name: formatting
+            command: npm run format:check
+
+    defaults:
+      run:
+        working-directory: frontend
+
+    steps:
+      - uses: actions/checkout@v6
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v6
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: frontend/package-lock.json
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Run ${{ matrix.name }}
+        run: ${{ matrix.command }}
+
+  frontend-build:
+    name: Frontend build (${{ matrix.name }})
+    runs-on: [self-hosted, linux, x64, vps]
+
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - name: cinedex-app
+            command: npm run build -w cinedex-app
+          - name: docs-site
+            command: npm run build -w @cinedex/docs-site
+          - name: storybook-types
+            command: npm run build -w @cinedex/storybook
+          - name: storybook-static
+            command: npm run build-storybook -w @cinedex/storybook
+          - name: atoms
+            command: npm run build -w @cinedex/atoms
+          - name: compounds
+            command: npm run build -w @cinedex/compounds
+          - name: solution
+            command: npm run build -w @cinedex/solution
+
+    defaults:
+      run:
+        working-directory: frontend
+
+    steps:
+      - uses: actions/checkout@v6
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v6
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: frontend/package-lock.json
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Build ${{ matrix.name }}
+        run: ${{ matrix.command }}
+
+  frontend-tests:
+    name: Frontend tests (${{ matrix.name }})
     runs-on: [self-hosted, linux, x64, vps]
 
     permissions:
       contents: read
       pull-requests: write
 
-    # `frontend/` is an npm workspace root (apps/* + packages/*); every script
-    # below fans out to the workspaces from here.
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - name: cinedex-app
+            workspace: cinedex-app
+            directory: frontend/apps/cinedex-app
+          - name: "@cinedex/atoms"
+            workspace: "@cinedex/atoms"
+            directory: frontend/packages/atoms
+          - name: "@cinedex/compounds"
+            workspace: "@cinedex/compounds"
+            directory: frontend/packages/compounds
+          - name: "@cinedex/solution"
+            workspace: "@cinedex/solution"
+            directory: frontend/packages/solution
+
     defaults:
       run:
         working-directory: frontend
 
     steps:
-    - uses: actions/checkout@v6
+      - uses: actions/checkout@v6
 
-    - name: Setup Node.js
-      uses: actions/setup-node@v6
-      with:
-        node-version: 22
-        cache: npm
-        cache-dependency-path: frontend/package-lock.json
+      - name: Setup Node.js
+        uses: actions/setup-node@v6
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: frontend/package-lock.json
 
-    # Repo-wide rule, not a frontend one, but it lives in this job because this
-    # job already has Node set up and is already required to merge — a separate
-    # job would need a branch-protection change before it could gate anything.
-    # The script is dependency-free, so it runs before `npm ci` and fails fast.
-    - name: Check diagrams (no ASCII box art)
-      working-directory: .
-      run: node scripts/check-diagrams.mjs
+      - name: Install dependencies
+        run: npm ci
 
-    - name: Install dependencies
-      run: npm ci
+      - name: Run tests with coverage
+        run: npm run coverage -w ${{ matrix.workspace }}
 
-    - name: Lint
-      run: npm run lint
-
-    - name: Check formatting
-      run: npm run format:check
-
-    - name: Build
-      run: npm run build
-
-    - name: Build Storybook
-      run: npm run build-storybook
-
-    - name: Run tests with coverage
-      run: npm run coverage
-
-    # One report per workspace — the action reads a single coverage directory,
-    # and the distinct names keep the two job summaries apart.
-    - name: Coverage summary (cinedex-app)
-      if: always()
-      uses: davelosert/vitest-coverage-report-action@v2
-      with:
-        name: cinedex-app
-        working-directory: frontend/apps/cinedex-app
-
-    # One per library tier. @cinedex/theme is absent on purpose — it ships CSS
-    # and no JavaScript, so it has no test suite to report on.
-    - name: Coverage summary (@cinedex/atoms)
-      if: always()
-      uses: davelosert/vitest-coverage-report-action@v2
-      with:
-        name: '@cinedex/atoms'
-        working-directory: frontend/packages/atoms
-
-    - name: Coverage summary (@cinedex/compounds)
-      if: always()
-      uses: davelosert/vitest-coverage-report-action@v2
-      with:
-        name: '@cinedex/compounds'
-        working-directory: frontend/packages/compounds
-
-    - name: Coverage summary (@cinedex/solution)
-      if: always()
-      uses: davelosert/vitest-coverage-report-action@v2
-      with:
-        name: '@cinedex/solution'
-        working-directory: frontend/packages/solution
+      - name: Coverage summary (${{ matrix.name }})
+        if: always()
+        uses: davelosert/vitest-coverage-report-action@v2
+        with:
+          name: ${{ matrix.name }}
+          working-directory: ${{ matrix.directory }}

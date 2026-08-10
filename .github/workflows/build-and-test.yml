@@ -9,7 +9,7 @@ on:
 jobs:
   repository-checks:
     name: Repository checks
-    runs-on: [self-hosted, linux, x64, vps]
+    runs-on: [self-hosted, cinedex, production]
 
     steps:
       - uses: actions/checkout@v6
@@ -30,7 +30,7 @@ jobs:
 
   backend-build:
     name: Backend build
-    runs-on: [self-hosted, linux, x64, vps]
+    runs-on: [self-hosted, cinedex, production]
 
     defaults:
       run:
@@ -51,7 +51,7 @@ jobs:
 
   backend-tests:
     name: Backend tests (${{ matrix.name }})
-    runs-on: [self-hosted, linux, x64, vps]
+    runs-on: [self-hosted, cinedex, production]
 
     strategy:
       fail-fast: false
@@ -93,7 +93,7 @@ jobs:
 
   frontend-quality:
     name: Frontend quality (${{ matrix.name }})
-    runs-on: [self-hosted, linux, x64, vps]
+    runs-on: [self-hosted, cinedex, production]
 
     strategy:
       fail-fast: false
@@ -119,7 +119,7 @@ jobs:
 
   frontend-build:
     name: Frontend build (${{ matrix.name }})
-    runs-on: [self-hosted, linux, x64, vps]
+    runs-on: [self-hosted, cinedex, production]
 
     strategy:
       fail-fast: false
@@ -155,7 +155,7 @@ jobs:
 
   frontend-tests:
     name: Frontend tests (${{ matrix.name }})
-    runs-on: [self-hosted, linux, x64, vps]
+    runs-on: [self-hosted, cinedex, production]
 
     permissions:
       contents: read

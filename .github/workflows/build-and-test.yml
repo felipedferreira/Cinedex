@@ -57,9 +57,12 @@ jobs:
   frontend:
     runs-on: [self-hosted, cinedex, production]
 
+    permissions:
+      contents: read
+      pull-requests: write
+
     # `frontend/` is an npm workspace root (apps/* + packages/*); every script
-    # below validates or builds the workspaces from here. Coverage runs in the
-    # explicit dependency chain that follows this job.
+    # below fans out to the workspaces from here.
     defaults:
       run:
         working-directory: frontend
@@ -89,118 +92,37 @@ jobs:
       - name: Build Storybook
         run: npm run build-storybook
 
-  frontend-atoms:
-    name: Frontend · atoms
-    needs: frontend
-    runs-on: [self-hosted, cinedex, production]
-
-    permissions:
-      contents: read
-      pull-requests: write
-
-    defaults:
-      run:
-        working-directory: frontend
-
-    steps:
-      - uses: actions/checkout@v6
-
-      - name: Install dependencies
-        run: npm ci
-
       - name: Run tests with coverage
-        run: npm run coverage -w @cinedex/atoms
+        run: npm run coverage
 
-      - name: Coverage summary
+      # One report per workspace—the action reads a single coverage directory,
+      # and the distinct names keep the job summaries apart.
+      - name: Coverage summary (cinedex-app)
+        if: always()
+        uses: davelosert/vitest-coverage-report-action@v2
+        with:
+          name: cinedex-app
+          working-directory: frontend/apps/cinedex-app
+
+      # One per library tier. @cinedex/theme is absent on purpose—it ships CSS
+      # and no JavaScript, so it has no test suite to report on.
+      - name: Coverage summary (@cinedex/atoms)
         if: always()
         uses: davelosert/vitest-coverage-report-action@v2
         with:
           name: "@cinedex/atoms"
           working-directory: frontend/packages/atoms
 
-  frontend-compounds:
-    name: Frontend · compounds
-    needs: frontend
-    runs-on: [self-hosted, cinedex, production]
-
-    permissions:
-      contents: read
-      pull-requests: write
-
-    defaults:
-      run:
-        working-directory: frontend
-
-    steps:
-      - uses: actions/checkout@v6
-
-      - name: Install dependencies
-        run: npm ci
-
-      - name: Run tests with coverage
-        run: npm run coverage -w @cinedex/compounds
-
-      - name: Coverage summary
+      - name: Coverage summary (@cinedex/compounds)
         if: always()
         uses: davelosert/vitest-coverage-report-action@v2
         with:
           name: "@cinedex/compounds"
           working-directory: frontend/packages/compounds
 
-  frontend-solution:
-    name: Frontend · solution
-    needs: frontend
-    runs-on: [self-hosted, cinedex, production]
-
-    permissions:
-      contents: read
-      pull-requests: write
-
-    defaults:
-      run:
-        working-directory: frontend
-
-    steps:
-      - uses: actions/checkout@v6
-
-      - name: Install dependencies
-        run: npm ci
-
-      - name: Run tests with coverage
-        run: npm run coverage -w @cinedex/solution
-
-      - name: Coverage summary
+      - name: Coverage summary (@cinedex/solution)
         if: always()
         uses: davelosert/vitest-coverage-report-action@v2
         with:
           name: "@cinedex/solution"
           working-directory: frontend/packages/solution
-
-  frontend-app:
-    name: Frontend · cinedex-app
-    needs: frontend
-    runs-on: [self-hosted, cinedex, production]
-
-    permissions:
-      contents: read
-      pull-requests: write
-
-    defaults:
-      run:
-        working-directory: frontend
-
-    steps:
-      - uses: actions/checkout@v6
-
-      - name: Install dependencies
-        run: npm ci
-
-      - name: Run tests with coverage
-        run: npm run coverage -w cinedex-app
-
-      - name: Coverage summary
-        if: always()
-        uses: davelosert/vitest-coverage-report-action@v2
-        with:
-          name: cinedex-app
-          working-directory: frontend/apps/cinedex-app

@@ -1,8 +1,11 @@
 using Cinedex.Application.Abstractions;
+using Microsoft.Extensions.Logging;
 
 namespace Cinedex.Application.Auth.Logout;
 
-internal sealed class LogoutHandler(ITokenService tokenService) : ILogoutHandler
+internal sealed class LogoutHandler(
+    ITokenService tokenService,
+    ILogger<LogoutHandler> logger) : ILogoutHandler
 {
     public async Task HandleAsync(LogoutCommand command, CancellationToken cancellationToken)
     {
@@ -12,11 +15,13 @@ internal sealed class LogoutHandler(ITokenService tokenService) : ILogoutHandler
 
         if (tokenOwnerId is null)
         {
+            logger.LogInformation("Refresh-token revocation skipped because the token is unknown.");
             return;
         }
 
         if (tokenOwnerId != command.RequestingUserId)
         {
+            logger.LogInformation("Refresh-token revocation skipped because the token belongs to another user.");
             return;
         }
 

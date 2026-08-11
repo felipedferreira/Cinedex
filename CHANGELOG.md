@@ -362,7 +362,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [0.1.0] - Initial Project Setup
 
 ### Added
-- **GitHub Actions CI/CD** - Automated build and test workflow (build-and-test.yml)
+- **GitHub Actions CI/CD** - Automated build and test workflow (`continuous-integration.yml`)
 - **.NET SDK configuration** - Global.json for SDK version management
 - **Docker support** - Docker configuration and .dockerignore
 - **Project structure** - Core project organization with:

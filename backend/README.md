@@ -1,6 +1,6 @@
 # Movies Backend
 
-[![Build and Test](https://github.com/felipedferreira/Cinedex/actions/workflows/build-and-test.yml/badge.svg)](https://github.com/felipedferreira/Cinedex/actions/workflows/build-and-test.yml)
+[![Continuous Integration](https://github.com/felipedferreira/Cinedex/actions/workflows/continuous-integration.yml/badge.svg)](https://github.com/felipedferreira/Cinedex/actions/workflows/continuous-integration.yml)
 
 A hexagonal (ports & adapters) .NET solution for cataloging movie titles and their genres — inspired by IMDB. Built with a focus on separation of concerns, testability, and maintainability.
 

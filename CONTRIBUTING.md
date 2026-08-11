@@ -255,7 +255,7 @@ All error responses are RFC 7807 Problem Details and carry the request's correla
 
 ### GitHub Actions
 
-The project has automated CI/CD configured in `.github/workflows/build-and-test.yml`:
+The project has automated CI/CD configured in `.github/workflows/continuous-integration.yml`:
 
 - Runs on every push to main and on all pull requests
 - **Backend job** — Release build and tests

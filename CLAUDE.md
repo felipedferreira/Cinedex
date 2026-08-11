@@ -40,6 +40,6 @@ With compose up: UI/proxy at https://localhost:9000 (Caddy local-CA cert — `cu
 ## Toolchain & CI
 
 - .NET SDK 10.0.100 (`backend/global.json`, prerelease allowed), Node 22, Docker.
-- CI (`.github/workflows/build-and-test.yml`): backend job = changelog-sync check + Release build + tests; frontend job = lint + format:check + build + build-storybook + coverage (one coverage summary per workspace). All checks required to merge to `main`.
+- CI (`.github/workflows/continuous-integration.yml`): backend job = Release build + tests; frontend job = lint + format:check + build + coverage (one coverage summary per workspace). The workspace build includes Storybook. All checks are required to merge to `main`.
 - Commit messages follow Conventional Commits: `type(scope): summary` (types in use: `feat`, `fix`, `refactor`, `test`, `docs`, `chore`). Branches have no prefix convention — recent ones are short kebab-case descriptions (e.g. `asp-net-identity-auth`).
 - Changelog entries accumulate under `## [Unreleased]` (Keep a Changelog format); a release turns them into a `## [x.y.z] - Title` section with a matching version bump in `backend/Directory.Build.props` (Version, FileVersion, InformationalVersion together).

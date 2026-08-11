@@ -218,10 +218,8 @@ Key rules:
 - Write XML documentation for public members
 - Keep README.md up to date
 - Update CHANGELOG.md for significant changes — **edit only the root `CHANGELOG.md`**.
-  `backend/CHANGELOG.md` is a build-managed copy (the web service serves it as the app's
-  changelog page, and the Docker build can't see the repo root); a local backend build
-  refreshes it, and CI fails if the two files differ. `frontend/apps/docs-site` also
-  renders it, automatically, at `/changelog` — see [its CLAUDE.md](frontend/apps/docs-site/CLAUDE.md)
+  `frontend/apps/docs-site` renders it automatically at `/changelog` — see
+  [its CLAUDE.md](frontend/apps/docs-site/CLAUDE.md).
 - Document API endpoints and their behavior
 - **Diagrams are Mermaid fences, never ASCII box art.** Both GitHub and Docusaurus render
   ```` ```mermaid ```` natively, so a diagram versions and diffs with the code instead of drifting
@@ -260,7 +258,7 @@ All error responses are RFC 7807 Problem Details and carry the request's correla
 The project has automated CI/CD configured in `.github/workflows/build-and-test.yml`:
 
 - Runs on every push to main and on all pull requests
-- **Backend job** — changelog-sync check (root `CHANGELOG.md` vs `backend/CHANGELOG.md`), Release build, tests
+- **Backend job** — Release build and tests
 - **Frontend job** — `lint`, `format:check`, `build`, `build-storybook`, coverage (one summary per workspace package)
 
 Status checks are **required** to merge to main.

@@ -17,22 +17,6 @@ jobs:
     steps:
       - uses: actions/checkout@v6
 
-      # backend/CHANGELOG.md is a build-managed copy of the root CHANGELOG.md (the Docker build
-      # context is ./backend, so the image build cannot see the root file). Only the root file is
-      # edited by hand; a local backend build refreshes the copy. Fail fast if they have drifted.
-      - name: Verify backend/CHANGELOG.md matches root CHANGELOG.md
-        working-directory: .
-        run: |
-          if ! cmp -s CHANGELOG.md backend/CHANGELOG.md; then
-            echo "::error file=backend/CHANGELOG.md::backend/CHANGELOG.md is out of sync with the root CHANGELOG.md. Edit only the root file, then run 'cp CHANGELOG.md backend/CHANGELOG.md' (or a local backend build) and commit."
-            diff -u CHANGELOG.md backend/CHANGELOG.md || true
-            exit 1
-          fi
-
-      - name: Install web dependencies
-        working-directory: backend/src/Presentation/Cinedex.WebService
-        run: npm ci
-
       - name: Restore dependencies
         run: dotnet restore
 

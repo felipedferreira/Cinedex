@@ -39,10 +39,10 @@ Stories are grouped by tier, which is also how they appear in the sidebar: **Ato
 
 Run from `frontend/`; both delegate here with `-w @cinedex/storybook`.
 
-| Script                    | Description                                        |
-| ------------------------- | -------------------------------------------------- |
-| `npm run storybook`       | Dev server with HMR on port 9001                   |
-| `npm run build`           | Type-check and build the static bundle to `storybook-static/` |
+| Script              | Description                                                   |
+| ------------------- | ------------------------------------------------------------- |
+| `npm run storybook` | Dev server with HMR on port 9001                              |
+| `npm run build`     | Type-check and build the static bundle to `storybook-static/` |
 
 ## 🎨 Styling and theming
 

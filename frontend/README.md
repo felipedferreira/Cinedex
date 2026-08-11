@@ -46,16 +46,16 @@ The app's dev server uses a local HTTPS certificate and proxies `/movies-svc` to
 
 All run from this directory.
 
-| Script                    | Description                                          |
-| ------------------------- | ---------------------------------------------------- |
-| `npm run dev`             | Start the app's Vite dev server with HMR             |
-| `npm run storybook`       | Start Storybook on port 9001                         |
-| `npm run docs-site`       | Start the docs site on port 9004                     |
-| `npm run build`           | Type-check and build every package, including Storybook |
-| `npm run test:run`        | Run every test suite once (CI-friendly)              |
-| `npm run coverage`        | Run tests and write a `coverage/` report per package |
-| `npm run lint`            | Lint every package with ESLint                       |
-| `npm run format:check`    | Check formatting without writing (CI-friendly)       |
+| Script                 | Description                                             |
+| ---------------------- | ------------------------------------------------------- |
+| `npm run dev`          | Start the app's Vite dev server with HMR                |
+| `npm run storybook`    | Start Storybook on port 9001                            |
+| `npm run docs-site`    | Start the docs site on port 9004                        |
+| `npm run build`        | Type-check and build every package, including Storybook |
+| `npm run test:run`     | Run every test suite once (CI-friendly)                 |
+| `npm run coverage`     | Run tests and write a `coverage/` report per package    |
+| `npm run lint`         | Lint every package with ESLint                          |
+| `npm run format:check` | Check formatting without writing (CI-friendly)          |
 
 Scope any of them to one package with `-w cinedex-app`, `-w @cinedex/atoms`, `-w @cinedex/compounds`, `-w @cinedex/solution`, `-w @cinedex/storybook` or `-w @cinedex/docs-site` — for example `npm run test -w @cinedex/atoms` for watch mode. `@cinedex/theme` has no scripts; it ships CSS.
 

@@ -64,18 +64,18 @@ first when `node_modules` is missing. Turn the whole resource off there with
 
 All run from `frontend/`. Build and test scripts fan out across the workspace — add `-w cinedex-app` to scope one to this package.
 
-| Script                    | Description                                      |
-| ------------------------- | ------------------------------------------------ |
-| `npm run dev`             | Start the Vite dev server with HMR               |
-| `npm run build`           | Type-check and build every package to `dist/`    |
-| `npm run preview`         | Preview the production build locally             |
-| `npm run storybook`       | Start Storybook on port 9001                     |
-| `npm run lint`            | Lint every package with ESLint                   |
-| `npm run lint:fix`        | Lint and auto-fix fixable problems               |
-| `npm run format`          | Format all files with Prettier                   |
-| `npm run format:check`    | Check formatting without writing (CI-friendly)   |
-| `npm run test:run`        | Run every test suite once (CI-friendly)          |
-| `npm run coverage`        | Run tests once and generate coverage per package |
+| Script                 | Description                                      |
+| ---------------------- | ------------------------------------------------ |
+| `npm run dev`          | Start the Vite dev server with HMR               |
+| `npm run build`        | Type-check and build every package to `dist/`    |
+| `npm run preview`      | Preview the production build locally             |
+| `npm run storybook`    | Start Storybook on port 9001                     |
+| `npm run lint`         | Lint every package with ESLint                   |
+| `npm run lint:fix`     | Lint and auto-fix fixable problems               |
+| `npm run format`       | Format all files with Prettier                   |
+| `npm run format:check` | Check formatting without writing (CI-friendly)   |
+| `npm run test:run`     | Run every test suite once (CI-friendly)          |
+| `npm run coverage`     | Run tests once and generate coverage per package |
 
 Watch mode and the Vitest UI are per-package: `npm run test -w cinedex-app`, `npm run test:ui -w cinedex-app`.
 

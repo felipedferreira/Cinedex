@@ -74,13 +74,13 @@ Operational notes:
 
 The signing key must match on both the issuing and validating sides.
 
-| Key                      | Default                 | Notes                                               |
-| ------------------------ | ----------------------- | --------------------------------------------------- |
-| `Jwt:Issuer`             | `https://cinedex.local` |                                                     |
-| `Jwt:Audience`           | `cinedex-api`           |                                                     |
-| `Jwt:SigningKey`         | dev placeholder         | Minimum 32 bytes for HS256 — see the warning below. |
+| Key                      | Default                 | Notes                                                       |
+| ------------------------ | ----------------------- | ----------------------------------------------------------- |
+| `Jwt:Issuer`             | `https://cinedex.local` |                                                             |
+| `Jwt:Audience`           | `cinedex-api`           |                                                             |
+| `Jwt:SigningKey`         | dev placeholder         | Minimum 32 bytes for HS256 — see the warning below.         |
 | `Jwt:AccessTokenMinutes` | `15`                    | Configurable; must be between 5 and 15 minutes (inclusive). |
-| `Jwt:RefreshTokenDays`   | `7`                     | Configurable; must be between 1 and 7 days (inclusive). |
+| `Jwt:RefreshTokenDays`   | `7`                     | Configurable; must be between 1 and 7 days (inclusive).     |
 
 | Key                                        | Default       | Notes                                                                                   |
 | ------------------------------------------ | ------------- | --------------------------------------------------------------------------------------- |

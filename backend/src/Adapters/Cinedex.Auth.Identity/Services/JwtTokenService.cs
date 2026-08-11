@@ -138,6 +138,9 @@ internal sealed class JwtTokenService(
     public Task RevokeRefreshTokenAsync(string refreshToken, CancellationToken cancellationToken) =>
         refreshTokens.RevokeByTokenHashAsync(HashToken(refreshToken), DateTime.UtcNow, cancellationToken);
 
+    public async Task<Guid?> GetRefreshTokenUserIdAsync(string refreshToken, CancellationToken cancellationToken) =>
+        (await refreshTokens.FindByTokenHashAsync(HashToken(refreshToken), cancellationToken))?.UserId;
+
     private static string GenerateRefreshToken() =>
         Convert.ToBase64String(RandomNumberGenerator.GetBytes(32));
 

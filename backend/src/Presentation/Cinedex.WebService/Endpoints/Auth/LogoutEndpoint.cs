@@ -1,3 +1,4 @@
+using System.IdentityModel.Tokens.Jwt;
 using Cinedex.Application.Auth.Logout;
 using Cinedex.WebService.Constants;
 using Cinedex.WebService.Http;
@@ -16,10 +17,23 @@ internal sealed class LogoutEndpoint(ILogoutHandler handler) : EndpointWithoutRe
 
     public override async Task HandleAsync(CancellationToken cancellationToken)
     {
+        var subClaim = User.FindFirst(JwtRegisteredClaimNames.Sub);
+        if (subClaim is null)
+        {
+            await Send.NoContentAsync(cancellationToken);
+            return;
+        }
+
+        if (!Guid.TryParseExact(subClaim.Value, "D", out var requestingUserId))
+        {
+            await Send.NoContentAsync(cancellationToken);
+            return;
+        }
+
         var refreshToken = RefreshTokenCookie.Read(HttpContext.Request);
         if (refreshToken is not null)
         {
-            await handler.HandleAsync(new LogoutCommand(refreshToken), cancellationToken);
+            await handler.HandleAsync(new LogoutCommand(requestingUserId, refreshToken), cancellationToken);
         }
 
         // Always clear, even when no cookie was presented: logout is idempotent.

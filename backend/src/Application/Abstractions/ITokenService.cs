@@ -51,4 +51,12 @@ public interface ITokenService
     /// callers cannot use this method to probe whether a token exists.
     /// </remarks>
     Task RevokeRefreshTokenAsync(string refreshToken, CancellationToken cancellationToken);
+
+    /// <summary>
+    /// Finds the user who was issued a refresh token.
+    /// </summary>
+    /// <param name="refreshToken">The raw refresh token to look up.</param>
+    /// <param name="cancellationToken">A token to observe while waiting for the task to complete.</param>
+    /// <returns>The token's owner, or <see langword="null"/> when the token is unknown.</returns>
+    Task<Guid?> GetRefreshTokenUserIdAsync(string refreshToken, CancellationToken cancellationToken);
 }

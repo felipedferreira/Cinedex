@@ -664,6 +664,28 @@ public sealed class AuthEndpointTests(WebApplicationFixture fixture)
     }
 
     [Fact]
+    public async Task Logout_WithAnotherUsersRefreshToken_DoesNotRevokeIt()
+    {
+        var tokenOwnerEmail = NewEmail();
+        var requestingUserEmail = NewEmail();
+        await RegisterAsync(tokenOwnerEmail, "tokenowner", Password);
+        await RegisterAsync(requestingUserEmail, "requestinguser", Password);
+        var (_, tokenOwnerRefreshToken) = await LoginAsync(tokenOwnerEmail, Password);
+        var (requestingUserLogin, _) = await LoginAsync(requestingUserEmail, Password);
+
+        var logout = await PostAsync(
+            TestRouteConstants.Auth.LogoutEndpoint,
+            tokenOwnerRefreshToken,
+            requestingUserLogin.AccessToken);
+
+        Assert.Equal(HttpStatusCode.NoContent, logout.StatusCode);
+        Assert.Equal(string.Empty, ReadRefreshCookieValue(logout));
+
+        var refresh = await PostAsync(TestRouteConstants.Auth.RefreshEndpoint, tokenOwnerRefreshToken);
+        Assert.Equal(HttpStatusCode.OK, refresh.StatusCode);
+    }
+
+    [Fact]
     public async Task Logout_WithoutCookie_Returns204()
     {
         var email = NewEmail();

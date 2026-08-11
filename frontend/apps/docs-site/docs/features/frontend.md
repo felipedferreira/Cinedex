@@ -113,5 +113,5 @@ npm run docs-site    # this site  → http://localhost:9004
 ```
 
 ESLint (type-aware, `typescript-eslint` strict + stylistic) and Prettier are configured once at the
-workspace root and cover every package; CI runs `lint`, `format:check`, `build`, `build-storybook`,
-and `coverage` for the frontend on every change.
+workspace root and cover every package; CI runs `lint`, `format:check`, `build`, and `coverage` for
+the frontend on every change. The workspace build includes Storybook.

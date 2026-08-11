@@ -53,7 +53,8 @@ Auth endpoints are unchanged: `register`, `login`, `refresh`, `password/forgot`,
 
 - `WebApplicationFixture` registers a dedicated test user and logs in once during
   `InitializeAsync`, then exposes an `AuthenticatedClient`: an `HttpClient` whose default
-  `Authorization` header carries the bearer token. The 15-minute access-token lifetime covers a
+  `Authorization` header carries the bearer token. The 15-minute default access-token lifetime
+  (configurable from 5 to 15 minutes through `Jwt:AccessTokenMinutes`) covers a
   test run.
 - Genre and Title test classes (`GenreEndpointTests`, `CreateTitleEndpointTests`,
   `TitleGenreEndpointTests`) switch from `Client` to `AuthenticatedClient`.

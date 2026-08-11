@@ -46,17 +46,16 @@ The app's dev server uses a local HTTPS certificate and proxies `/movies-svc` to
 
 All run from this directory.
 
-| Script                    | Description                                          |
-| ------------------------- | ---------------------------------------------------- |
-| `npm run dev`             | Start the app's Vite dev server with HMR             |
-| `npm run storybook`       | Start Storybook on port 9001                         |
-| `npm run docs-site`       | Start the docs site on port 9004                     |
-| `npm run build`           | Type-check and build every package                   |
-| `npm run build-storybook` | Build the static Storybook (also run in CI)          |
-| `npm run test:run`        | Run every test suite once (CI-friendly)              |
-| `npm run coverage`        | Run tests and write a `coverage/` report per package |
-| `npm run lint`            | Lint every package with ESLint                       |
-| `npm run format:check`    | Check formatting without writing (CI-friendly)       |
+| Script                 | Description                                             |
+| ---------------------- | ------------------------------------------------------- |
+| `npm run dev`          | Start the app's Vite dev server with HMR                |
+| `npm run storybook`    | Start Storybook on port 9001                            |
+| `npm run docs-site`    | Start the docs site on port 9004                        |
+| `npm run build`        | Type-check and build every package, including Storybook |
+| `npm run test:run`     | Run every test suite once (CI-friendly)                 |
+| `npm run coverage`     | Run tests and write a `coverage/` report per package    |
+| `npm run lint`         | Lint every package with ESLint                          |
+| `npm run format:check` | Check formatting without writing (CI-friendly)          |
 
 Scope any of them to one package with `-w cinedex-app`, `-w @cinedex/atoms`, `-w @cinedex/compounds`, `-w @cinedex/solution`, `-w @cinedex/storybook` or `-w @cinedex/docs-site` — for example `npm run test -w @cinedex/atoms` for watch mode. `@cinedex/theme` has no scripts; it ships CSS.
 
@@ -93,7 +92,7 @@ That buys three things and costs one:
 - Storybook, Vitest and the SPA all compile the exact same source.
 - The cost: `tsc -b` in a consumer also typechecks library source under that consumer's compiler flags, so the tsconfigs should stay in step — four sets now, not two.
 
-Each library exports nothing but its barrel, and the Storybook app is a consumer like any other: its stories `import { Button } from '@cinedex/atoms'` rather than reaching into `packages/atoms/src`. A component missing from a barrel fails `build-storybook`.
+Each library exports nothing but its barrel, and the Storybook app is a consumer like any other: its stories `import { Button } from '@cinedex/atoms'` rather than reaching into `packages/atoms/src`. A component missing from a barrel fails the workspace build.
 
 ## 🎨 Styling
 
@@ -145,4 +144,4 @@ docker build -f frontend/apps/docs-site/Dockerfile -t cinedex-docs-site ..
 Two things these Dockerfiles depend on, both easy to break:
 
 - **Every workspace manifest is `COPY`d before `npm ci`**, even though each install is scoped with `--workspace`. This is for **layer caching**, not build correctness — a missing `package.json` does _not_ fail the build (the later source copy fills the directory in), but it means the `npm ci` layer is not invalidated when that package's dependencies change, so a new dependency silently never lands in the image. Adding a package means adding a `COPY` line to all three files.
-- **`.dockerignore` must not ignore `**/.storybook`.** The Storybook image runs `build-storybook` inside the container and needs that config in the context.
+- **`.dockerignore` must not ignore `**/.storybook`.** The Storybook image runs its `build` script inside the container and needs that config in the context.

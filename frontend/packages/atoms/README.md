@@ -53,7 +53,7 @@ One folder per component; the cva variant map sits beside the component rather t
 
 ## Conventions
 
-- **One folder per component**, holding the component, its cva variant map and its test. Export it from `src/index.ts` — that barrel is the whole public surface, and a component missing from it fails `build-storybook`.
+- **One folder per component**, holding the component, its cva variant map and its test. Export it from `src/index.ts` — that barrel is the whole public surface, and a component missing from it fails the workspace build.
 - **Tailwind only**, resolved through [`@cinedex/theme`](../theme/README.md)'s tokens. No CSS Modules, no hard-coded hex, and no raw pixel value where a named type step exists — `text-label`, not `text-[10px]`.
 - **Variants are [cva](https://cva.style/), in their own file.** `react-refresh/only-export-components` fires on a module exporting both a component and a non-component, so `buttonVariants` lives in `Button/buttonVariants.ts`. Both are exported — `buttonVariants({ variant: 'outline' })` is how a caller styles something that isn't a `<button>`.
 - **Compose classes with `cn()`, never string concatenation.** That is what makes a caller's `className` reliably beat the component's own: `cn('rounded-md', 'rounded-lg')` is `rounded-lg`, where `+ ' '` leaves both and lets stylesheet order decide.

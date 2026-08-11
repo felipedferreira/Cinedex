@@ -1,6 +1,6 @@
 # Cinedex
 
-[![Build and Test](https://github.com/felipedferreira/Cinedex/actions/workflows/build-and-test.yml/badge.svg)](https://github.com/felipedferreira/Cinedex/actions/workflows/build-and-test.yml)
+[![Continuous Integration](https://github.com/felipedferreira/Cinedex/actions/workflows/continuous-integration.yml/badge.svg)](https://github.com/felipedferreira/Cinedex/actions/workflows/continuous-integration.yml)
 
 A full-stack portfolio application for cataloging movie titles and their genres — inspired by IMDB — with JWT-based authentication in front of a members-only catalog.
 

@@ -62,8 +62,8 @@ sequenceDiagram
 
     B->>API: credentials
     API->>DB: insert refresh token, FamilyId = new Guid v7
-    API-->>B: access token in the response body<br/>JWT, HS256, 15 min (Jwt:AccessTokenMinutes)
-    API-->>B: Set-Cookie only — refresh token<br/>32 random bytes, base64, 7 days (Jwt:RefreshTokenDays)
+    API-->>B: access token in the response body<br/>JWT, HS256, 15 min default (Jwt:AccessTokenMinutes, 5-15 min)
+    API-->>B: Set-Cookie only — refresh token<br/>32 random bytes, base64, 7-day default (Jwt:RefreshTokenDays, 1-7 days)
 
     Note over B,DB: POST /auth/refresh — no request body, the token rides in the cookie
 
@@ -89,7 +89,8 @@ sequenceDiagram
 
 The refresh token is returned to the browser only as a cookie, never in a response body, so a
 cross-site scripting defect cannot read it. The access token remains in the body; it is short-lived
-(15 minutes) and the client needs to attach it as a bearer header.
+(15 minutes by default; configurable from 5 to 15 minutes) and the client needs to attach it as a
+bearer header.
 
 ```
 Set-Cookie: __Secure-cinedex_refresh_token=<raw token>;
@@ -140,7 +141,8 @@ Issued by `JwtTokenService.CreateAccessToken`, signed HS256 with `Jwt:SigningKey
 `ClaimTypes.Role` (repeatable — one entry per assigned role)
 
 Roles are re-read from Identity on both issue and refresh, so a role change propagates on the next
-refresh — the lag is bounded by the access-token lifetime (15 min).
+refresh — the lag is bounded by the access-token lifetime (15 minutes by default; configurable
+from 5 to 15 minutes).
 
 Validation (`AuthenticationExtensions.AddJwtAuthentication`) checks issuer, audience, signing key,
 and lifetime, with a 30-second clock skew. The JwtBearer default `RoleClaimType` is `ClaimTypes.Role`,
@@ -163,8 +165,8 @@ rotation chain that follows shares a single indexed value. Two logins by the sam
 families, so they can be reasoned about — and revoked — independently.
 
 The identifier is already derivable by walking `ReplacedByTokenHash` hash by hash. The point of
-storing it is that the walk collapses into one indexed lookup: a 15-minute access token over a 7-day
-refresh window means a continuously-active session can accumulate several hundred rotations, so
+storing it is that the walk collapses into one indexed lookup: a 15-minute default access token
+over a 7-day default refresh window means a continuously-active session can accumulate several hundred rotations, so
 chain-walking would cost that many sequential round-trips on the refresh path. It is also
 forward-only, which leaves a chain's live tail unreachable from an older token.
 
@@ -275,7 +277,8 @@ The two buffers exist for opposite reasons, and are not interchangeable:
   trigger that lets it recognise a stolen, already-rotated token being replayed. Delete it too soon
   and that evidence is gone before it can ever be used. The window has to outlast the period an
   attacker could plausibly still be replaying the token it replaced, which is bounded by the token's
-  own lifetime (`Jwt:RefreshTokenDays`, 7 days by default) — hence double that as margin. Shrinking
+  own lifetime (`Jwt:RefreshTokenDays`, 7 days by default and configurable from 1 to 7 days) — hence
+  double that as margin. Shrinking
   this window narrows how long reuse stays detectable; it is not a space-saving knob the way
   `ExpiredRetention` is.
 
@@ -349,8 +352,8 @@ presentation layer (token validation) — the signing key must match on both sid
 | `Jwt:Issuer` | `https://cinedex.local` | |
 | `Jwt:Audience` | `cinedex-api` | |
 | `Jwt:SigningKey` | dev placeholder | **See below.** Minimum 32 bytes for HS256. |
-| `Jwt:AccessTokenMinutes` | `15` | |
-| `Jwt:RefreshTokenDays` | `7` | |
+| `Jwt:AccessTokenMinutes` | `15` | Configurable; must be between 5 and 15 minutes (inclusive). |
+| `Jwt:RefreshTokenDays` | `7` | Configurable; must be between 1 and 7 days (inclusive). |
 
 The `RefreshTokenCleanup` section is bound to `RefreshTokenCleanupOptions` and read only by
 `Cinedex.SchedulerWorker`; the web service neither binds nor needs it. All values are validated at

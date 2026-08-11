@@ -19,8 +19,8 @@ sequenceDiagram
 
     B->>API: credentials
     API->>DB: insert refresh token, FamilyId = new Guid v7
-    API-->>B: access token in the response body<br/>JWT, HS256, 15 min (Jwt:AccessTokenMinutes)
-    API-->>B: Set-Cookie only — refresh token<br/>32 random bytes, base64, 7 days (Jwt:RefreshTokenDays)
+    API-->>B: access token in the response body<br/>JWT, HS256, 15 min default (Jwt:AccessTokenMinutes, 5-15 min)
+    API-->>B: Set-Cookie only — refresh token<br/>32 random bytes, base64, 7-day default (Jwt:RefreshTokenDays, 1-7 days)
 
     Note over B,DB: POST /auth/refresh — no request body, the token rides in the cookie
 
@@ -46,7 +46,8 @@ sequenceDiagram
 
 The refresh token is returned to the browser only as a cookie, never in a response body, so a
 cross-site scripting defect can't read it. The access token stays in the body; it's short-lived
-(15 minutes) and the client attaches it as a bearer header.
+(15 minutes by default; configurable from 5 to 15 minutes) and the client attaches it as a bearer
+header.
 
 ```http
 Set-Cookie: __Secure-cinedex_refresh_token=<raw token>;
@@ -90,7 +91,8 @@ Issued by `JwtTokenService.CreateAccessToken`, signed HS256 with `Jwt:SigningKey
 `ClaimTypes.Role` (repeatable — one entry per assigned role)
 
 Roles are re-read from Identity on both issue and refresh, so a role change propagates on the next
-refresh — the lag is bounded by the access-token lifetime (15 minutes). The JwtBearer default
+refresh — the lag is bounded by the access-token lifetime (15 minutes by default; configurable
+from 5 to 15 minutes). The JwtBearer default
 `RoleClaimType` is `ClaimTypes.Role`, so `[Authorize(Roles = ...)]` reads these claims without
 further configuration.
 
@@ -111,7 +113,7 @@ and the whole rotation chain that follows shares a single indexed value. Two log
 account are two families, so they can be reasoned about — and revoked — independently.
 
 The identifier is derivable by walking `ReplacedByTokenHash` hash by hash, but storing it collapses
-that walk into one indexed lookup — a 15-minute access token over a 7-day refresh window means a
+that walk into one indexed lookup — a 15-minute default access token over a 7-day default refresh window means a
 continuously-active session can accumulate several hundred rotations, so chain-walking would cost
 that many sequential round-trips on the refresh path.
 

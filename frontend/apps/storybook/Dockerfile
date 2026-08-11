@@ -27,7 +27,7 @@ COPY packages/solution/package.json packages/solution/
 COPY packages/theme/package.json packages/theme/
 RUN npm ci --workspace @cinedex/storybook --include-workspace-root
 COPY . .
-RUN npm run build-storybook -w @cinedex/storybook
+RUN npm run build -w @cinedex/storybook
 
 FROM nginx:alpine AS final
 # Plain HTTP: unlike the SPA image, this container is not the stack's reverse proxy and Storybook

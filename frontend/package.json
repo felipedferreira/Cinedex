@@ -11,7 +11,6 @@
     "dev": "npm run dev -w cinedex-app",
     "preview": "npm run preview -w cinedex-app",
     "storybook": "npm run storybook -w @cinedex/storybook",
-    "build-storybook": "npm run build-storybook -w @cinedex/storybook",
     "docs-site": "npm run start -w @cinedex/docs-site",
     "build": "npm run build --workspaces --if-present",
     "test:run": "npm run test:run --workspaces --if-present",

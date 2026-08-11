@@ -13,7 +13,7 @@ dotnet run --project aspire/Cinedex.AppHost                # whole stack via Asp
 .\coverage.ps1 -Open  # HTML coverage report (needs dotnet-reportgenerator-globaltool installed once)
 ```
 
-First build on a fresh clone: run `npm ci` in `src/Presentation/Cinedex.WebService/` first. The csproj's `BuildFrontend` target runs `npx vite build` before every build to populate `wwwroot/` (the service's landing/changelog pages). Skip it with `-p:SkipFrontendBuild=true`. The same target refreshes `backend/CHANGELOG.md` from the root `CHANGELOG.md` — never edit the backend copy by hand; commit the diff the build produces.
+The web service is API-only; it does not build or serve static site assets.
 
 ## Architecture
 
@@ -77,7 +77,7 @@ Use the same shape with `migrations add <Name>`. The connection string resolves 
 
 ## Auth
 
-JWT bearer (15-minute HS256 access token) + rotating 7-day refresh token stored hashed and delivered as a `Secure` cookie. **All catalog endpoints require authentication**; only auth and health endpoints are anonymous. Roles (`User`/`Moderator`/`Administrator`, constants in `RoleNames`) are seeded and issued as token claims — registration assigns `User` — but no endpoint restricts by role yet. `Jwt:SigningKey` in `appsettings.json` is a dev-only placeholder — override per environment (`Jwt__SigningKey`/User Secrets). Full model and known gaps: `docs/auth-security-model.md`.
+JWT bearer (15-minute default HS256 access token, configurable from 5 to 15 minutes through `Jwt:AccessTokenMinutes`) + rotating 7-day default refresh token (configurable from 1 to 7 days through `Jwt:RefreshTokenDays`) stored hashed and delivered as a `Secure` cookie. **All catalog endpoints require authentication**; only auth and health endpoints are anonymous. Roles (`User`/`Moderator`/`Administrator`, constants in `RoleNames`) are seeded and issued as token claims — registration assigns `User` — but no endpoint restricts by role yet. `Jwt:SigningKey` in `appsettings.json` is a dev-only placeholder — override per environment (`Jwt__SigningKey`/User Secrets). Full model and known gaps: `docs/auth-security-model.md`.
 
 ## Testing
 

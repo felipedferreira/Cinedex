@@ -49,7 +49,7 @@ category, no matter how long it's sat unused.
   already-rotated token being replayed (see
   [Token lifecycle → Reuse response](./token-lifecycle.md#reuse-response)). Delete it too soon and
   that evidence is gone before it can be used. The window has to outlast the period an attacker
-  could plausibly still be replaying the token it replaced — hence roughly double the 7-day refresh
+  could plausibly still be replaying the token it replaced — hence roughly double the 7-day default refresh
   token lifetime, as margin.
 
 Operational notes:
@@ -79,8 +79,8 @@ The signing key must match on both the issuing and validating sides.
 | `Jwt:Issuer`             | `https://cinedex.local` |                                                     |
 | `Jwt:Audience`           | `cinedex-api`           |                                                     |
 | `Jwt:SigningKey`         | dev placeholder         | Minimum 32 bytes for HS256 — see the warning below. |
-| `Jwt:AccessTokenMinutes` | `15`                    |                                                     |
-| `Jwt:RefreshTokenDays`   | `7`                     |                                                     |
+| `Jwt:AccessTokenMinutes` | `15`                    | Configurable; must be between 5 and 15 minutes (inclusive). |
+| `Jwt:RefreshTokenDays`   | `7`                     | Configurable; must be between 1 and 7 days (inclusive). |
 
 | Key                                        | Default       | Notes                                                                                   |
 | ------------------------------------------ | ------------- | --------------------------------------------------------------------------------------- |

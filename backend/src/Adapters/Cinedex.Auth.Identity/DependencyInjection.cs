@@ -112,23 +112,14 @@ public static class DependencyInjection
             options.TokenLifespan = PasswordResetTokenPolicy.Lifespan);
 
         services.AddOptions<JwtOptions>()
-            .Configure<IConfiguration>((jwtOptions, configuration) =>
-            {
-                var section = configuration.GetSection(JwtOptions.SectionName);
-                jwtOptions.Issuer = section["Issuer"] ?? string.Empty;
-                jwtOptions.Audience = section["Audience"] ?? string.Empty;
-                jwtOptions.SigningKey = section["SigningKey"] ?? string.Empty;
-
-                if (int.TryParse(section["AccessTokenMinutes"], out var accessTokenMinutes))
-                {
-                    jwtOptions.AccessTokenMinutes = accessTokenMinutes;
-                }
-
-                if (int.TryParse(section["RefreshTokenDays"], out var refreshTokenDays))
-                {
-                    jwtOptions.RefreshTokenDays = refreshTokenDays;
-                }
-            });
+            .BindConfiguration(JwtOptions.SectionName)
+            .Validate(
+                options => options.AccessTokenMinutes is >= 5 and <= 15,
+                $"{JwtOptions.SectionName}:AccessTokenMinutes must be between 5 and 15 minutes.")
+            .Validate(
+                options => options.RefreshTokenDays is >= 1 and <= 7,
+                $"{JwtOptions.SectionName}:RefreshTokenDays must be between 1 and 7 days.")
+            .ValidateOnStart();
 
         services.AddScoped<IIdentityService, IdentityService>();
         services.AddScoped<ITokenService, JwtTokenService>();

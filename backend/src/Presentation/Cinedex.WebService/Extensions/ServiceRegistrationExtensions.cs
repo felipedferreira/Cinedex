@@ -30,9 +30,8 @@ public static class ServiceRegistrationExtensions
             .AddEmailAdapter();
 
         // Bind the SPA base URL used to build user-facing links (e.g. the password-reset link).
-        var frontendOptions = new FrontendOptions();
-        builder.Configuration.GetSection(FrontendOptions.SectionName).Bind(frontendOptions);
-        builder.Services.AddSingleton(frontendOptions);
+        builder.Services.AddOptions<FrontendOptions>()
+            .BindConfiguration(FrontendOptions.SectionName);
 
         // Configure JWT bearer authentication and authorization.
         builder.AddJwtAuthentication();

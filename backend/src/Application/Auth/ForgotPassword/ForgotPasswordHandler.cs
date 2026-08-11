@@ -3,13 +3,14 @@ using Cinedex.Application.Configuration;
 using Cinedex.Application.Email;
 using FluentValidation;
 using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.Options;
 
 namespace Cinedex.Application.Auth.ForgotPassword;
 
 internal sealed class ForgotPasswordHandler(
     IIdentityService identityService,
     IEmailDispatcher emailDispatcher,
-    FrontendOptions frontendOptions,
+    IOptions<FrontendOptions> frontendOptions,
     IValidator<ForgotPasswordCommand> validator,
     ILogger<ForgotPasswordHandler> logger) : IForgotPasswordHandler
 {
@@ -39,7 +40,7 @@ internal sealed class ForgotPasswordHandler(
     private EmailMessage BuildResetEmail(string email, string resetToken)
     {
         var resetLink =
-            $"{frontendOptions.BaseUrl}/reset-password" +
+            $"{frontendOptions.Value.BaseUrl}/reset-password" +
             $"?email={Uri.EscapeDataString(email)}" +
             $"&token={Uri.EscapeDataString(resetToken)}";
 

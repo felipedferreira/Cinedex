@@ -1,7 +1,7 @@
-using System.Globalization;
 using System.Text;
 using Cinedex.Auth.Identity.Options;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.Extensions.Options;
 using Microsoft.IdentityModel.Tokens;
 
 namespace Cinedex.WebService.Extensions;
@@ -19,27 +19,29 @@ public static class AuthenticationExtensions
     /// <returns>The same <paramref name="builder"/> instance so calls can be chained.</returns>
     public static WebApplicationBuilder AddJwtAuthentication(this WebApplicationBuilder builder)
     {
-        var jwtSection = builder.Configuration.GetSection(JwtOptions.SectionName);
-
-        var signingKey = jwtSection["SigningKey"]
-            ?? throw new InvalidOperationException(
-                string.Format(
-                    CultureInfo.InvariantCulture,
-                    "Configuration '{0}:SigningKey' is not configured.",
-                    JwtOptions.SectionName));
-
         builder.Services
             .AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
-            .AddJwtBearer(options =>
+            .AddJwtBearer();
+
+        builder.Services
+            .AddOptions<JwtBearerOptions>(JwtBearerDefaults.AuthenticationScheme)
+            .Configure<IOptions<JwtOptions>>((bearerOptions, jwtOptions) =>
             {
-                options.TokenValidationParameters = new TokenValidationParameters
+                var jwt = jwtOptions.Value;
+                if (string.IsNullOrWhiteSpace(jwt.SigningKey))
+                {
+                    throw new InvalidOperationException(
+                        $"Configuration '{JwtOptions.SectionName}:SigningKey' is not configured.");
+                }
+
+                bearerOptions.TokenValidationParameters = new TokenValidationParameters
                 {
                     ValidateIssuer = true,
-                    ValidIssuer = jwtSection["Issuer"],
+                    ValidIssuer = jwt.Issuer,
                     ValidateAudience = true,
-                    ValidAudience = jwtSection["Audience"],
+                    ValidAudience = jwt.Audience,
                     ValidateIssuerSigningKey = true,
-                    IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(signingKey)),
+                    IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(jwt.SigningKey)),
                     ValidateLifetime = true,
                     ClockSkew = TimeSpan.FromSeconds(30),
                 };

@@ -34,7 +34,9 @@ refresh token; protected endpoints are guarded by JWT bearer middleware.
 
 - **Endpoints** under `/movies-svc/auth` — `register`, `login`, `refresh`, `logout`,
   `password/forgot`, `password/reset`.
-- **Tokens** — 15-minute HS256 access token in the response body; 7-day refresh token stored
+- **Tokens** — 15-minute default HS256 access token in the response body (configurable from 5 to
+  15 minutes through `Jwt:AccessTokenMinutes`); 7-day default refresh token (configurable from 1 to
+  7 days through `Jwt:RefreshTokenDays`) stored
   hashed, rotated on use, and delivered only as an `HttpOnly`/`Secure` cookie (never in the body).
 - **Members-only catalog** — every Genre and Title endpoint (reads and writes) requires a bearer
   token; anonymous catalog requests get `401`.

@@ -119,7 +119,7 @@ dotnet build
 npm run lint
 npm run format:check
 npm run test:run
-npm run build-storybook
+npm run build
 ```
 
 Your IDE should automatically enforce EditorConfig rules (backend) and Prettier/ESLint rules (frontend). Most formatting issues can be fixed automatically with `npm run lint:fix` and `npm run format`.
@@ -259,7 +259,7 @@ The project has automated CI/CD configured in `.github/workflows/build-and-test.
 
 - Runs on every push to main and on all pull requests
 - **Backend job** — Release build and tests
-- **Frontend job** — `lint`, `format:check`, `build`, `build-storybook`, coverage (one summary per workspace package)
+- **Frontend job** — `lint`, `format:check`, `build`, coverage (one summary per workspace package)
 
 Status checks are **required** to merge to main.
 

@@ -18,7 +18,7 @@ npm run format:check # prettier (`npm run format` to write)
 
 Scope to this package with `-w cinedex-app` (e.g. `npm run test -w cinedex-app` for watch mode). Lint and format are workspace-wide only.
 
-CI requires lint, format:check, build, build-storybook, and coverage to all pass — run `npm run format` before pushing to avoid format:check failures.
+CI requires lint, format:check, build, and coverage to all pass; the workspace build includes Storybook. Run `npm run format` before pushing to avoid format:check failures.
 
 ## Notes
 

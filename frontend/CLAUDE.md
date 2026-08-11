@@ -30,8 +30,7 @@ npm ci
 npm run dev              # app on https://localhost:9000 (basic-ssl, strictPort)
 npm run storybook        # Storybook on http://localhost:9001
 npm run docs-site        # Docs site on http://localhost:9004
-npm run build            # every package (--workspaces --if-present)
-npm run build-storybook  # static Storybook, also run in CI
+npm run build            # every package, including static Storybook (--workspaces --if-present)
 npm run test:run         # every package
 npm run coverage         # what CI runs — one coverage/ dir per package
 npm run lint             # eslint . — one pass across all packages
@@ -60,7 +59,7 @@ The sharpest illustration is `AuthCard`: it takes `brand` as a prop and never dr
 
 - **Shared config is hoisted here**, not per-package: `eslint.config.js`, `.prettierrc.json`, `.prettierignore`, `.gitignore`, `.dockerignore`. ESLint uses `projectService: true`, which resolves the nearest `tsconfig` per file, so the single root config covers every package.
 - **Consumers compile library source directly.** Vite compiles the TSX and HMR crosses package boundaries; `tsc -b` in a consumer therefore also typechecks library source under that consumer's compiler flags. Four `tsconfig` sets now have to stay in step, not two.
-- **Each library exports nothing but its barrel.** `packages/<tier>/src/index.ts` is the whole public surface — the Storybook app imports through it, so a component missing from a barrel fails `build-storybook` rather than going unnoticed.
+- **Each library exports nothing but its barrel.** `packages/<tier>/src/index.ts` is the whole public surface — the Storybook app imports through it, so a component missing from a barrel fails the workspace build rather than going unnoticed.
 - **Docker builds from this directory**, not from an app folder — the lockfile is here. Both images set `context: ./frontend` with an explicit `dockerfile:`. Every workspace manifest is `COPY`d before `npm ci`; that list is for **layer caching**, not build correctness (a missing one does not fail the build — it leaves a stale install layer). See the comment in either Dockerfile.
 - **Never add `**/.storybook` to `.dockerignore`** — `apps/storybook` builds inside its image and needs that config.
 - **Install scripts are default-deny.** `.npmrc` sets `strict-allow-scripts=true`, so any dependency carrying a `preinstall`/`install`/`postinstall` script that is not listed in the root `package.json`'s `allowScripts` map makes `npm ci` **fail** rather than warn. npm's default is warn-and-run, which is the exact vector CVE-2025-54313 used against `eslint-config-prettier`. `esbuild` and `fsevents` are set to `false` — neither script is needed, since esbuild's binary ships via `optionalDependencies` and `fsevents` is macOS-only. `core-js` and `@swc/core` (pulled in by `@cinedex/docs-site`'s `@docusaurus/faster`) are also `false`: `core-js`'s postinstall is only a local donation banner, and `@swc/core`'s only downloads a WASM fallback when its native binary fails to load — Windows/Linux/macOS x64 all get a working prebuilt native binary via `optionalDependencies`, so the fallback never triggers. A new script surfacing means a dependency changed shape: review it, then `npm approve-scripts <pkg>` (pinned to the version by default) or `npm deny-scripts <pkg>`. Never reach for `--dangerously-allow-all-scripts`. (`radix-ui`, `class-variance-authority`, `clsx` and `tailwind-merge` all install clean.)

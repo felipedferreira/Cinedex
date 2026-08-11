@@ -70,7 +70,6 @@ All run from `frontend/`. Build and test scripts fan out across the workspace â€
 | `npm run build`           | Type-check and build every package to `dist/`    |
 | `npm run preview`         | Preview the production build locally             |
 | `npm run storybook`       | Start Storybook on port 9001                     |
-| `npm run build-storybook` | Build the static Storybook (also run in CI)      |
 | `npm run lint`            | Lint every package with ESLint                   |
 | `npm run lint:fix`        | Lint and auto-fix fixable problems               |
 | `npm run format`          | Format all files with Prettier                   |
@@ -94,7 +93,7 @@ npm run format        # rewrite files to match Prettier
 npm run format:check  # verify formatting (used in CI)
 ```
 
-CI runs `lint`, `format:check`, `build`, `build-storybook`, and `coverage` for the frontend, so all five must pass before a change can merge.
+CI runs `lint`, `format:check`, `build`, and `coverage` for the frontend, so all four must pass before a change can merge. The workspace build includes Storybook.
 
 ## ðŸ§ª Testing
 

@@ -4,9 +4,8 @@
   "version": "0.9.0",
   "type": "module",
   "scripts": {
-    "build": "tsc -b",
-    "storybook": "storybook dev -p 9001",
-    "build-storybook": "storybook build"
+    "build": "tsc -b && storybook build",
+    "storybook": "storybook dev -p 9001"
   },
   "dependencies": {
     "@cinedex/atoms": "*",

@@ -13,7 +13,7 @@ dotnet run --project aspire/Cinedex.AppHost                # whole stack via Asp
 .\coverage.ps1 -Open  # HTML coverage report (needs dotnet-reportgenerator-globaltool installed once)
 ```
 
-First build on a fresh clone: run `npm ci` in `src/Presentation/Cinedex.WebService/` first. The csproj's `BuildFrontend` target runs `npx vite build` before every build to populate `wwwroot/` (the service's landing/changelog pages). Skip it with `-p:SkipFrontendBuild=true`. The same target refreshes `backend/CHANGELOG.md` from the root `CHANGELOG.md` — never edit the backend copy by hand; commit the diff the build produces.
+The web service is API-only; it does not build or serve static site assets.
 
 ## Architecture
 

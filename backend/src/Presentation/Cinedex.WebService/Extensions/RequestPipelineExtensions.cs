@@ -2,7 +2,6 @@ using Cinedex.WebService.Constants;
 using FastEndpoints;
 using Microsoft.AspNetCore.Diagnostics.HealthChecks;
 using Microsoft.AspNetCore.HttpOverrides;
-using Microsoft.AspNetCore.StaticFiles;
 using Microsoft.Extensions.Diagnostics.HealthChecks;
 using Scalar.AspNetCore;
 
@@ -15,7 +14,7 @@ public static class RequestPipelineExtensions
 {
     /// <summary>
     /// Configures the HTTP request pipeline: base path, health checks, exception handling,
-    /// correlation IDs, API documentation, static files and FastEndpoints.
+    /// correlation IDs, API documentation and FastEndpoints.
     /// </summary>
     /// <param name="app">The web application whose request pipeline is configured.</param>
     /// <returns>The same <paramref name="app"/> instance so calls can be chained.</returns>
@@ -56,18 +55,6 @@ public static class RequestPipelineExtensions
         app.MapApiDocumentation();
 
         app.UseHttpsRedirection();
-        app.UseDefaultFiles();
-
-        // UseStaticFiles serves a file only when its extension is in the content-type provider;
-        // unknown extensions return 404 by design, to avoid leaking arbitrary files under wwwroot.
-        // The default table covers common web assets but omits `.md`, so we extend it here so
-        // markdown files in wwwroot (e.g. CHANGELOG.md) are served with the correct Content-Type.
-        var contentTypeProvider = new FileExtensionContentTypeProvider();
-        contentTypeProvider.Mappings[".md"] = "text/markdown";
-        app.UseStaticFiles(new StaticFileOptions
-        {
-            ContentTypeProvider = contentTypeProvider,
-        });
 
         // Authentication and authorization must run before endpoint execution.
         app.UseAuthentication();
@@ -149,7 +136,6 @@ public static class RequestPipelineExtensions
             options.EnabledClients = [ScalarClient.HttpClient, ScalarClient.Axios, ScalarClient.Fetch];
             options.EnabledTargets = [ScalarTarget.CSharp, ScalarTarget.JavaScript];
             options.Theme = ScalarTheme.Solarized;
-            options.Favicon = $"{ApiConstants.BasePath}/favicon.ico";
             options.Title = "API Documentation - {documentName}";
         });
 

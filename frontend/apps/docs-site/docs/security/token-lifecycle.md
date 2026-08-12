@@ -35,12 +35,25 @@ sequenceDiagram
         API-->>B: new token pair, fresh Set-Cookie<br/>rotation stays in the same family
     end
 
-    Note over B,DB: POST /auth/logout — idempotent
+    Note over B,DB: POST /auth/logout — idempotent, and the only auth route needing a bearer
 
-    B->>API: cookie only
-    API->>DB: RevokedAtUtc = now
-    API-->>B: 204, and the cookie is cleared<br/>an unknown, already-revoked or absent<br/>cookie is a silent no-op that still clears
+    B->>API: cookie plus bearer access token
+    API->>DB: RevokedAtUtc = now for every active token<br/>in the cookie's family, but only if that<br/>token was issued to the bearer's user
+    API-->>B: 204, and the cookie is cleared<br/>an absent, unknown, already-revoked<br/>or someone else's cookie is a silent<br/>no-op that still clears
 ```
+
+Logout ends the **family**, not the row the cookie names. A session is a family — one login opens
+one — so revoking only the presented hash would leave a rotation that landed moments earlier holding
+a live successor, and the session would outlive the logout that ended it. Ending the family is also
+bounded in the other direction: the user's other logins are other families and are untouched.
+
+The ownership condition is part of the same statement, not a check made before it. It matters less
+as a barrier than it looks — anyone holding another user's refresh token can already exchange it at
+`/auth/refresh`, which is strictly worse than ending it — and more as the fix for a browser holding
+one user's cookie alongside another's bearer token, where the wrong session used to end. Because
+the response is `204` either way, the outcome is not observable from outside. Inside, a token that
+exists and belongs to somebody else is logged as a warning under `RefreshTokenOwnershipMismatch`; an
+unknown or already-revoked one is ordinary and logged as nothing.
 
 ## The refresh token cookie
 

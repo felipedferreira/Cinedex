@@ -85,14 +85,34 @@ internal sealed class RefreshTokenRepository(AuthDbContext dbContext) : IRefresh
     // One conditional statement rather than read-then-mutate-then-save. Idempotent either way, but
     // the RevokedAtUtc IS NULL filter also means an earlier revocation's timestamp survives a
     // concurrent logout instead of being overwritten by the later one.
+    //
+    // ownedFamilyIds stays an IQueryable for the same reason batchIds does below: materialising it
+    // would round-trip the family and open a window between deciding whose session this is and
+    // ending it. As a subquery, the ownership test and the revocation are one statement, so a
+    // rotation cannot add a token to the family after the test has passed. The presented token is
+    // matched on hash and owner alone — deliberately not on RevokedAtUtc — because a token that
+    // rotation already retired still identifies the session the client is asking to end.
 
     /// <inheritdoc />
-    public Task RevokeByTokenHashAsync(string tokenHash, DateTime revokedAtUtc, CancellationToken cancellationToken) =>
-        dbContext.RefreshTokens
-            .Where(token => token.TokenHash == tokenHash && token.RevokedAtUtc == null)
+    public Task<int> RevokeActiveFamilyByTokenHashAsync(
+        string tokenHash,
+        Guid userId,
+        DateTime revokedAtUtc,
+        CancellationToken cancellationToken)
+    {
+        IQueryable<Guid> ownedFamilyIds = dbContext.RefreshTokens
+            .Where(token => token.TokenHash == tokenHash && token.UserId == userId)
+            .Select(token => token.FamilyId);
+
+        return dbContext.RefreshTokens
+            .Where(token =>
+                ownedFamilyIds.Contains(token.FamilyId) &&
+                token.RevokedAtUtc == null &&
+                token.ExpiresAtUtc > revokedAtUtc)
             .ExecuteUpdateAsync(
                 setters => setters.SetProperty(token => token.RevokedAtUtc, revokedAtUtc),
                 cancellationToken);
+    }
 
     /// <inheritdoc />
     public Task<int> RevokeAllActiveForUserAsync(Guid userId, DateTime revokedAtUtc, CancellationToken cancellationToken) =>

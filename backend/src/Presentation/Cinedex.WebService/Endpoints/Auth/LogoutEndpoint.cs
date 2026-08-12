@@ -1,14 +1,12 @@
-using System.IdentityModel.Tokens.Jwt;
 using Cinedex.Application.Auth.Logout;
 using Cinedex.WebService.Constants;
+using Cinedex.WebService.Extensions;
 using Cinedex.WebService.Http;
 using FastEndpoints;
 
 namespace Cinedex.WebService.Endpoints.Auth;
 
-internal sealed class LogoutEndpoint(
-    ILogoutHandler handler,
-    ILogger<LogoutEndpoint> logger) : EndpointWithoutRequest
+internal sealed class LogoutEndpoint(ILogoutHandler handler) : EndpointWithoutRequest
 {
     public override void Configure()
     {
@@ -19,31 +17,15 @@ internal sealed class LogoutEndpoint(
 
     public override async Task HandleAsync(CancellationToken cancellationToken)
     {
-        var subClaim = User.FindFirst(JwtRegisteredClaimNames.Sub);
-        if (subClaim is null)
-        {
-            logger.LogInformation("Logout skipped because the authenticated user has no subject claim.");
-            RefreshTokenCookie.Clear(HttpContext.Response);
-            await Send.NoContentAsync(cancellationToken);
-            return;
-        }
-
-        if (!Guid.TryParseExact(subClaim.Value, "D", out var requestingUserId))
-        {
-            logger.LogInformation("Logout skipped because the authenticated user subject claim is invalid.");
-            RefreshTokenCookie.Clear(HttpContext.Response);
-            await Send.NoContentAsync(cancellationToken);
-            return;
-        }
-
         var refreshToken = RefreshTokenCookie.Read(HttpContext.Request);
-        if (refreshToken is not null)
+
+        // Neither condition is exceptional. A client that logs out twice presents no cookie the
+        // second time, and the endpoint is unreachable without a token this service signed, so the
+        // subject is always readable in practice. Neither changes the response, so neither gets a
+        // branch of its own: the single exit below is what keeps "always clear the cookie" true.
+        if (refreshToken is not null && User.TryGetUserId(out var requestingUserId))
         {
             await handler.HandleAsync(new LogoutCommand(requestingUserId, refreshToken), cancellationToken);
-        }
-        else
-        {
-            logger.LogInformation("Logout skipped because no refresh token cookie was supplied.");
         }
 
         // Always clear, even when no cookie was presented: logout is idempotent.

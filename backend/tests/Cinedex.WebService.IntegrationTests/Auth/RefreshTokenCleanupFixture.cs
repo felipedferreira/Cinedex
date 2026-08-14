@@ -20,7 +20,7 @@ public sealed class RefreshTokenCleanupFixture : IAsyncLifetime
 
     internal string ConnectionString => this._postgresContainer.GetConnectionString();
 
-    public async Task InitializeAsync()
+    public async ValueTask InitializeAsync()
     {
         await this._postgresContainer.StartAsync();
 
@@ -28,7 +28,7 @@ public sealed class RefreshTokenCleanupFixture : IAsyncLifetime
         await AuthDbInitializer.MigrateAsync(provider);
     }
 
-    public async Task DisposeAsync()
+    public async ValueTask DisposeAsync()
     {
         await this._postgresContainer.DisposeAsync();
     }

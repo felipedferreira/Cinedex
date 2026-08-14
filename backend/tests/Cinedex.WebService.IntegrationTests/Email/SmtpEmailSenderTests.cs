@@ -27,9 +27,9 @@ public sealed class SmtpEmailSenderTests : IAsyncLifetime
                 .UntilInternalTcpPortIsAvailable(MailpitSmtpPort))
         .Build();
 
-    public Task InitializeAsync() => _mailpitContainer.StartAsync();
+    public async ValueTask InitializeAsync() => await _mailpitContainer.StartAsync();
 
-    public async Task DisposeAsync() => await _mailpitContainer.DisposeAsync();
+    public async ValueTask DisposeAsync() => await _mailpitContainer.DisposeAsync();
 
     [Fact]
     public async Task SendAsync_WithSupportedBodies_DeliversAuthenticatedMessagesToSmtpServer()

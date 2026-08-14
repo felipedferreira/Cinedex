@@ -44,7 +44,7 @@ public class WebApplicationFixture : WebApplicationFactory<Program>, IAsyncLifet
 
     internal string ConnectionString => _postgresContainer.GetConnectionString();
 
-    public async Task InitializeAsync()
+    public async ValueTask InitializeAsync()
     {
         await _postgresContainer.StartAsync();
 
@@ -78,7 +78,7 @@ public class WebApplicationFixture : WebApplicationFactory<Program>, IAsyncLifet
             new AuthenticationHeaderValue("Bearer", await CreateFixtureUserAccessTokenAsync());
     }
 
-    public new async Task DisposeAsync()
+    public new async ValueTask DisposeAsync()
     {
         this.Client.Dispose();
         this.CookielessClient.Dispose();

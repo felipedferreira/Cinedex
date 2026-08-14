@@ -43,18 +43,18 @@ Prerequisites: [Node.js](https://nodejs.org/) (LTS recommended) and npm. **Run t
 
 ```bash
 npm install     # install the whole workspace
-npm run dev     # start the dev server with HMR
+npm run start   # start the dev server with HMR
 ```
 
 The dev server runs on https://localhost:9000 (configured in [`vite.config.ts`](vite.config.ts)).
 It uses a local HTTPS certificate and proxies `/movies-svc` to the backend's HTTPS dev profile at
 `https://localhost:7201`, so auth cookies use the same secure, same-origin shape as Docker Compose.
 Override the backend target with `VITE_API_PROXY_TARGET` if your API runs somewhere else, for example
-`VITE_API_PROXY_TARGET=https://localhost:7443 npm run dev`. The port comes from `PORT` when that is
+`VITE_API_PROXY_TARGET=https://localhost:7443 npm run start`. The port comes from `PORT` when that is
 set, falling back to 9000.
 
 You do not have to start this yourself: `dotnet run --project aspire/Cinedex.AppHost` (from
-`backend/`) runs this same `npm run dev` as one of its resources. It pins the port to 9000 (passed both as
+`backend/`) runs the app package's `npm run start` as one of its resources. It pins the port to 9000 (passed both as
 `--port` and as `PORT`) and sets `VITE_API_PROXY_TARGET` to the web service it started, rather than
 the `7201` default â€” so the URL and the proxy are both already correct. It installs dependencies
 first when `node_modules` is missing. Turn the whole resource off there with
@@ -66,7 +66,7 @@ All run from `frontend/`. Build and test scripts fan out across the workspace â€
 
 | Script                 | Description                                      |
 | ---------------------- | ------------------------------------------------ |
-| `npm run dev`          | Start the Vite dev server with HMR               |
+| `npm run start`        | Start the Vite dev server with HMR               |
 | `npm run build`        | Type-check and build every package to `dist/`    |
 | `npm run preview`      | Preview the production build locally             |
 | `npm run storybook`    | Start Storybook on port 9001                     |

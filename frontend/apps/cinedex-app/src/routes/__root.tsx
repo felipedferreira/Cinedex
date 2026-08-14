@@ -1,5 +1,6 @@
 import { createRootRoute, Link, Outlet } from '@tanstack/react-router';
 import { SolutionProvider, type SolutionLinkProps } from '@cinedex/solution';
+import { Toaster } from 'sonner';
 
 /**
  * Adapts `@cinedex/solution`'s router-agnostic link contract to TanStack Router.
@@ -19,6 +20,7 @@ export const Route = createRootRoute({
   component: () => (
     <SolutionProvider linkComponent={RouterLink}>
       <Outlet />
+      <Toaster />
     </SolutionProvider>
   ),
 });

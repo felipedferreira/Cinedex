@@ -8,6 +8,7 @@ import { formatCountdown } from './formatCountdown';
 const CODE_LIFETIME_SECONDS = 60;
 
 export interface TwoFactorScreenProps {
+  codeLength?: number;
   onSubmit?: (values: { code: string }) => void;
   onResend?: () => void;
 }
@@ -16,7 +17,11 @@ export interface TwoFactorScreenProps {
  * Presentational on purpose: the backend has no MFA yet, so nothing can drive
  * this screen for real. It renders against local state, ready to wire.
  */
-export function TwoFactorScreen({ onSubmit, onResend }: TwoFactorScreenProps) {
+export function TwoFactorScreen({
+  codeLength = 6,
+  onSubmit,
+  onResend,
+}: TwoFactorScreenProps) {
   const [code, setCode] = useState('');
   const [secondsLeft, setSecondsLeft] = useState(CODE_LIFETIME_SECONDS);
 
@@ -36,7 +41,7 @@ export function TwoFactorScreen({ onSubmit, onResend }: TwoFactorScreenProps) {
         kicker="Administrator · Verify"
         kickerTone="accent"
         title="Two-factor code"
-        description="Six digits from your authenticator app for this account."
+        description={`${String(codeLength)} digits from your authenticator app for this account.`}
         footnote="Administrator sessions require MFA. Catalog-only accounts skip this step."
       >
         <form
@@ -46,7 +51,12 @@ export function TwoFactorScreen({ onSubmit, onResend }: TwoFactorScreenProps) {
             onSubmit?.({ code });
           }}
         >
-          <OtpInput label="Verification code" value={code} onChange={setCode} />
+          <OtpInput
+            label="Verification code"
+            length={codeLength}
+            value={code}
+            onChange={setCode}
+          />
           <div className="flex items-center justify-between gap-2.5 font-mono text-brand font-medium tracking-[0.06em] text-text uppercase">
             <span>
               Code expires in{' '}
@@ -68,7 +78,7 @@ export function TwoFactorScreen({ onSubmit, onResend }: TwoFactorScreenProps) {
             type="submit"
             variant="solid"
             size="block"
-            disabled={code.length < 6}
+            disabled={code.length < codeLength}
           >
             Verify
           </Button>

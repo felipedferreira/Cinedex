@@ -1,6 +1,25 @@
 import { createFileRoute } from '@tanstack/react-router';
 import { TwoFactorScreen } from '@cinedex/solution';
+import { toast } from 'sonner';
 
 export const Route = createFileRoute('/login/verify')({
-  component: TwoFactorScreen,
+  component: RouteComponent,
 });
+
+function RouteComponent() {
+  return (
+    <TwoFactorScreen
+      codeLength={4}
+      onSubmit={({ code }) => {
+        window.setTimeout(() => {
+          if (code === '1234') {
+            toast.success('Verification successful.');
+            return;
+          }
+
+          toast.error('Invalid verification code.');
+        }, 2_000);
+      }}
+    />
+  );
+}

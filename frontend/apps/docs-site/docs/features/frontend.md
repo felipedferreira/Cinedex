@@ -107,7 +107,7 @@ npm run storybook    # from frontend/ → http://localhost:9001
 
 ```bash
 npm ci
-npm run dev          # SPA        → https://localhost:9000
+npm run start        # SPA        → https://localhost:9000
 npm run storybook    # Storybook  → http://localhost:9001
 npm run docs-site    # this site  → http://localhost:9004
 ```

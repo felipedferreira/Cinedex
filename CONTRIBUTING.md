@@ -64,7 +64,7 @@ The one-shot database migrator applies pending migrations for both `FilmDbContex
 
 2. Start the dev server (https://localhost:9000):
    ```bash
-   npm run dev
+   npm run start
    ```
 
 3. Browse the component library (http://localhost:9001):

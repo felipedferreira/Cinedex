@@ -475,7 +475,7 @@ build on this.
   Bootstrapping the first `Administrator` is also manual (SQL against `auth."AspNetUserRoles"`);
   no `Auth:BootstrapAdminEmail` seed exists.
 - **No CORS configuration.** Docker Compose serves the SPA and API through the HTTPS Nginx reverse
-  proxy at `https://localhost:9000`, and `npm run dev` serves HTTPS with a Vite `/movies-svc`
+  proxy at `https://localhost:9000`, and `npm run start` serves HTTPS with a Vite `/movies-svc`
   proxy to the backend's HTTPS development profile. Browser auth flows are same-origin in both
   local modes and do not need CORS. Non-local deployments that split the API and SPA origins must
   add credentialed CORS or provide an equivalent reverse proxy (see [Deployment constraints](#deployment-constraints)).

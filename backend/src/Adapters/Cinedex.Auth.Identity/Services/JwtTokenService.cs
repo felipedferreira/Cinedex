@@ -134,12 +134,25 @@ internal sealed class JwtTokenService(
         return CreateTokenResponse(domainUser, roles, rawRefreshToken, refreshEntity.ExpiresAtUtc);
     }
 
-    // Idempotent: revoking an unknown or already-revoked token matches no row and is a no-op.
-    public Task RevokeRefreshTokenAsync(string refreshToken, CancellationToken cancellationToken) =>
-        refreshTokens.RevokeByTokenHashAsync(HashToken(refreshToken), DateTime.UtcNow, cancellationToken);
+    // Idempotent: an unknown token, another user's token, and a session with nothing left active all
+    // match no row and report 0. Both the ownership test and the family-wide revocation live in the
+    // one statement the repository emits, so nothing here needs a transaction or a lock.
+    public Task<int> RevokeSessionAsync(Guid ownerId, string refreshToken, CancellationToken cancellationToken) =>
+        refreshTokens.RevokeActiveFamilyByTokenHashAsync(
+            HashToken(refreshToken),
+            ownerId,
+            DateTime.UtcNow,
+            cancellationToken);
 
-    public async Task<Guid?> GetRefreshTokenUserIdAsync(string refreshToken, CancellationToken cancellationToken) =>
-        (await refreshTokens.FindByTokenHashAsync(HashToken(refreshToken), cancellationToken))?.UserId;
+    public async Task<bool> RefreshTokenBelongsToAnotherUserAsync(
+        Guid requestingUserId,
+        string refreshToken,
+        CancellationToken cancellationToken)
+    {
+        var existing = await refreshTokens.FindByTokenHashAsync(HashToken(refreshToken), cancellationToken);
+
+        return existing is not null && existing.UserId != requestingUserId;
+    }
 
     private static string GenerateRefreshToken() =>
         Convert.ToBase64String(RandomNumberGenerator.GetBytes(32));
@@ -200,12 +213,16 @@ internal sealed class JwtTokenService(
         var signingKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(_options.SigningKey));
         var credentials = new SigningCredentials(signingKey, SecurityAlgorithms.HmacSha256);
 
+        // The user id appears once, as the RFC 7519 subject. It used to be written a second time as
+        // ClaimTypes.NameIdentifier, which is what JwtBearer's inbound mapping turns `sub` into
+        // anyway: the principal ended up carrying the same id twice, and the two spellings invited
+        // readers to disagree about which one was authoritative. Presentation reads the subject
+        // through ClaimsPrincipalExtensions.TryGetUserId, which accepts either spelling.
         var claims = new List<Claim>
         {
             new(JwtRegisteredClaimNames.Sub, user.Id.ToString()),
             new(JwtRegisteredClaimNames.Email, user.Email),
             new(JwtRegisteredClaimNames.Jti, Guid.CreateVersion7().ToString()),
-            new(ClaimTypes.NameIdentifier, user.Id.ToString()),
             new(ClaimTypes.Name, user.UserName),
         };
 

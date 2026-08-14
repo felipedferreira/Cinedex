@@ -133,7 +133,7 @@ internal static class AppHostConstants
 
     /// <summary>
     /// Read by <c>vite.config.ts</c> to decide whether the dev server opens a browser tab on start.
-    /// It defaults to opening one when this is unset, which is what a bare <c>npm run dev</c> should
+    /// It defaults to opening one when this is unset, which is what a bare <c>npm run start</c> should
     /// keep doing; the AppHost sets it to <see cref="OpenBrowserDisabledValue"/> because the dashboard
     /// already links to the SPA, so a tab per resource on every run is noise.
     /// </summary>

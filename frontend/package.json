@@ -8,7 +8,7 @@
     "packages/*"
   ],
   "scripts": {
-    "dev": "npm run dev -w cinedex-app",
+    "start": "npm run start -w cinedex-app",
     "preview": "npm run preview -w cinedex-app",
     "storybook": "npm run storybook -w @cinedex/storybook",
     "docs-site": "npm run start -w @cinedex/docs-site",

@@ -242,8 +242,8 @@ internal static class AppHostBuilderExtensions
             return null;
         }
 
-        // AddViteApp runs the package.json "dev" script (so: the same `npm run dev` a developer would
-        // run by hand) and installs dependencies first when node_modules is missing, which is what
+        // AddViteApp runs the package.json "start" script and installs dependencies first when
+        // node_modules is missing, which is what
         // makes this work on a fresh clone. AddNpmApp is the Aspire 12 spelling and is obsolete —
         // warnings are errors here, so it would not compile.
         //
@@ -263,8 +263,8 @@ internal static class AppHostBuilderExtensions
         // VITE_OPEN_BROWSER suppresses the tab Vite would otherwise open. The dashboard already links
         // to the SPA, so under this host the tab is a duplicate — and with Storybook alongside it, two
         // of them on every `dotnet run`. Set here rather than committed as `open: false` in
-        // vite.config.ts so a bare `npm run dev` still opens the browser the way it always has.
-        var ui = builder.AddViteApp("ui", AppHostConstants.FrontendAppDirectory)
+        // vite.config.ts so a bare `npm run start` still opens the browser the way it always has.
+        var ui = builder.AddViteApp("ui", AppHostConstants.FrontendAppDirectory, "start")
             .WithHttpsEndpoint(
                 port: AppHostConstants.FrontendPort,
                 targetPort: AppHostConstants.FrontendPort,

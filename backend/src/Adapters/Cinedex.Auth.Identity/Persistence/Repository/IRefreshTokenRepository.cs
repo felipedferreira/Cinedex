@@ -80,13 +80,33 @@ internal interface IRefreshTokenRepository
     Task<int> RevokeActiveFamilyAsync(Guid familyId, DateTime revokedAtUtc, CancellationToken cancellationToken);
 
     /// <summary>
-    /// Revokes a single token by hash, if it is still active. Idempotent.
+    /// Revokes every active token in the family the supplied token belongs to, provided that token
+    /// was issued to <paramref name="userId"/> — the logout path. Idempotent.
     /// </summary>
-    /// <param name="tokenHash">The hash of the token to revoke.</param>
-    /// <param name="revokedAtUtc">The revocation stamp.</param>
+    /// <remarks>
+    /// Ownership is part of the statement rather than a check the caller runs first. That closes two
+    /// things at once: no window exists in which a concurrent rotation could change the answer
+    /// between the test and the write, and the caller is never handed the token's owner, so this
+    /// cannot be used to ask who a token belongs to.
+    /// <para>
+    /// The family, not the row, is the unit because the family is the session. Revoking only the
+    /// presented hash would leave a rotation that landed moments earlier — or one racing this
+    /// statement — holding a live successor, so the session would outlive the logout that ended it.
+    /// </para>
+    /// </remarks>
+    /// <param name="tokenHash">The hex-encoded SHA-256 hash of the raw refresh token presented.</param>
+    /// <param name="userId">The user the presented token must belong to for anything to be revoked.</param>
+    /// <param name="revokedAtUtc">The revocation stamp, also used as the expiry cutoff.</param>
     /// <param name="cancellationToken">A token to observe while waiting for the task to complete.</param>
-    /// <returns>A task that completes when the statement has run.</returns>
-    Task RevokeByTokenHashAsync(string tokenHash, DateTime revokedAtUtc, CancellationToken cancellationToken);
+    /// <returns>
+    /// The number of tokens revoked. Zero when the token is unknown, belongs to another user, or its
+    /// family holds nothing active — three cases this method deliberately does not distinguish.
+    /// </returns>
+    Task<int> RevokeActiveFamilyByTokenHashAsync(
+        string tokenHash,
+        Guid userId,
+        DateTime revokedAtUtc,
+        CancellationToken cancellationToken);
 
     /// <summary>
     /// Revokes every active token belonging to one user, whatever family it is in.

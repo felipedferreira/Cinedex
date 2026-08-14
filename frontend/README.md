@@ -36,7 +36,7 @@ Prerequisites: [Node.js](https://nodejs.org/) 22 and npm.
 
 ```bash
 npm ci
-npm run dev          # app        → https://localhost:9000
+npm run start        # app        → https://localhost:9000
 npm run storybook    # Storybook  → http://localhost:9001
 ```
 
@@ -48,7 +48,7 @@ All run from this directory.
 
 | Script                 | Description                                             |
 | ---------------------- | ------------------------------------------------------- |
-| `npm run dev`          | Start the app's Vite dev server with HMR                |
+| `npm run start`        | Start the app's Vite dev server with HMR                |
 | `npm run storybook`    | Start Storybook on port 9001                            |
 | `npm run docs-site`    | Start the docs site on port 9004                        |
 | `npm run build`        | Type-check and build every package, including Storybook |

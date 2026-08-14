@@ -41,22 +41,43 @@ public interface ITokenService
     Task<AuthTokensDto> RefreshAsync(string refreshToken, CancellationToken cancellationToken);
 
     /// <summary>
-    /// Revokes a refresh token so it can no longer be used, for example on logout.
+    /// Ends the session a refresh token belongs to — the logout path — provided that token was
+    /// issued to <paramref name="ownerId"/>.
     /// </summary>
-    /// <param name="refreshToken">The raw refresh token to revoke.</param>
+    /// <param name="ownerId">The user the token must belong to for anything to be revoked.</param>
+    /// <param name="refreshToken">The raw refresh token presented by the client.</param>
     /// <param name="cancellationToken">A token to observe while waiting for the task to complete.</param>
-    /// <returns>A task that completes when the token has been revoked.</returns>
+    /// <returns>The number of tokens revoked, which is zero whenever nothing matched.</returns>
     /// <remarks>
-    /// Idempotent: an unknown or already-revoked token is a silent no-op rather than an error, so
-    /// callers cannot use this method to probe whether a token exists.
+    /// The session, not the presented token, is what ends: every active token in the same rotation
+    /// family is revoked, so a rotation that landed just before this call cannot leave a live
+    /// successor behind.
+    /// <para>
+    /// Ownership is enforced within the operation rather than by a check the caller makes first, so
+    /// there is no window in which the two could disagree, and no reading of the token's owner is
+    /// ever returned. Idempotent: an unknown token, another user's token, and an already-ended
+    /// session all revoke nothing and report zero, so callers cannot use this method to probe
+    /// whether a token exists or who holds it.
+    /// </para>
     /// </remarks>
-    Task RevokeRefreshTokenAsync(string refreshToken, CancellationToken cancellationToken);
+    Task<int> RevokeSessionAsync(Guid ownerId, string refreshToken, CancellationToken cancellationToken);
 
     /// <summary>
-    /// Finds the user who was issued a refresh token.
+    /// Reports whether a refresh token exists and was issued to somebody other than the requester.
     /// </summary>
-    /// <param name="refreshToken">The raw refresh token to look up.</param>
+    /// <param name="requestingUserId">The user asking, whose own tokens are not a mismatch.</param>
+    /// <param name="refreshToken">The raw refresh token presented by the client.</param>
     /// <param name="cancellationToken">A token to observe while waiting for the task to complete.</param>
-    /// <returns>The token's owner, or <see langword="null"/> when the token is unknown.</returns>
-    Task<Guid?> GetRefreshTokenUserIdAsync(string refreshToken, CancellationToken cancellationToken);
+    /// <returns><see langword="true"/> only when the token is known and its owner is somebody else.</returns>
+    /// <remarks>
+    /// Diagnostic only, for logging an anomaly that <see cref="RevokeSessionAsync"/> has already
+    /// acted on; never call it to decide whether to revoke, which would reintroduce exactly the
+    /// check-then-act window that method exists to avoid. It answers one question and reveals
+    /// nothing else: <see langword="false"/> covers both "unknown" and "yours", so it cannot be
+    /// used to probe whether a token exists.
+    /// </remarks>
+    Task<bool> RefreshTokenBelongsToAnotherUserAsync(
+        Guid requestingUserId,
+        string refreshToken,
+        CancellationToken cancellationToken);
 }

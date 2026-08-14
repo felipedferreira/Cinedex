@@ -27,9 +27,6 @@ public static class AuthenticationExtensions
             .AddOptions<JwtBearerOptions>(JwtBearerDefaults.AuthenticationScheme)
             .Configure<IOptions<JwtOptions>>((bearerOptions, jwtOptions) =>
             {
-                // Logout reads the RFC 7519 subject claim directly from the authenticated user.
-                bearerOptions.MapInboundClaims = false;
-
                 var jwt = jwtOptions.Value;
                 if (string.IsNullOrWhiteSpace(jwt.SigningKey))
                 {

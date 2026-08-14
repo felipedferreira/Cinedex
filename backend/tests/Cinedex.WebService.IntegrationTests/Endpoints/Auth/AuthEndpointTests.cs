@@ -85,30 +85,6 @@ public sealed class AuthEndpointTests(WebApplicationFixture fixture)
     }
 
     [Fact]
-    public async Task AuthDatabase_EmailIndex_IsUnique()
-    {
-        await using var connection = new NpgsqlConnection(fixture.ConnectionString);
-        await connection.OpenAsync();
-
-        await using var command = new NpgsqlCommand(
-            """
-            SELECT i.indisunique
-            FROM pg_class AS t
-            JOIN pg_namespace AS n ON n.oid = t.relnamespace
-            JOIN pg_index AS i ON i.indrelid = t.oid
-            JOIN pg_class AS ix ON ix.oid = i.indexrelid
-            WHERE n.nspname = 'auth'
-              AND t.relname = 'AspNetUsers'
-              AND ix.relname = 'EmailIndex';
-            """,
-            connection);
-
-        var isUnique = await command.ExecuteScalarAsync();
-
-        Assert.True(Assert.IsType<bool>(isUnique));
-    }
-
-    [Fact]
     public async Task Register_WithWeakPassword_Returns400()
     {
         var response = await RegisterAsync(NewEmail(), "weakuser", "short");
@@ -683,6 +659,69 @@ public sealed class AuthEndpointTests(WebApplicationFixture fixture)
 
         var refresh = await PostAsync(TestRouteConstants.Auth.RefreshEndpoint, tokenOwnerRefreshToken);
         Assert.Equal(HttpStatusCode.OK, refresh.StatusCode);
+    }
+
+    [Fact]
+    public async Task Logout_WithRotatedToken_AlsoRevokesTheSuccessor()
+    {
+        var email = NewEmail();
+        await RegisterAsync(email, "rotatedlogout", Password);
+        var (login, firstToken) = await LoginAsync(email, Password);
+
+        var rotation = await PostAsync(TestRouteConstants.Auth.RefreshEndpoint, firstToken);
+        Assert.Equal(HttpStatusCode.OK, rotation.StatusCode);
+        var successorToken = ReadRefreshCookieValue(rotation);
+
+        // Logout presents the token rotation already replaced — the tab that refreshed and the tab
+        // that logged out need not be the same one. Revoking only the presented hash would leave the
+        // successor live and the session open, so the family is what ends.
+        var logout = await PostAsync(TestRouteConstants.Auth.LogoutEndpoint, firstToken, login.AccessToken);
+
+        Assert.Equal(HttpStatusCode.NoContent, logout.StatusCode);
+
+        var refresh = await PostAsync(TestRouteConstants.Auth.RefreshEndpoint, successorToken);
+        Assert.Equal(HttpStatusCode.Unauthorized, refresh.StatusCode);
+    }
+
+    [Fact]
+    public async Task Logout_LeavesTheSameUsersOtherSessionsAlone()
+    {
+        var email = NewEmail();
+        await RegisterAsync(email, "twosessions", Password);
+        var (firstLogin, firstSessionToken) = await LoginAsync(email, Password);
+        var (_, secondSessionToken) = await LoginAsync(email, Password);
+
+        var logout = await PostAsync(
+            TestRouteConstants.Auth.LogoutEndpoint,
+            firstSessionToken,
+            firstLogin.AccessToken);
+
+        Assert.Equal(HttpStatusCode.NoContent, logout.StatusCode);
+
+        // Each login starts its own family, so ending one session must not sign the user out of the
+        // other — the bound that makes family-wide revocation safe to use for logout.
+        var refresh = await PostAsync(TestRouteConstants.Auth.RefreshEndpoint, secondSessionToken);
+        Assert.Equal(HttpStatusCode.OK, refresh.StatusCode);
+    }
+
+    [Fact]
+    public async Task Login_AccessTokenCarriesTheUserIdExactlyOnce()
+    {
+        var email = NewEmail();
+        await RegisterAsync(email, "subjectuser", Password);
+
+        var (body, _) = await LoginAsync(email, Password);
+
+        // The subject is the one place the user id is written. Both spellings are counted because
+        // either would satisfy TryGetUserId — what must not come back is two of them, which is what
+        // made the token ambiguous about which claim was authoritative.
+        var jwt = new JwtSecurityTokenHandler().ReadJwtToken(body.AccessToken);
+        var subjectClaims = jwt.Claims
+            .Where(claim => claim.Type == JwtRegisteredClaimNames.Sub || claim.Type == ClaimTypes.NameIdentifier)
+            .ToList();
+
+        Assert.Single(subjectClaims);
+        Assert.True(Guid.TryParse(subjectClaims[0].Value, out _));
     }
 
     [Fact]

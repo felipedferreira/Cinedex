@@ -15,13 +15,12 @@ namespace Cinedex.WebService.IntegrationTests.Auth;
 /// </remarks>
 public sealed class RefreshTokenCleanupFixture : IAsyncLifetime
 {
-    private readonly PostgreSqlContainer _postgresContainer = new PostgreSqlBuilder()
-        .WithImage("postgres:17-alpine")
+    private readonly PostgreSqlContainer _postgresContainer = new PostgreSqlBuilder("postgres:17-alpine")
         .Build();
 
     internal string ConnectionString => this._postgresContainer.GetConnectionString();
 
-    public async Task InitializeAsync()
+    public async ValueTask InitializeAsync()
     {
         await this._postgresContainer.StartAsync();
 
@@ -29,7 +28,7 @@ public sealed class RefreshTokenCleanupFixture : IAsyncLifetime
         await AuthDbInitializer.MigrateAsync(provider);
     }
 
-    public async Task DisposeAsync()
+    public async ValueTask DisposeAsync()
     {
         await this._postgresContainer.DisposeAsync();
     }

@@ -10,12 +10,12 @@ const apiProxyTarget =
 
 // PORT is what the Aspire AppHost sets for the endpoint it publishes for this dev server (it also
 // passes `--port` on the command line, which wins over this either way). Vite does not read PORT on
-// its own. The 9000 fallback keeps a bare `npm run dev` — and the URL the compose stack serves the
+// its own. The 9000 fallback keeps a bare `npm run start` — and the URL the compose stack serves the
 // SPA on — unchanged.
 const devServerPort = Number(process.env.PORT ?? 9_000);
 
 // Whether the dev server pops a browser tab on start. VITE_OPEN_BROWSER wins when it is set; with it
-// unset the answer is `true`, so a bare `npm run dev` is unchanged. The Aspire AppHost sets it to
+// unset the answer is `true`, so a bare `npm run start` is unchanged. The Aspire AppHost sets it to
 // "false" because its dashboard already links here, and a tab per resource on every run is noise.
 // Only the listed literals turn it off — an unrecognised value stays on rather than silently
 // suppressing the tab.

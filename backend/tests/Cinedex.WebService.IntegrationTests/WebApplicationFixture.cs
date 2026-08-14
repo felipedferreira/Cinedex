@@ -21,8 +21,7 @@ namespace Cinedex.WebService.IntegrationTests;
 
 public class WebApplicationFixture : WebApplicationFactory<Program>, IAsyncLifetime
 {
-    private readonly PostgreSqlContainer _postgresContainer = new PostgreSqlBuilder()
-        .WithImage("postgres:17-alpine")
+    private readonly PostgreSqlContainer _postgresContainer = new PostgreSqlBuilder("postgres:17-alpine")
         .Build();
 
     public HttpClient Client { get; private set; } = null!;
@@ -45,7 +44,7 @@ public class WebApplicationFixture : WebApplicationFactory<Program>, IAsyncLifet
 
     internal string ConnectionString => _postgresContainer.GetConnectionString();
 
-    public async Task InitializeAsync()
+    public async ValueTask InitializeAsync()
     {
         await _postgresContainer.StartAsync();
 
@@ -79,7 +78,7 @@ public class WebApplicationFixture : WebApplicationFactory<Program>, IAsyncLifet
             new AuthenticationHeaderValue("Bearer", await CreateFixtureUserAccessTokenAsync());
     }
 
-    public new async Task DisposeAsync()
+    public new async ValueTask DisposeAsync()
     {
         this.Client.Dispose();
         this.CookielessClient.Dispose();

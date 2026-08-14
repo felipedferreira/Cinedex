@@ -11,8 +11,18 @@ node_modules
 **/dist
 dist-ssr
 *.local
+*.map
+*.d.ts.map
+**/.vite
+**/.vite-cache
+**/.cache
+**/.parcel-cache
+**/.turbo
+**/.tmp
+**/.swc
+**/.webpack
 
-# Build / test output
+# Build / transpilation / test output
 **/coverage
 **/storybook-static
 **/.docusaurus

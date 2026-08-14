@@ -27,7 +27,7 @@ flowchart BT
 
 ```bash
 npm ci
-npm run start            # app on https://localhost:9000 (basic-ssl, strictPort)
+npm run start            # app on http://localhost:5173 (strictPort)
 npm run storybook        # Storybook on http://localhost:9001
 npm run docs-site        # Docs site on http://localhost:9004
 npm run build            # every package, including static Storybook (--workspaces --if-present)

@@ -29,7 +29,7 @@ public sealed class AuthEndpointTests(WebApplicationFixture fixture)
 
     // Asserted here rather than referenced from the web project: the cookie name is part of the
     // HTTP contract, so a rename should break a test rather than silently ship.
-    private const string RefreshCookieName = "__Secure-cinedex_refresh_token";
+    private const string RefreshCookieName = "cinedex_refresh_token";
 
     [Fact]
     public async Task Register_WithValidRequest_Returns201()
@@ -103,7 +103,7 @@ public sealed class AuthEndpointTests(WebApplicationFixture fixture)
     }
 
     [Fact]
-    public async Task Login_SetsHardenedRefreshCookie()
+    public async Task Login_SetsDevelopmentRefreshCookie()
     {
         var email = NewEmail();
         await RegisterAsync(email, "cookieuser", Password);
@@ -113,9 +113,23 @@ public sealed class AuthEndpointTests(WebApplicationFixture fixture)
         var setCookie = GetRefreshSetCookie(response);
         Assert.NotNull(setCookie);
         Assert.Contains("httponly", setCookie, StringComparison.OrdinalIgnoreCase);
-        Assert.Contains("secure", setCookie, StringComparison.OrdinalIgnoreCase);
+        Assert.DoesNotContain("secure", setCookie, StringComparison.OrdinalIgnoreCase);
         Assert.Contains("samesite=strict", setCookie, StringComparison.OrdinalIgnoreCase);
         Assert.Contains($"path={TestRouteConstants.MoviesServiceBasePath}/auth", setCookie, StringComparison.OrdinalIgnoreCase);
+    }
+
+    [Fact]
+    public async Task DevelopmentCors_PreflightAllowsFrontendCredentials()
+    {
+        using var request = new HttpRequestMessage(HttpMethod.Options, TestRouteConstants.Auth.RefreshEndpoint);
+        request.Headers.Add("Origin", "http://localhost:5173");
+        request.Headers.Add("Access-Control-Request-Method", HttpMethod.Post.Method);
+
+        var response = await fixture.CookielessClient.SendAsync(request);
+
+        Assert.Equal(HttpStatusCode.NoContent, response.StatusCode);
+        Assert.Equal("http://localhost:5173", response.Headers.GetValues("Access-Control-Allow-Origin").Single());
+        Assert.Equal("true", response.Headers.GetValues("Access-Control-Allow-Credentials").Single());
     }
 
     [Fact]

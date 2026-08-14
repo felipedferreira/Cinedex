@@ -10,7 +10,8 @@ namespace Cinedex.AppHost;
 /// the prod-like path (built images, Nginx terminating HTTPS in front of the API, Seq, the SPA as a
 /// static bundle). This host exists for the inner loop: no image rebuild per change, migrations are
 /// applied for you, and the SPA runs from the Vite dev server with hot reload instead. Both publish
-/// the SPA on <c>https://localhost:9000</c> and Postgres on 5432, so the two cannot run at once.
+/// the SPA on port 9000 and Postgres on 5432, so the two cannot run at once. Aspire uses HTTP at
+/// <c>http://localhost:9000</c>; Compose is the separate HTTPS path.
 /// </para>
 /// <para>
 /// There is no <c>Cinedex.ServiceDefaults</c> project on purpose. Every host already calls
@@ -58,8 +59,8 @@ namespace Cinedex.AppHost;
 /// <c>Features:EnableFrontendUiSvc</c> (default <c>true</c>) controls whether the SPA's Vite dev
 /// server runs, same override channels again. It is the one resource that needs Node and npm on
 /// <c>PATH</c> — turn it off on a machine without them, or when the session is backend-only. With it
-/// on, the SPA is served at <c>https://localhost:9000</c> (self-signed, so expect the browser
-/// warning) and its <c>/movies-svc</c> proxy already points at this host's web service.
+/// on, the SPA is served at <c>http://localhost:9000</c> and its <c>/movies-svc</c> proxy already
+/// points at this host's web service.
 /// </para>
 /// <para>
 /// <c>Features:EnableStorybookSvc</c> (default <c>true</c>) controls whether the component library's

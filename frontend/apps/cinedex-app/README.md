@@ -46,17 +46,18 @@ npm install     # install the whole workspace
 npm run start   # start the dev server with HMR
 ```
 
-The dev server runs on https://localhost:9000 (configured in [`vite.config.ts`](vite.config.ts)).
-It uses a local HTTPS certificate and proxies `/movies-svc` to the backend's HTTPS dev profile at
-`https://localhost:7201`, so auth cookies use the same secure, same-origin shape as Docker Compose.
+The direct dev server runs on http://localhost:5173 (configured in [`vite.config.ts`](vite.config.ts))
+and proxies `/movies-svc` to the WebService at `http://localhost:5186`. The shared HTTP scheme lets
+the refresh cookie retain `SameSite=Strict`; credentialed CORS also permits direct API calls from 5173.
 Override the backend target with `VITE_API_PROXY_TARGET` if your API runs somewhere else, for example
-`VITE_API_PROXY_TARGET=https://localhost:7443 npm run start`. The port comes from `PORT` when that is
-set, falling back to 9000.
+`VITE_API_PROXY_TARGET=http://localhost:7443 npm run start`. The port comes from `PORT` when that is
+set, falling back to 5173.
 
 You do not have to start this yourself: `dotnet run --project aspire/Cinedex.AppHost` (from
 `backend/`) runs the app package's `npm run start` as one of its resources. It pins the port to 9000 (passed both as
 `--port` and as `PORT`) and sets `VITE_API_PROXY_TARGET` to the web service it started, rather than
-the `7201` default — so the URL and the proxy are both already correct. It installs dependencies
+the `5186` default — so the URL and the proxy are both already correct. Aspire's Vite endpoint is
+also HTTP on port 9000. It installs dependencies
 first when `node_modules` is missing. Turn the whole resource off there with
 `Features:EnableFrontendUiSvc`.
 
@@ -137,8 +138,8 @@ The following reporters are configured in [`vite.config.ts`](vite.config.ts) so 
 
 The SPA consumes the backend API. With the backend running (see the [root README](../../../README.md)), the API is available at:
 
-- **npm dev server:** https://localhost:9000/movies-svc
-- **npm dev OpenAPI Spec:** https://localhost:9000/movies-svc/openapi/v1.json
+- **npm dev server:** http://localhost:5173/movies-svc
+- **npm dev OpenAPI Spec:** http://localhost:5173/movies-svc/openapi/v1.json
 - **Docker Compose:** https://localhost:9000/movies-svc
 - **Docker Compose OpenAPI Spec:** https://localhost:9000/movies-svc/openapi/v1.json
 

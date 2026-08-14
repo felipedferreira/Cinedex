@@ -1,4 +1,6 @@
+using Cinedex.WebService.Configuration;
 using Cinedex.WebService.Constants;
+using Microsoft.Extensions.Options;
 
 namespace Cinedex.WebService.Http;
 
@@ -19,17 +21,25 @@ namespace Cinedex.WebService.Http;
 /// those values so a mismatch between <see cref="Append"/> and <see cref="Clear"/> cannot arise.
 /// </para>
 /// </remarks>
-internal static class RefreshTokenCookie
+internal sealed class RefreshTokenCookie(IOptions<RefreshTokenCookieOptions> options)
 {
     /// <summary>
-    /// The cookie name. The <c>__Secure-</c> prefix makes the browser reject the cookie unless it was
-    /// set over HTTPS.
+    /// The secure cookie name. The <c>__Secure-</c> prefix makes the browser reject the cookie unless
+    /// it was set over HTTPS.
     /// </summary>
-    public const string Name = "__Secure-cinedex_refresh_token";
+    public const string SecureName = "__Secure-cinedex_refresh_token";
+
+    /// <summary>
+    /// The HTTP-development cookie name. It deliberately has no <c>__Secure-</c> prefix because that
+    /// prefix requires the <c>Secure</c> attribute.
+    /// </summary>
+    public const string InsecureName = "cinedex_refresh_token";
 
     // The browser-visible path. Routes are registered without the base path because the pipeline
     // applies it via UsePathBase, so it has to be prepended here.
     private const string CookiePath = $"{ApiConstants.BasePath}/{ApiConstants.Auth.Route}";
+
+    private string Name => options.Value.Secure ? SecureName : InsecureName;
 
     /// <summary>
     /// Writes the refresh token to the response as a hardened cookie.
@@ -37,7 +47,7 @@ internal static class RefreshTokenCookie
     /// <param name="response">The response to append the cookie to.</param>
     /// <param name="refreshToken">The raw refresh token.</param>
     /// <param name="expiresAtUtc">The token's own expiry, so cookie and database agree on lifetime.</param>
-    public static void Append(HttpResponse response, string refreshToken, DateTime expiresAtUtc)
+    public void Append(HttpResponse response, string refreshToken, DateTime expiresAtUtc)
     {
         var options = BuildOptions();
         options.Expires = new DateTimeOffset(DateTime.SpecifyKind(expiresAtUtc, DateTimeKind.Utc));
@@ -50,7 +60,7 @@ internal static class RefreshTokenCookie
     /// </summary>
     /// <param name="request">The request to read the cookie from.</param>
     /// <returns>The raw refresh token, or <see langword="null"/> when the cookie is absent or blank.</returns>
-    public static string? Read(HttpRequest request) =>
+    public string? Read(HttpRequest request) =>
         request.Cookies.TryGetValue(Name, out var refreshToken) && !string.IsNullOrWhiteSpace(refreshToken)
             ? refreshToken
             : null;
@@ -59,12 +69,12 @@ internal static class RefreshTokenCookie
     /// Expires the refresh-token cookie so the browser stops sending it.
     /// </summary>
     /// <param name="response">The response to append the expiring cookie to.</param>
-    public static void Clear(HttpResponse response) => response.Cookies.Delete(Name, BuildOptions());
+    public void Clear(HttpResponse response) => response.Cookies.Delete(Name, BuildOptions());
 
-    private static CookieOptions BuildOptions() => new()
+    private CookieOptions BuildOptions() => new()
     {
         HttpOnly = true,
-        Secure = true,
+        Secure = options.Value.Secure,
         SameSite = SameSiteMode.Strict,
         Path = CookiePath,
 

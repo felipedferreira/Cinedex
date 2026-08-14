@@ -3,7 +3,7 @@
     <PropertyGroup>
         <DockerDefaultTargetOS>Linux</DockerDefaultTargetOS>
         <GenerateDocumentationFile>true</GenerateDocumentationFile>
-        <StaticWebAssetsEnabled>false</StaticWebAssetsEnabled>
+        <StaticWebAssetsEnabled>true</StaticWebAssetsEnabled>
       <UserSecretsId>c195f0ac-8b2a-42a3-aa5a-4507e0cc6b0d</UserSecretsId>
   </PropertyGroup>
 

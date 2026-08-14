@@ -120,8 +120,10 @@ Set-Cookie: __Secure-cinedex_refresh_token=<raw token>;
 
 `RefreshTokenCookie` (Presentation layer) owns the cookie name and a single `CookieOptions` factory
 shared by the set and the clear, so the two cannot drift apart — a cookie is only deleted when the
-delete call's attributes match the ones it was set with. The Application layer is unchanged: it still
-produces the refresh token and does not know it travels as a cookie.
+delete call's attributes match the ones it was set with. `Authentication:RefreshTokenCookie` configures
+only `Secure`; `SameSite=Strict`, `HttpOnly=true`, and `Path=/movies-svc/auth` remain fixed, and no
+`Domain` attribute is set. The Application layer is unchanged: it still produces the refresh token and
+does not know it travels as a cookie.
 
 On a failed refresh the endpoint clears the cookie via `HttpContext.Response.OnStarting`. A direct
 clear would be lost, because rethrowing runs `UseExceptionHandler`, which calls `Response.Clear()`
@@ -474,9 +476,13 @@ build on this.
   require authentication, not a particular role, so any logged-in account can edit the catalog.
   Bootstrapping the first `Administrator` is also manual (SQL against `auth."AspNetUserRoles"`);
   no `Auth:BootstrapAdminEmail` seed exists.
-- **No CORS configuration.** Docker Compose serves the SPA and API through the HTTPS Nginx reverse
-  proxy at `https://localhost:9000`, and `npm run start` serves HTTPS with a Vite `/movies-svc`
-  proxy to the backend's HTTPS development profile. Browser auth flows are same-origin in both
-  local modes and do not need CORS. Non-local deployments that split the API and SPA origins must
-  add credentialed CORS or provide an equivalent reverse proxy (see [Deployment constraints](#deployment-constraints)).
+- **Direct HTTP local development is supported.** `appsettings.Development.json` sets
+  `Authentication:RefreshTokenCookie:Secure=false` and permits credentialed CORS only from
+  `http://localhost:5173`. The default direct WebService launch profile listens on
+  `http://localhost:5186`. Browser requests that rely on the refresh cookie must use
+  `credentials: "include"`. Production defaults to `Secure=true`; the secure cookie keeps its
+  `__Secure-` prefix, while HTTP development uses an unprefixed name because browsers reject a
+  `__Secure-` cookie without the `Secure` attribute. Compose and the Vite proxy remain same-origin
+  local alternatives and do not need CORS. Non-local split-origin deployments must explicitly add
+  their own credentialed CORS origin or provide an equivalent reverse proxy (see [Deployment constraints](#deployment-constraints)).
 - **No email confirmation, external logins, or 2FA.**

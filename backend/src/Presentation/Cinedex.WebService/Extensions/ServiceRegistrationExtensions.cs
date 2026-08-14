@@ -4,8 +4,10 @@ using Cinedex.Application.Configuration;
 using Cinedex.Auth.Identity;
 using Cinedex.Email.Smtp;
 using Cinedex.Persistence.Postgres;
+using Cinedex.WebService.Configuration;
 using Cinedex.WebService.Constants;
 using Cinedex.WebService.ExceptionHandlers;
+using Cinedex.WebService.Http;
 using FastEndpoints;
 
 namespace Cinedex.WebService.Extensions;
@@ -15,6 +17,8 @@ namespace Cinedex.WebService.Extensions;
 /// </summary>
 public static class ServiceRegistrationExtensions
 {
+    internal const string FrontendCorsPolicy = "Frontend";
+
     /// <summary>
     /// Registers the application, persistence and web-service services (endpoints, OpenAPI,
     /// problem details, health checks and exception handlers) with the DI container.
@@ -32,6 +36,23 @@ public static class ServiceRegistrationExtensions
         // Bind the SPA base URL used to build user-facing links (e.g. the password-reset link).
         builder.Services.AddOptions<FrontendOptions>()
             .BindConfiguration(FrontendOptions.SectionName);
+
+        builder.Services.AddOptions<RefreshTokenCookieOptions>()
+            .BindConfiguration(RefreshTokenCookieOptions.SectionName);
+        builder.Services.AddSingleton<RefreshTokenCookie>();
+
+        var frontendOrigin = builder.Configuration.GetValue<string>(ConfigurationConstants.CorsFrontendOrigin);
+        builder.Services.AddCors(options => options.AddPolicy(FrontendCorsPolicy, policy =>
+        {
+            if (!string.IsNullOrWhiteSpace(frontendOrigin))
+            {
+                policy
+                    .WithOrigins(frontendOrigin)
+                    .AllowAnyHeader()
+                    .AllowAnyMethod()
+                    .AllowCredentials();
+            }
+        }));
 
         // Configure JWT bearer authentication and authorization.
         builder.AddJwtAuthentication();

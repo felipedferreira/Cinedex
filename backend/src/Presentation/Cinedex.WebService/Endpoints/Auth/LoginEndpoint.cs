@@ -7,7 +7,8 @@ using FoundryOceanus.WebService.Contracts.Responses;
 
 namespace Cinedex.WebService.Endpoints.Auth;
 
-internal sealed class LoginEndpoint(ILoginHandler handler) : Endpoint<LoginRequest, LoginResponse>
+internal sealed class LoginEndpoint(ILoginHandler handler, RefreshTokenCookie refreshTokenCookie)
+    : Endpoint<LoginRequest, LoginResponse>
 {
     public override void Configure()
     {
@@ -21,7 +22,7 @@ internal sealed class LoginEndpoint(ILoginHandler handler) : Endpoint<LoginReque
         var tokens = await handler.HandleAsync(request.ToCommand(), cancellationToken);
 
         // The refresh token leaves the service only as an HttpOnly cookie, never in the body.
-        RefreshTokenCookie.Append(HttpContext.Response, tokens.RefreshToken, tokens.RefreshTokenExpiresAtUtc);
+        refreshTokenCookie.Append(HttpContext.Response, tokens.RefreshToken, tokens.RefreshTokenExpiresAtUtc);
 
         await Send.OkAsync(tokens.ToResponse(), cancellationToken);
     }

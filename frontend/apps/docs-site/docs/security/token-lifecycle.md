@@ -77,7 +77,9 @@ Set-Cookie: __Secure-cinedex_refresh_token=<raw token>;
 
 `RefreshTokenCookie` owns the cookie name and a single `CookieOptions` factory shared by the set
 and the clear, so the two can't drift apart — a cookie is only deleted when the delete call's
-attributes match the ones it was set with.
+attributes match the ones it was set with. `Authentication:RefreshTokenCookie` configures only
+`Secure`; `SameSite=Strict`, `HttpOnly=true`, and `Path=/movies-svc/auth` remain fixed, and no
+`Domain` attribute is set.
 
 ### Deployment constraints
 
@@ -95,6 +97,14 @@ second weakens it.
    a same-named cookie scoped to the parent domain and shadow this one — session fixation, for a
    refresh token. If untrusted subdomains ever become possible, switch to `__Host-` and accept
    `Path=/`.
+
+### Direct HTTP local development
+
+`appsettings.Development.json` sets `Authentication:RefreshTokenCookie:Secure=false` and enables
+credentialed CORS only for `http://localhost:5173`; the direct WebService launch profile listens on
+`http://localhost:5186`. Requests that use the refresh cookie must set `credentials: "include"`. The HTTP-only development cookie uses an unprefixed name because browsers
+reject a `__Secure-` cookie without the `Secure` attribute. Production keeps `Secure=true` and the
+`__Secure-` name.
 
 ## Access token claims
 

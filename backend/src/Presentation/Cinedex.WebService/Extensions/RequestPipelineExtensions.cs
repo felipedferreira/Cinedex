@@ -54,7 +54,15 @@ public static class RequestPipelineExtensions
 
         app.MapApiDocumentation();
 
+        if (!string.IsNullOrWhiteSpace(app.Configuration.GetValue<string>(ConfigurationConstants.CorsFrontendOrigin)))
+        {
+            app.UseCors(ServiceRegistrationExtensions.FrontendCorsPolicy);
+        }
+
         app.UseHttpsRedirection();
+
+        // Public assets in wwwroot are served beneath the configured service base path.
+        app.UseStaticFiles();
 
         // Authentication and authorization must run before endpoint execution.
         app.UseAuthentication();

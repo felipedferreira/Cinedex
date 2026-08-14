@@ -6,7 +6,7 @@ using FastEndpoints;
 
 namespace Cinedex.WebService.Endpoints.Auth;
 
-internal sealed class LogoutEndpoint(ILogoutHandler handler) : EndpointWithoutRequest
+internal sealed class LogoutEndpoint(ILogoutHandler handler, RefreshTokenCookie refreshTokenCookie) : EndpointWithoutRequest
 {
     public override void Configure()
     {
@@ -17,7 +17,7 @@ internal sealed class LogoutEndpoint(ILogoutHandler handler) : EndpointWithoutRe
 
     public override async Task HandleAsync(CancellationToken cancellationToken)
     {
-        var refreshToken = RefreshTokenCookie.Read(HttpContext.Request);
+        var refreshToken = refreshTokenCookie.Read(HttpContext.Request);
 
         // Neither condition is exceptional. A client that logs out twice presents no cookie the
         // second time, and the endpoint is unreachable without a token this service signed, so the
@@ -29,7 +29,7 @@ internal sealed class LogoutEndpoint(ILogoutHandler handler) : EndpointWithoutRe
         }
 
         // Always clear, even when no cookie was presented: logout is idempotent.
-        RefreshTokenCookie.Clear(HttpContext.Response);
+        refreshTokenCookie.Clear(HttpContext.Response);
 
         await Send.NoContentAsync(cancellationToken);
     }

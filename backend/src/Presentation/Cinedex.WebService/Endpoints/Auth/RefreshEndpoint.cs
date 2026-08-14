@@ -8,7 +8,8 @@ using FoundryOceanus.WebService.Contracts.Responses;
 
 namespace Cinedex.WebService.Endpoints.Auth;
 
-internal sealed class RefreshEndpoint(IRefreshTokenHandler handler) : EndpointWithoutRequest<LoginResponse>
+internal sealed class RefreshEndpoint(IRefreshTokenHandler handler, RefreshTokenCookie refreshTokenCookie)
+    : EndpointWithoutRequest<LoginResponse>
 {
     public override void Configure()
     {
@@ -21,7 +22,7 @@ internal sealed class RefreshEndpoint(IRefreshTokenHandler handler) : EndpointWi
     {
         // Identical message to the one the token service throws, so a missing cookie is
         // indistinguishable from an invalid one.
-        var refreshToken = RefreshTokenCookie.Read(HttpContext.Request)
+        var refreshToken = refreshTokenCookie.Read(HttpContext.Request)
             ?? throw new InvalidCredentialsException("The refresh token is invalid or has expired.");
 
         AuthTokensDto tokens;
@@ -38,13 +39,13 @@ internal sealed class RefreshEndpoint(IRefreshTokenHandler handler) : EndpointWi
             var response = HttpContext.Response;
             response.OnStarting(() =>
             {
-                RefreshTokenCookie.Clear(response);
+                refreshTokenCookie.Clear(response);
                 return Task.CompletedTask;
             });
             throw;
         }
 
-        RefreshTokenCookie.Append(HttpContext.Response, tokens.RefreshToken, tokens.RefreshTokenExpiresAtUtc);
+        refreshTokenCookie.Append(HttpContext.Response, tokens.RefreshToken, tokens.RefreshTokenExpiresAtUtc);
 
         await Send.OkAsync(tokens.ToResponse(), cancellationToken);
     }

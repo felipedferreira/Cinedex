@@ -125,6 +125,15 @@ internal static class AppHostConstants
     public const string ViteApiProxyTargetVariable = "VITE_API_PROXY_TARGET";
 
     /// <summary>
+    /// Configuration key the WebService reads when building password-reset links. The AppHost sets
+    /// it to <see cref="FrontendBaseUrl"/> only when its Vite resource is enabled.
+    /// </summary>
+    public const string FrontendBaseUrlVariable = "Frontend__BaseUrl";
+
+    /// <summary>HTTP origin of the SPA managed by this AppHost.</summary>
+    public const string FrontendBaseUrl = "http://localhost:9000";
+
+    /// <summary>
     /// The variable Aspire exports the dev server's allocated port to, which <c>vite.config.ts</c>
     /// reads — Vite does not pick <c>PORT</c> up on its own. <c>AddViteApp</c> separately appends the
     /// same port to the npm command as <c>--port</c>.

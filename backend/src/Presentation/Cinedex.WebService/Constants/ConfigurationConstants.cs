@@ -6,4 +6,5 @@ internal static class ConfigurationConstants
     public const string RequestTimeoutSeconds = "WebServer:RequestTimeoutSeconds";
     public const string ForwardedHeadersEnabled = "ForwardedHeaders:Enabled";
     public const string ApiDocumentationEnabled = "Features:ApiDocumentationEnabled";
+    public const string CorsFrontendOrigin = "Cors:FrontendOrigin";
 }

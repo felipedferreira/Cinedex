@@ -36,11 +36,11 @@ Prerequisites: [Node.js](https://nodejs.org/) 22 and npm.
 
 ```bash
 npm ci
-npm run start        # app        → https://localhost:9000
+npm run start        # app        → http://localhost:5173
 npm run storybook    # Storybook  → http://localhost:9001
 ```
 
-The app's dev server uses a local HTTPS certificate and proxies `/movies-svc` to the backend's HTTPS dev profile at `https://localhost:7201`. Override with `VITE_API_PROXY_TARGET`.
+The direct dev server runs at `http://localhost:5173` and proxies `/movies-svc` to the WebService at `http://localhost:5186`. This keeps the browser's refresh cookie same-site; the WebService also allows credentialed direct calls from that origin. Override the backend target with `VITE_API_PROXY_TARGET`. Aspire is a separate HTTP workflow on `http://localhost:9000`; Docker Compose remains the HTTPS-proxied workflow.
 
 ## 📜 Scripts
 

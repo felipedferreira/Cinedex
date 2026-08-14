@@ -247,13 +247,13 @@ internal static class AppHostBuilderExtensions
         // makes this work on a fresh clone. AddNpmApp is the Aspire 12 spelling and is obsolete —
         // warnings are errors here, so it would not compile.
         //
-        // The endpoint is declared https because vite.config.ts serves TLS itself through
-        // @vitejs/plugin-basic-ssl; Aspire is not terminating it and never sees the certificate. Port
-        // and target port are pinned to the same fixed 9000 vite.config.ts defaults to, and the proxy
+        // The endpoint is HTTP because Vite does not terminate TLS in local development. Port and
+        // target port are pinned to the same fixed 9000 used by this AppHost workflow, and the proxy
         // is off, for the reason it is off on the web service: Vite owns that socket. It binds with
         // strictPort, so a proxy in front of it would only add a second port to an address that has to
-        // stay https://localhost:9000 anyway — that is the URL the web service builds password-reset
-        // links from (Frontend:BaseUrl) and the one compose publishes the SPA on.
+        // stay http://localhost:9000 anyway — that is the URL the web service builds password-reset
+        // links from (Frontend:BaseUrl) for this workflow. Compose continues to publish its separate
+        // production-like frontend through HTTPS.
         //
         // env: PORT is how Aspire tells the dev server which port it allocated — belt and braces, since
         // AddViteApp also appends `--port` to the npm command from the same endpoint. Vite does not
@@ -265,7 +265,7 @@ internal static class AppHostBuilderExtensions
         // of them on every `dotnet run`. Set here rather than committed as `open: false` in
         // vite.config.ts so a bare `npm run start` still opens the browser the way it always has.
         var ui = builder.AddViteApp("ui", AppHostConstants.FrontendAppDirectory, "start")
-            .WithHttpsEndpoint(
+            .WithHttpEndpoint(
                 port: AppHostConstants.FrontendPort,
                 targetPort: AppHostConstants.FrontendPort,
                 env: AppHostConstants.FrontendPortVariable,
@@ -277,6 +277,10 @@ internal static class AppHostBuilderExtensions
                 AppHostConstants.ViteOpenBrowserVariable,
                 AppHostConstants.OpenBrowserDisabledValue)
             .WaitFor(webservice);
+
+        webservice.WithEnvironment(
+            AppHostConstants.FrontendBaseUrlVariable,
+            AppHostConstants.FrontendBaseUrl);
 
         // Presentational only: the WaitFor above, not this, is what orders startup.
         if (frontend is not null)

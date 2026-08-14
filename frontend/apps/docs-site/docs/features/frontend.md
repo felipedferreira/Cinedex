@@ -22,10 +22,10 @@ four library packages — a design system plus three component tiers.
 React 19 with the [React Compiler](https://react.dev/learn/react-compiler), TypeScript, and Vite for
 the dev server, HMR, and builds. Tests run on Vitest + Testing Library.
 
-The dev server runs at **https://localhost:9000** with a local HTTPS certificate, and proxies
-`/movies-svc` to the backend's HTTPS dev profile — so auth cookies use the same secure, same-origin
-shape locally as they do under Docker Compose. In both local modes, browser code calls the API with
-relative paths such as `/movies-svc/auth/login`.
+The direct dev server runs at **http://localhost:5173** and proxies `/movies-svc` to the WebService
+at **http://localhost:5186**. Its shared HTTP scheme lets the refresh cookie use `SameSite=Strict`;
+the WebService also permits credentialed direct calls from port 5173. Browser code can call the API
+with relative paths such as `/movies-svc/auth/login`.
 
 ## Three component tiers
 
@@ -107,7 +107,7 @@ npm run storybook    # from frontend/ → http://localhost:9001
 
 ```bash
 npm ci
-npm run start        # SPA        → https://localhost:9000
+npm run start        # SPA        → http://localhost:5173
 npm run storybook    # Storybook  → http://localhost:9001
 npm run docs-site    # this site  → http://localhost:9004
 ```

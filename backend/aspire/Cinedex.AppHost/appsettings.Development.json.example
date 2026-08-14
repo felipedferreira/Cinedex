@@ -26,7 +26,7 @@
     // http://localhost:8025. Turn it back on when you need to see or click a reset email.
     "EnableMailpitSvc": false,
 
-    // false skips the SPA's Vite dev server entirely: nothing serves https://localhost:9000, and the
+    // false skips the SPA's Vite dev server entirely: nothing serves http://localhost:9000, and the
     // API is only reachable directly at http://localhost:9002. Together with EnableStorybookSvc below
     // these are the two resources that need Node and npm on PATH, so turn both off on a machine
     // without them or for a backend-only session.

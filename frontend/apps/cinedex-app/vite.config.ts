@@ -1,18 +1,15 @@
 import { defineConfig } from 'vitest/config';
 import react, { reactCompilerPreset } from '@vitejs/plugin-react';
-import basicSsl from '@vitejs/plugin-basic-ssl';
 import babel from '@rolldown/plugin-babel';
 import tailwindcss from '@tailwindcss/vite';
 import { tanstackRouter } from '@tanstack/router-plugin/vite';
 
 const apiProxyTarget =
-  process.env.VITE_API_PROXY_TARGET ?? 'https://localhost:7201';
+  process.env.VITE_API_PROXY_TARGET ?? 'http://localhost:5186';
 
-// PORT is what the Aspire AppHost sets for the endpoint it publishes for this dev server (it also
-// passes `--port` on the command line, which wins over this either way). Vite does not read PORT on
-// its own. The 9000 fallback keeps a bare `npm run start` — and the URL the compose stack serves the
-// SPA on — unchanged.
-const devServerPort = Number(process.env.PORT ?? 9_000);
+// Direct development defaults to Vite's conventional 5173 port. Aspire supplies PORT=9000 for its
+// separate full-stack workflow; Vite does not otherwise read PORT on its own.
+const devServerPort = Number(process.env.PORT ?? 5_173);
 
 // Whether the dev server pops a browser tab on start. VITE_OPEN_BROWSER wins when it is set; with it
 // unset the answer is `true`, so a bare `npm run start` is unchanged. The Aspire AppHost sets it to
@@ -30,7 +27,6 @@ export default defineConfig({
   plugins: [
     tanstackRouter({ target: 'react', autoCodeSplitting: true }),
     tailwindcss(),
-    basicSsl({ name: 'Cinedex local development' }),
     react(),
     babel({ presets: [reactCompilerPreset()] }),
   ],

@@ -8,7 +8,7 @@ One of seven packages in the `frontend/` npm workspace — see [`../../CLAUDE.md
 
 ```bash
 npm ci
-npm run start        # https://localhost:9000 (basic-ssl, strictPort; proxies /movies-svc → https://localhost:7201)
+npm run start        # http://localhost:5173 (strictPort; proxies /movies-svc → http://localhost:5186)
 npm run build        # tsc -b && vite build
 npm run test:run     # single Vitest pass across the workspace
 npm run coverage     # what CI runs
@@ -22,8 +22,8 @@ CI requires lint, format:check, build, and coverage to all pass; the workspace b
 
 ## Notes
 
-- The dev-server API proxy target is overridable via `VITE_API_PROXY_TARGET` (defaults to the local `dotnet run` backend at `https://localhost:7201`); the port is overridable via `PORT` (defaults to 9000). Both are read from `process.env` in `vite.config.ts`, i.e. from the shell — a `.env` file will **not** work for them.
-- The Aspire AppHost (`backend/aspire/Cinedex.AppHost`) runs this package's `npm run start` as a resource — pinning the port to 9000 (as `--port` and `PORT`) and setting `VITE_API_PROXY_TARGET` to the web service it started — so `dotnet run --project aspire/Cinedex.AppHost` brings the SPA up at https://localhost:9000 already wired to the API. `Features:EnableFrontendUiSvc: false` there omits it. Its `AppHostConstants.FrontendAppDirectory` points at **this** directory, not the workspace root, because that is what makes `npm run start` resolve to plain `vite` so Aspire's `--port` reaches it.
+- The dev-server API proxy target is overridable via `VITE_API_PROXY_TARGET` (defaults to the local `dotnet run` backend at `http://localhost:5186`); the port is overridable via `PORT` (defaults to 5173). Both are read from `process.env` in `vite.config.ts`, i.e. from the shell — a `.env` file will **not** work for them.
+- The Aspire AppHost (`backend/aspire/Cinedex.AppHost`) runs this package's `npm run start` as a resource — pinning the port to 9000 (as `--port` and `PORT`) and setting `VITE_API_PROXY_TARGET` to the web service it started — so `dotnet run --project aspire/Cinedex.AppHost` serves the SPA at http://localhost:9000 already wired to the API. `Features:EnableFrontendUiSvc: false` there omits it. Its `AppHostConstants.FrontendAppDirectory` points at **this** directory, not the workspace root, because that is what makes `npm run start` resolve to plain `vite` so Aspire's `--port` reaches it.
 - `nginx.conf` only serves the SPA and its history fallback on internal port 8080. The root `../../../Caddyfile` owns the Compose `/movies-svc` route to `movies.webservice`; a backend base-path change must be mirrored there and in `vite.config.ts`.
 - **`main.tsx` imports `@cinedex/theme/tailwind.css` and nothing else.** That one import pulls in the tokens, the base element styling and Tailwind, in the cascade-layer order they have to be in — see [`packages/theme/CLAUDE.md`](../../packages/theme/CLAUDE.md). This app has **no stylesheet of its own**: every screen it renders comes from `@cinedex/solution` and is styled through the theme's utilities. An app-specific rule would go in a new `src/index.css` imported after that line.
 - **This app is routes and nothing else.** `src/` holds `routes/`, the generated `routeTree.gen.ts`, `main.tsx` and one test. There is no `App.tsx` — the Vite scaffold landing page (hero image, counter, Vite/React links) was replaced by `@cinedex/solution`'s `HomeScreen`, which indexes every screen in the flow.

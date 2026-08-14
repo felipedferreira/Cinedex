@@ -16,16 +16,15 @@ public sealed class SmtpEmailSenderTests : IAsyncLifetime
     private const string SmtpUsername = "cinedex-tests";
     private const string SmtpPassword = "cinedex-tests-password";
     private static readonly byte[] PngHeader = [137, 80, 78, 71, 13, 10, 26, 10];
-    private readonly IContainer _mailpitContainer = new ContainerBuilder()
-        .WithImage("axllent/mailpit:v1.30.0")
+    private readonly IContainer _mailpitContainer = new ContainerBuilder("axllent/mailpit:v1.30.0")
         .WithEnvironment("MP_SMTP_AUTH", $"{SmtpUsername}:{SmtpPassword}")
         .WithEnvironment("MP_SMTP_AUTH_ALLOW_INSECURE", "true")
         .WithPortBinding(MailpitHttpPort, true)
         .WithPortBinding(MailpitSmtpPort, true)
         .WithWaitStrategy(
             Wait.ForUnixContainer()
-                .UntilPortIsAvailable(MailpitHttpPort)
-                .UntilPortIsAvailable(MailpitSmtpPort))
+                .UntilInternalTcpPortIsAvailable(MailpitHttpPort)
+                .UntilInternalTcpPortIsAvailable(MailpitSmtpPort))
         .Build();
 
     public Task InitializeAsync() => _mailpitContainer.StartAsync();

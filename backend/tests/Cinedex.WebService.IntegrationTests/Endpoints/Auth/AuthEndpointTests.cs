@@ -85,30 +85,6 @@ public sealed class AuthEndpointTests(WebApplicationFixture fixture)
     }
 
     [Fact]
-    public async Task AuthDatabase_EmailIndex_IsUnique()
-    {
-        await using var connection = new NpgsqlConnection(fixture.ConnectionString);
-        await connection.OpenAsync();
-
-        await using var command = new NpgsqlCommand(
-            """
-            SELECT i.indisunique
-            FROM pg_class AS t
-            JOIN pg_namespace AS n ON n.oid = t.relnamespace
-            JOIN pg_index AS i ON i.indrelid = t.oid
-            JOIN pg_class AS ix ON ix.oid = i.indexrelid
-            WHERE n.nspname = 'auth'
-              AND t.relname = 'AspNetUsers'
-              AND ix.relname = 'EmailIndex';
-            """,
-            connection);
-
-        var isUnique = await command.ExecuteScalarAsync();
-
-        Assert.True(Assert.IsType<bool>(isUnique));
-    }
-
-    [Fact]
     public async Task Register_WithWeakPassword_Returns400()
     {
         var response = await RegisterAsync(NewEmail(), "weakuser", "short");

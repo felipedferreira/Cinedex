@@ -32,6 +32,7 @@ npm run storybook        # Storybook on http://localhost:9001
 npm run docs-site        # Docs site on http://localhost:9004
 npm run build            # every package, including static Storybook (--workspaces --if-present)
 npm run test:run         # every package
+npm run test:ui          # one Vitest UI across the testable workspaces
 npm run coverage         # what CI runs — one coverage/ dir per package
 npm run lint             # eslint . — one pass across all packages
 npm run format:check     # prettier — run `npm run format` before pushing

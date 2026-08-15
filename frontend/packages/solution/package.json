@@ -19,7 +19,8 @@
   },
   "dependencies": {
     "@cinedex/atoms": "*",
-    "@cinedex/compounds": "*"
+    "@cinedex/compounds": "*",
+    "gsap": "^3.15.0"
   },
   "peerDependencies": {
     "react": "^19.0.0",

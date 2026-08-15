@@ -26,13 +26,17 @@ export interface MarkBodyProps {
  *
  * Rendered at rest (iris open, rings fully drawn, no ghosts, no glint) — the
  * settled state `Brand` shows statically and the two animated components
- * settle into after their sequence finishes. Every animatable piece carries a
- * `data-*` hook; `useMarkAnimation` queries them off the forwarded `ref` and
- * writes attributes directly rather than through React state, mirroring the
- * `requestAnimationFrame`-driven approach verified in the artifact this was
- * built from — 60 frames/second of React re-renders would be wasted work an
- * imperative attribute write skips entirely. `Brand` itself passes no `ref`
- * and never rerenders these attributes, so they stay inert there.
+ * settle into after their sequence finishes. Authoring the settled state in the
+ * markup rather than the opening one is what makes a pre-hydration or no-JS
+ * render show a complete logo; the animated variants rewind to frame zero in a
+ * layout effect, before first paint.
+ *
+ * Every animatable piece carries a `data-*` hook. `timelines.ts` builds its
+ * GSAP tweens against those hooks off the forwarded `ref`, tweening SVG
+ * attributes directly rather than React state — a 1.2s sequence is ~70 frames,
+ * and none of `transform`, `stroke-dashoffset` or `opacity` needs to pass
+ * through a diff. `Brand` itself passes no `ref` and builds no timeline, so
+ * these attributes stay inert there.
  */
 export function MarkBody({ uid, ref }: MarkBodyProps) {
   return (

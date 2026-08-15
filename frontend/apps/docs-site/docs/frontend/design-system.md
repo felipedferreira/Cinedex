@@ -2,6 +2,8 @@
 sidebar_position: 2
 ---
 
+import StoryboookLink from '@site/src/components/StoryboookLink';
+
 # Design choices and theme
 
 The visual system is deliberately **amethyst, disciplined**: a restrained
@@ -118,7 +120,7 @@ system tune the scale without changing component APIs.
 
 ## Review in Storybook
 
-The [Storybook workbench](http://localhost:9001) is the live reference for
+The <StoryboookLink /> is the live reference for
 these choices. Use its theme toolbar to compare both color schemes and its
 accessibility panel to check interactive components as they are composed. Run
 it locally with `npm run storybook` from `frontend/`.

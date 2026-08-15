@@ -23,6 +23,10 @@ const config: Config = {
   organizationName: 'felipedferreira',
   projectName: 'Cinedex',
 
+  customFields: {
+    storybookBaseUrl: process.env.STORYBOOK_BASE_URL ?? 'http://localhost:9001',
+  },
+
   onBrokenLinks: 'throw',
 
   // Every diagram on this site is a ```mermaid fence — there is deliberately no

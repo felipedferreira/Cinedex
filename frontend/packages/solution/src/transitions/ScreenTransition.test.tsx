@@ -1,6 +1,6 @@
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 import { fireEvent, render, screen, waitFor } from '@testing-library/react';
-import { useState } from 'react';
+import { StrictMode, useState } from 'react';
 import { useCaptureOutgoing } from './captureContext';
 import { ScreenTransition } from './ScreenTransition';
 
@@ -202,6 +202,88 @@ describe('ScreenTransition', () => {
 
     expect(container.querySelector('[data-cdx-pane="outgoing"]')).toBeNull();
     expect(screen.getByRole('heading')).toHaveTextContent('Screen b');
+  });
+});
+
+/**
+ * Every other test in this file drives the timeline with `progress()`, which is
+ * what makes the motion assertable — and is exactly why none of them noticed
+ * that `play()` never ran.
+ *
+ * The app mounts under `StrictMode`, which invokes an effect, tears it down, and
+ * invokes it again. The first version of this component recorded the rendered
+ * key before building the timeline, so the second invocation early-returned and
+ * left the incoming screen on frame zero: opacity 0 behind an 11px blur. The
+ * whole app rendered blank, with a completely green test suite.
+ *
+ * These assert the thing the scrubbing tests structurally cannot — that the
+ * transition actually plays, and that it plays under a double-invoked effect.
+ */
+/** Narrows here rather than at each call site, which keeps the assertions readable. */
+function opacityOf(el: Element | null): number {
+  if (!(el instanceof HTMLElement)) {
+    throw new Error('expected a transition pane element');
+  }
+
+  return Number(el.style.getPropertyValue('--cdx-pane-opacity'));
+}
+
+function incomingPane(container: HTMLElement): Element | null {
+  return container.querySelector('[data-cdx-pane="incoming"]');
+}
+
+describe('ScreenTransition playback', () => {
+  useFullMotion();
+
+  it('settles the incoming screen visible on a cold load', async () => {
+    const { container } = render(<Harness />);
+
+    await waitFor(
+      () => {
+        expect(opacityOf(incomingPane(container))).toBeCloseTo(1, 2);
+      },
+      { timeout: 3_000 },
+    );
+  });
+
+  it('still settles visible when the effect is double-invoked', async () => {
+    const { container } = render(
+      <StrictMode>
+        <Harness />
+      </StrictMode>,
+    );
+
+    await waitFor(
+      () => {
+        expect(opacityOf(incomingPane(container))).toBeCloseTo(1, 2);
+      },
+      { timeout: 3_000 },
+    );
+  });
+
+  it('settles visible after a real transition under StrictMode', async () => {
+    const { container } = render(
+      <StrictMode>
+        <Harness />
+      </StrictMode>,
+    );
+
+    await waitFor(() => {
+      expect(opacityOf(incomingPane(container))).toBeCloseTo(1, 2);
+    });
+
+    go();
+
+    await waitFor(
+      () => {
+        expect(screen.getByRole('heading')).toHaveTextContent('Screen b');
+        expect(opacityOf(incomingPane(container))).toBeCloseTo(1, 2);
+        expect(
+          container.querySelector('[data-cdx-pane="outgoing"]'),
+        ).toBeNull();
+      },
+      { timeout: 3_000 },
+    );
   });
 });
 

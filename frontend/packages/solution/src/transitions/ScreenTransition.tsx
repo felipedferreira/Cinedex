@@ -5,7 +5,6 @@ import {
   type CSSProperties,
   type ReactNode,
 } from 'react';
-import type { gsap } from 'gsap';
 import { CaptureContext, useCaptureOutgoing } from './captureContext';
 import {
   buildRackFocusTimeline,
@@ -98,16 +97,17 @@ export function ScreenTransition({
   }, [captureParent, dropClone]);
 
   useLayoutEffect(() => {
-    if (renderedKey.current === transitionKey) {
+    const previousKey = renderedKey.current;
+    if (previousKey === transitionKey) {
       return;
     }
-    renderedKey.current = transitionKey;
 
     const incoming = liveRef.current;
     const stage = stageRef.current;
     if (!incoming || !stage) {
       return;
     }
+    renderedKey.current = transitionKey;
 
     const outgoing = pendingRef.current;
     pendingRef.current = null;
@@ -149,6 +149,23 @@ export function ScreenTransition({
       // rewinding every property on a node React is about to drop is pointless,
       // and on a StrictMode remount it would fight the fresh timeline.
       timeline.kill();
+
+      // Then put back everything this run changed, because an effect has to be
+      // safe to run twice. StrictMode tears it down and re-runs it on mount, and
+      // without this the re-run early-returns on the key it already recorded —
+      // leaving the incoming screen frozen on frame zero, which is opacity 0 and
+      // an 11px blur. The app renders blank, and no `progress()`-driven test
+      // catches it because none of them ever call `play()`.
+      renderedKey.current = previousKey;
+      if (outgoing) {
+        outgoing.remove();
+        cloneRef.current = null;
+        // Hand the snapshot back only if nothing newer is staged. A real key
+        // change captures *before* this cleanup runs, and overwriting that
+        // would mount the previous screen's snapshot over the new one — which
+        // reads as a screen cross-fading with a copy of itself.
+        pendingRef.current ??= outgoing;
+      }
     };
   }, [transitionKey, variant, dropClone]);
 

@@ -37,7 +37,7 @@ function HomepageHeader() {
   const { siteConfig } = useDocusaurusContext();
 
   return (
-    <header className="border-b border-border bg-bg px-6 py-16">
+    <header className="cinedex-home-hero border-b border-border bg-bg px-6 py-16">
       <div className="mx-auto flex max-w-[720px] flex-col items-center gap-5 text-center">
         <BrandLockup />
 

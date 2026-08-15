@@ -16,6 +16,16 @@ export type {
   SolutionLinkProps,
 } from './link/linkTypes';
 
+export { ScreenTransition } from './transitions/ScreenTransition';
+export type { ScreenTransitionProps } from './transitions/ScreenTransition';
+export { useCaptureOutgoing } from './transitions/captureContext';
+export { buildRackFocusTimeline, PANE_STYLE } from './transitions/rackFocus';
+export type {
+  RackFocusOptions,
+  TransitionVariant,
+} from './transitions/rackFocus';
+export { variantForEdge } from './transitions/authEdges';
+
 export { CreateAccountScreen } from './screens/CreateAccountScreen';
 export type {
   CreateAccountScreenProps,

@@ -23,7 +23,7 @@ flowchart LR
     DS --> SCRIPTS["<b>scripts/</b>"]
     DS --> SRC["<b>src/</b>"]
     DS --> DOCS["<b>docs/</b>"]
-    DS --> STATIC["static/img/<br/><i>Cinedex favicon.svg — the only static asset</i>"]
+    DS --> STATIC["static/img/<br/><i>favicon.svg + og-cinedex-docs.png (the social card)</i>"]
     DS --> TS["tsconfig.json<br/><i>Docusaurus's own single tsconfig — see CLAUDE.md</i>"]
 
     SCRIPTS --> S1["sync-changelog.mjs<br/><i>generates src/pages/changelog.md — see below</i>"]
@@ -67,6 +67,11 @@ extend it.
 ## 🎨 Branding
 
 Colors come from [`@cinedex/theme`](../../packages/theme/CLAUDE.md)'s `--accent` design token — see `src/css/custom.css` for how the Infima color scale is derived from it. The favicon and navbar logo are a copy of `cinedex-app`'s `favicon.svg`.
+
+Sharing a link to this site renders a social card: `static/img/og-cinedex-docs.png` (1200×630), wired
+up as `themeConfig.image` in [`docusaurus.config.ts`](docusaurus.config.ts) — the docs-site counterpart
+to the SPA's `og-cinedex-light.png`. Docusaurus resolves it to an absolute URL against `url` +
+`baseUrl`, which is why `url` is set to the deployed `https://cinedex.online` origin.
 
 ## 🐳 Docker and Compose
 

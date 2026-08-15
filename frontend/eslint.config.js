@@ -27,7 +27,19 @@ export default defineConfig([
       parserOptions: {
         // `projectService` resolves the nearest tsconfig per file, so this one
         // config covers every workspace package from the frontend root.
-        projectService: true,
+        projectService: {
+          // ...with one exception: `vitest.config.ts` sits *at* this root, and
+          // the root is the one directory with no tsconfig of its own — every
+          // other config file is covered by its package's `tsconfig.node.json`.
+          // Without this it is the only file the service cannot resolve a
+          // project for, and type-aware linting fails on it outright
+          // ("was not found by the project service"), taking `npm run lint`
+          // with it. `allowDefaultProject` lints it against inferred compiler
+          // options instead. Listed file by file on purpose: the service
+          // refuses any entry that some tsconfig already covers, and the list
+          // is capped, so it stays a short exception rather than a catch-all.
+          allowDefaultProject: ['vitest.config.ts'],
+        },
         tsconfigRootDir: import.meta.dirname,
       },
     },

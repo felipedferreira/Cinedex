@@ -53,6 +53,7 @@ All run from this directory.
 | `npm run docs-site`    | Start the docs site on port 9004                        |
 | `npm run build`        | Type-check and build every package, including Storybook |
 | `npm run test:run`     | Run every test suite once (CI-friendly)                 |
+| `npm run test:ui`      | Start one Vitest UI across the testable workspaces      |
 | `npm run coverage`     | Run tests and write a `coverage/` report per package    |
 | `npm run lint`         | Lint every package with ESLint                          |
 | `npm run format:check` | Check formatting without writing (CI-friendly)          |

@@ -209,6 +209,8 @@ services:
     build:
       context: .
       dockerfile: frontend/apps/docs-site/Dockerfile
+      args:
+        STORYBOOK_BASE_URL: 'http://localhost:9001'
     container_name: cinedex-docs-site
     ports:
       - "127.0.0.1:9004:80"

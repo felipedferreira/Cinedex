@@ -43,10 +43,11 @@ src/
 │   ├── BrandFocusRingsAnimation.tsx    # Brand, plus the "focus rings" intro
 │   ├── MarkBody.tsx                    # the shared <svg> all three render — single source of truth for the geometry
 │   ├── MarkDefs.tsx                    # the shared gradients/clip path, keyed per instance via useId()
+│   ├── Wordmark.tsx                    # the text half of the lockup
 │   ├── mark.ts                         # path data and colour constants MarkBody/MarkDefs build from
-│   ├── animations.ts                   # pure per-frame attribute writers for both sequences
-│   ├── useMarkAnimation.ts             # drives a sequence via requestAnimationFrame, honours prefers-reduced-motion
-│   └── useDelayedReveal.ts             # times the wordmark's fade-in independently of the mark's own rAF loop
+│   ├── brandSize.ts                    # the XS–XL scale and its resolver
+│   ├── timelines.ts                    # both sequences as GSAP timelines, built paused
+│   └── useMarkTimeline.ts              # plays one on mount, honours prefers-reduced-motion
 ├── link/
 │   ├── linkTypes.ts             # SolutionLinkProps / SolutionLinkComponent
 │   ├── AnchorLink.tsx           # the default: maps `to` → `href`
@@ -54,6 +55,12 @@ src/
 │   ├── SolutionLink.tsx         # THE only reader of LinkContext
 │   ├── SolutionProvider.tsx
 │   └── AuthLink.tsx             # AuthLink (navigates) + AuthActionLink (a real <button>)
+├── transitions/
+│   ├── cubicBezier.ts           # solves the design's exact CSS beziers into a GSAP ease
+│   ├── rackFocus.ts             # the five variants + buildRackFocusTimeline, built paused
+│   ├── authEdges.ts             # (from, to, wentBack) → variant — the flow's edge map
+│   ├── captureContext.ts        # CaptureContext + useCaptureOutgoing
+│   └── ScreenTransition.tsx     # the clone host
 └── screens/                     # one file per screen + CinedexAuthCard + formatCountdown
 ```
 
@@ -65,5 +72,8 @@ src/
 - **`TwoFactorScreen` and `SignedOutScreen` are presentational on purpose** — the backend has no MFA and no session-listing/revoke-all endpoint (`docs/auth-security-model.md`, "Known gaps"). `SignInScreen`'s `locked` state is likewise unreachable through normal use; the app exposes it at `/login?state=locked`.
 - Screen tests are plain `render()` — no memory router, no `renderAuthScreen` helper. The app keeps `login-routing.test.tsx`, which mounts the real route tree and is what verifies the paths these screens hardcode are real routes.
 - **`Brand/` is the first inline-`<svg>`-in-JSX in this repo** — `atoms` and `compounds` have no icons yet and no `vite-plugin-svgr`. Nothing else needed adding for it: no build step, no new Vite plugin, consistent with every tier being source-consumed.
-- **The two animated components write SVG attributes imperatively via `requestAnimationFrame`, not React state** — a 1.2s sequence at 60fps is ~70 frames, and re-rendering React for each would be pure waste for values (`transform`, `stroke-dashoffset`, `opacity`) that never need to pass through a diff. `animations.ts`'s `render*Frame` functions query `MarkBody`'s `data-*` hooks off the ref `useMarkAnimation` returns and set attributes directly — the same approach, ported near line-for-line, that was empirically verified (rasterized and hit-tested) in the artifact this mark and its two sequences came from.
-- **jsdom has neither `matchMedia` nor `requestAnimationFrame`.** `test/setup.ts`'s `matchMedia` stub defaults `matches` to `true` — deliberately, so every test renders the animated components' synchronous "reduced motion" settle path rather than needing an rAF polyfill. The multi-frame path is verified by hand in a browser, not in this suite.
+- **All animation in this package is GSAP, and every sequence is a pure builder returning a `paused` timeline.** `Brand/timelines.ts` and `transitions/rackFocus.ts` both follow it, with a thin hook or component owning only the React lifecycle around the timeline. The shape is not decorative: a paused timeline can be driven to any instant with `progress(p)` and flushes its writes synchronously, with no ticker and no rAF — which is the only reason a 1.2s logo intro and an 820ms screen transition are unit-testable at all. Keep new sequences in that shape; anything that animates inside a component is unassertable.
+- **jsdom has no `matchMedia`, and `test/setup.ts`'s stub defaults `matches` to `true`** — so **every test in this package takes the reduced-motion path unless it says otherwise**. That is the right default (nothing waits on an animation it does not assert about) and a live trap: a full-motion test that forgets to override the stub passes for the wrong reason. `ScreenTransition.test.tsx` has a `useFullMotion()` helper for the cases that need the real thing. `apps/cinedex-app` carries the same stub for the same reason, since `__root.tsx` now renders `ScreenTransition`.
+- **`transitions/` animates through CSS custom properties, never `style.filter` / `style.transform`.** jsdom's `CSSStyleDeclaration` implements only a subset of real properties and can silently drop `filter`, which would leave the screen correct and the tests asserting nothing. The panes read all three variables from `PANE_STYLE`; the timeline only moves the variables. Every tween is a `fromTo`, because jsdom returns an empty string for an unset custom property and a plain `to()` parses that as `0` and animates from the wrong place.
+- **The outgoing screen is a DOM clone, captured imperatively.** A React subtree kept alive re-renders against the _new_ state — a router `Outlet` or a step-switching screen would cross-fade a screen with itself. And the clone has to be taken before React commits, so `useCaptureOutgoing` is called by the event that causes the change (`RouterLink`'s click, `ForgotPasswordScreen`'s submit), not by an effect. With no provider it is a no-op, so screens stay storyable — same shape as `useLinkComponent`. Hosts nest, capture at every level, and only the level whose key actually changed mounts its snapshot.
+- **`progress()`-driven tests cannot catch a timeline that never plays.** That is not hypothetical: under `StrictMode` the transition effect was torn down and re-invoked, early-returned on the key it had already recorded, and left every screen frozen at opacity 0 behind an 11px blur — a blank app with a green suite. The effect is re-entrant now (its cleanup restores what it changed), and `ScreenTransition.test.tsx`'s `playback` block asserts the timeline actually settles, including under a double-invoked effect. Keep those tests.

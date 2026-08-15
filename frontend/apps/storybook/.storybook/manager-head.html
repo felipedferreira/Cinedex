@@ -3,3 +3,62 @@
      main.ts already serves cinedex-app's public/ at the site root, so the
      same favicon.svg the app and docs-site use resolves here too. -->
 <link rel="icon" type="image/svg+xml" href="./favicon.svg" />
+
+<!-- The social card - what a messaging app or a social post renders when a link
+     to this Storybook is shared, the same treatment cinedex-app and
+     @cinedex/docs-site already have.
+
+     This file is the only injection point that works: Storybook 10 removed the
+     `managerHead` config hook, so there is nowhere in main.ts to build these
+     tags. The favicon above is the standing proof the file is honoured.
+
+     Consequences of it being static HTML with no interpolation:
+
+     1. The URLs are absolute and hardcoded to the deployed origin. Crawlers
+        reject a relative og:image, and nothing here can read the environment,
+        so these name where Storybook publicly lives (`STORYBOOK_BASE_URL`'s
+        production value, the one apps/docs-site's Dockerfile defaults to)
+        rather than whichever host built the bundle. That is the same
+        canonical-origin choice as @cinedex/docs-site's `url`. A local or
+        Compose build therefore advertises the production URL, which is correct
+        for a card and untrue of nothing else.
+     2. og:title is spelled out. Storybook names its own tab
+        "storybook - Storybook", so a crawler falling back to <title> would put
+        that on the card.
+
+     The image comes from the same `staticDirs` line as the favicon, out of
+     cinedex-app's public/assets. It is the product's brand card rather than a
+     design-system-specific one; a bespoke card is a drop-in replacement that
+     changes the two URLs below, the alt text, and og:image:type if it is not a
+     JPEG. -->
+<meta
+  name="description"
+  content="Atoms, compounds and solution screens - the Cinedex component library, rendered in isolation."
+/>
+<meta property="og:type" content="website" />
+<meta property="og:site_name" content="Cinedex" />
+<meta property="og:title" content="Cinedex Design System" />
+<meta
+  property="og:description"
+  content="Atoms, compounds and solution screens - the Cinedex component library, rendered in isolation."
+/>
+<meta property="og:url" content="https://cinedex.online/storybook/" />
+<meta
+  property="og:image"
+  content="https://cinedex.online/storybook/assets/og-cinedex-card.jpg"
+/>
+<meta property="og:image:type" content="image/jpeg" />
+<meta property="og:image:width" content="1200" />
+<meta property="og:image:height" content="630" />
+<meta property="og:image:alt" content="Cinedex" />
+<meta name="twitter:card" content="summary_large_image" />
+<meta name="twitter:title" content="Cinedex Design System" />
+<meta
+  name="twitter:description"
+  content="Atoms, compounds and solution screens - the Cinedex component library, rendered in isolation."
+/>
+<meta
+  name="twitter:image"
+  content="https://cinedex.online/storybook/assets/og-cinedex-card.jpg"
+/>
+<meta name="twitter:image:alt" content="Cinedex" />

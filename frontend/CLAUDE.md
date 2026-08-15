@@ -32,6 +32,7 @@ npm run storybook        # Storybook on http://localhost:9001
 npm run docs-site        # Docs site on http://localhost:9004
 npm run build            # every package, including static Storybook (--workspaces --if-present)
 npm run test:run         # every package
+npm run test:ui          # one Vitest UI across the testable workspaces
 npm run coverage         # what CI runs — one coverage/ dir per package
 npm run lint             # eslint . — one pass across all packages
 npm run format:check     # prettier — run `npm run format` before pushing
@@ -57,7 +58,7 @@ The sharpest illustration is `AuthCard`: it takes `brand` as a prop and never dr
 
 ## Notes
 
-- **Shared config is hoisted here**, not per-package: `eslint.config.js`, `.prettierrc.json`, `.prettierignore`, `.gitignore`, `.dockerignore`. ESLint uses `projectService: true`, which resolves the nearest `tsconfig` per file, so the single root config covers every package.
+- **Shared config is hoisted here**, not per-package: `eslint.config.js`, `.prettierrc.json`, `.prettierignore`, `.gitignore`, `.dockerignore`. ESLint's `projectService` resolves the nearest `tsconfig` per file, so the single root config covers every package. **Its `allowDefaultProject` list is the one exception, and a new root-level `*.config.ts` has to be added to it.** This directory is the only one with no `tsconfig` of its own — every other config file is covered by its package's `tsconfig.node.json` — so a file sitting _here_ resolves to no project at all and type-aware linting fails on it outright (`was not found by the project service`), failing `npm run lint` rather than skipping the file. `vitest.config.ts` is currently the only entry.
 - **Consumers compile library source directly.** Vite compiles the TSX and HMR crosses package boundaries; `tsc -b` in a consumer therefore also typechecks library source under that consumer's compiler flags. Four `tsconfig` sets now have to stay in step, not two.
 - **Each library exports nothing but its barrel.** `packages/<tier>/src/index.ts` is the whole public surface — the Storybook app imports through it, so a component missing from a barrel fails the workspace build rather than going unnoticed.
 - **Docker builds from this directory**, not from an app folder — the lockfile is here. Both images set `context: ./frontend` with an explicit `dockerfile:`. Every workspace manifest is `COPY`d before `npm ci`; that list is for **layer caching**, not build correctness (a missing one does not fail the build — it leaves a stale install layer). See the comment in either Dockerfile.

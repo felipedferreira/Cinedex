@@ -23,8 +23,7 @@ const clamp = (v: number, min: number, max: number) =>
   v < min ? min : v > max ? max : v;
 const seg = (t: number, a: number, b: number) => clamp((t - a) / (b - a), 0, 1);
 const eOut = (t: number) => 1 - (1 - t) ** 3;
-const eIO = (t: number) =>
-  t < 0.5 ? 4 * t ** 3 : 1 - (-2 * t + 2) ** 3 / 2;
+const eIO = (t: number) => (t < 0.5 ? 4 * t ** 3 : 1 - (-2 * t + 2) ** 3 / 2);
 const lerp = (a: number, b: number, t: number) => a + (b - a) * t;
 
 /**
@@ -94,7 +93,9 @@ function numberIn(el: Element | null, attribute: string): number {
 
 function hingeOf(root: SVGSVGElement): number {
   const blade = root.querySelector('[data-blade]');
-  return Number(/rotate\(([-\d.]+)\)/.exec(blade?.getAttribute('transform') ?? '')?.[1]);
+  return Number(
+    /rotate\(([-\d.]+)\)/.exec(blade?.getAttribute('transform') ?? '')?.[1],
+  );
 }
 
 function opacityOf(root: SVGSVGElement, hook: string): number {
@@ -119,7 +120,10 @@ describe('buildApertureTimeline', () => {
 
     for (const t of [0, 0.1, 0.2, 0.3, 0.4, 0.5, 0.75, 1]) {
       tl.progress(t);
-      expect(hingeOf(root)).toBeCloseTo(lerp(0, 30, eOut(seg(t, 0.06, 0.46))), 3);
+      expect(hingeOf(root)).toBeCloseTo(
+        lerp(0, 30, eOut(seg(t, 0.06, 0.46))),
+        3,
+      );
     }
     tl.kill();
   });
@@ -148,7 +152,9 @@ describe('buildApertureTimeline', () => {
         6,
       );
       expect(
-        Number(root.querySelector('[data-outer]')?.getAttribute('stroke-dashoffset')),
+        Number(
+          root.querySelector('[data-outer]')?.getAttribute('stroke-dashoffset'),
+        ),
       ).toBeCloseTo(1000 * (1 - ringP), 1);
     }
     tl.kill();
@@ -167,10 +173,9 @@ describe('buildApertureTimeline', () => {
       asWritten(Math.sin(Math.PI * glintP), 3),
       6,
     );
-    expect(Number(root.querySelector('[data-glint]')?.getAttribute('x'))).toBeCloseTo(
-      asWritten(lerp(-230, 225, glintP), 1),
-      6,
-    );
+    expect(
+      Number(root.querySelector('[data-glint]')?.getAttribute('x')),
+    ).toBeCloseTo(asWritten(lerp(-230, 225, glintP), 1), 6);
 
     tl.progress(1);
     expect(opacityOf(root, '[data-glintwrap]')).toBe(0);
@@ -251,14 +256,12 @@ describe('buildFocusRingsTimeline', () => {
     for (const t of [0.1, 0.25, 0.4, 0.52, 1]) {
       tl.progress(t);
       const asm = eOut(seg(t, 0.1, 0.52));
-      expect(numberIn(root.querySelector('[data-outer]'), 'transform')).toBeCloseTo(
-        lerp(52, 0, asm),
-        2,
-      );
-      expect(numberIn(root.querySelector('[data-inner]'), 'transform')).toBeCloseTo(
-        lerp(-64, 0, asm),
-        2,
-      );
+      expect(
+        numberIn(root.querySelector('[data-outer]'), 'transform'),
+      ).toBeCloseTo(lerp(52, 0, asm), 2);
+      expect(
+        numberIn(root.querySelector('[data-inner]'), 'transform'),
+      ).toBeCloseTo(lerp(-64, 0, asm), 2);
     }
 
     // Both must land exactly on the settled 0deg, about the mark's centre.
@@ -285,7 +288,10 @@ describe('buildFocusRingsTimeline', () => {
       tl.progress(t);
       const lensP = eOut(seg(t, 0.48, 0.82));
       expect(opacityOf(root, '[data-assembly]')).toBeCloseTo(lensP, 3);
-      expect(scaleOf(root, '[data-assembly]')).toBeCloseTo(lerp(0.5, 1, lensP), 3);
+      expect(scaleOf(root, '[data-assembly]')).toBeCloseTo(
+        lerp(0.5, 1, lensP),
+        3,
+      );
     }
     tl.kill();
   });
@@ -299,7 +305,10 @@ describe('buildFocusRingsTimeline', () => {
 
     for (const t of [0.5, 0.7, 0.9, 1]) {
       tl.progress(t);
-      expect(hingeOf(root)).toBeCloseTo(lerp(21, 30, eOut(seg(t, 0.5, 0.9))), 3);
+      expect(hingeOf(root)).toBeCloseTo(
+        lerp(21, 30, eOut(seg(t, 0.5, 0.9))),
+        3,
+      );
     }
     tl.kill();
   });
@@ -315,7 +324,10 @@ describe('buildFocusRingsTimeline', () => {
         0,
         1,
       );
-      expect(opacityOf(root, '[data-rings]')).toBeCloseTo(asWritten(expected, 3), 6);
+      expect(opacityOf(root, '[data-rings]')).toBeCloseTo(
+        asWritten(expected, 3),
+        6,
+      );
     }
     tl.kill();
   });
@@ -331,7 +343,12 @@ describe('both sequences', () => {
     aperture.progress(1);
     focus.progress(1);
 
-    for (const hook of ['[data-blade]', '[data-settle]', '[data-outer]', '[data-inner]']) {
+    for (const hook of [
+      '[data-blade]',
+      '[data-settle]',
+      '[data-outer]',
+      '[data-inner]',
+    ]) {
       expect(apertureRoot.querySelector(hook)?.getAttribute('transform')).toBe(
         focusRoot.querySelector(hook)?.getAttribute('transform'),
       );

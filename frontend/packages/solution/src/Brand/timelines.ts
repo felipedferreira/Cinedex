@@ -210,7 +210,11 @@ export const buildApertureTimeline: MarkTimelineBuilder = (root, wordmark) => {
   tl.fromTo(
     m.blades,
     { attr: { transform: hingeAt(0) } },
-    { attr: { transform: hingeAt(OPEN_HINGE_DEG) }, duration: hinge.dur, ease: OUT },
+    {
+      attr: { transform: hingeAt(OPEN_HINGE_DEG) },
+      duration: hinge.dur,
+      ease: OUT,
+    },
     hinge.at,
   )
     .fromTo(
@@ -366,8 +370,16 @@ export const buildFocusRingsTimeline: MarkTimelineBuilder = (
       ringDraw.at,
     )
     // Two overlapping ramps that sum to full opacity — see `DerivedState`.
-    .to(state, { ringA: 0.42, duration: ringFadeA.dur, ease: OUT }, ringFadeA.at)
-    .to(state, { ringB: 0.58, duration: ringFadeB.dur, ease: OUT }, ringFadeB.at)
+    .to(
+      state,
+      { ringA: 0.42, duration: ringFadeA.dur, ease: OUT },
+      ringFadeA.at,
+    )
+    .to(
+      state,
+      { ringB: 0.58, duration: ringFadeB.dur, ease: OUT },
+      ringFadeB.at,
+    )
     // Only now does the lens assembly grow in at the centre.
     .set(m.lens, { attr: { opacity: 1, transform: scaleAbout(1) } }, 0)
     .fromTo(

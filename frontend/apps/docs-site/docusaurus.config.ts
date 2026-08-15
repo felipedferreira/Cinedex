@@ -15,9 +15,13 @@ const config: Config = {
     v4: true, // Improve compatibility with the upcoming Docusaurus v4
   },
 
+  // The deployed origin, not a local one. It is load-bearing beyond canonical
+  // links and the sitemap: `themeConfig.image` below resolves against
+  // `url + baseUrl`, and social crawlers reject a relative og:image — so a
+  // placeholder host here means no link preview anywhere, with a green build.
+  url: 'https://cinedex.online',
   // Local npm development serves at `/`; the Docker build sets this to
   // `/documentation/` because Compose publishes the site behind Caddy there.
-  url: 'https://cinedex.example.com',
   baseUrl: process.env.DOCUSAURUS_BASE_URL ?? '/',
 
   organizationName: 'felipedferreira',
@@ -108,7 +112,26 @@ const config: Config = {
   ],
 
   themeConfig: {
-    // No bespoke social card image exists for this project yet.
+    // The social card — what a messaging app or a social post renders when this
+    // site's link is shared. Docusaurus turns this into og:image and
+    // twitter:image, resolved to an absolute URL from `url` + `baseUrl` above,
+    // and theme-classic already emits `twitter:card: summary_large_image`.
+    // Same 1200x630 shape as the SPA's `og-cinedex-light.png`.
+    image: 'img/og-cinedex-docs.png',
+    // The tags Docusaurus does NOT derive on its own. og:title, og:description
+    // and og:url come per page (from `<Layout title description>` on the
+    // homepage, front matter elsewhere); these are the site-wide constants and
+    // the image's own metadata, which several crawlers use to lay the card out
+    // before the image has finished downloading.
+    metadata: [
+      { property: 'og:type', content: 'website' },
+      { property: 'og:site_name', content: 'Cinedex' },
+      { property: 'og:image:type', content: 'image/png' },
+      { property: 'og:image:width', content: '1200' },
+      { property: 'og:image:height', content: '630' },
+      { property: 'og:image:alt', content: 'Cinedex documentation' },
+      { name: 'twitter:image:alt', content: 'Cinedex documentation' },
+    ],
     colorMode: {
       respectPrefersColorScheme: true,
     },

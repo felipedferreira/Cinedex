@@ -53,7 +53,7 @@ const FeatureList: FeatureItem[] = [
  */
 function Feature({ kicker, title, description }: FeatureItem) {
   return (
-    <Card className="flex flex-col gap-2 p-5">
+    <Card className="cinedex-home-card flex flex-col gap-2 p-5">
       <p className="m-0 font-mono text-label font-semibold tracking-eyebrow text-accent uppercase">
         {kicker}
       </p>
@@ -70,7 +70,7 @@ function Feature({ kicker, title, description }: FeatureItem) {
 
 export default function HomepageFeatures(): ReactNode {
   return (
-    <section className="mx-auto max-w-[900px] px-6 py-12">
+    <section className="cinedex-home-features mx-auto max-w-[900px] px-6 py-12">
       <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
         {FeatureList.map((props) => (
           <Feature key={props.title} {...props} />

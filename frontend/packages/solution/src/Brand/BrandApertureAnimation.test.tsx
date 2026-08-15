@@ -15,6 +15,13 @@ describe('BrandApertureAnimation', () => {
     expect(screen.getByText('Cinedex')).toBeInTheDocument();
   });
 
+  it('forwards its size to the mark and wordmark', () => {
+    render(<BrandApertureAnimation size="XL" />);
+
+    expect(screen.getByRole('img', { name: 'Cinedex' })).toHaveClass('size-10');
+    expect(screen.getByText('Cinedex')).toHaveClass('text-xl');
+  });
+
   it('settles on the fully-open iris immediately for a reduced-motion viewer', () => {
     // The global `matchMedia` stub defaults to `matches: true` (see
     // test/setup.ts) specifically so this exercises the synchronous settle

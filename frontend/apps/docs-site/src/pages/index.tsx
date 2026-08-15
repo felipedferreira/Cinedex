@@ -4,7 +4,6 @@ import Link from '@docusaurus/Link';
 import useDocusaurusContext from '@docusaurus/useDocusaurusContext';
 import { useColorMode } from '@docusaurus/theme-common';
 import Layout from '@theme/Layout';
-import Heading from '@theme/Heading';
 import { Button, Separator } from '@cinedex/atoms';
 import { Brand, BrandApertureAnimation } from '@cinedex/solution';
 import HomepageFeatures from '@site/src/components/HomepageFeatures';
@@ -27,8 +26,8 @@ import HomepageFeatures from '@site/src/components/HomepageFeatures';
 function BrandLockup() {
   return (
     <span className="flex items-center gap-2">
-      <BrowserOnly fallback={<Brand />}>
-        {() => <BrandApertureAnimation />}
+      <BrowserOnly fallback={<Brand size={10} />}>
+        {() => <BrandApertureAnimation size={10} />}
       </BrowserOnly>
     </span>
   );
@@ -38,20 +37,11 @@ function HomepageHeader() {
   const { siteConfig } = useDocusaurusContext();
 
   return (
-    <header className="border-b border-border bg-bg px-6 py-16">
+    <header className="cinedex-home-hero border-b border-border bg-bg px-6 py-16">
       <div className="mx-auto flex max-w-[720px] flex-col items-center gap-5 text-center">
         <BrandLockup />
 
         <div className="flex flex-col gap-2.5">
-          <p className="m-0 font-mono text-label font-semibold tracking-eyebrow text-accent uppercase">
-            Docs · Changelog
-          </p>
-          <Heading
-            as="h1"
-            className="m-0 text-title leading-[1.1] font-bold tracking-tight text-text-h"
-          >
-            {siteConfig.title}
-          </Heading>
           <p className="m-0 text-body text-text">{siteConfig.tagline}</p>
         </div>
 

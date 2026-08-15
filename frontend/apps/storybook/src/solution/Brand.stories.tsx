@@ -6,6 +6,17 @@ import {
   BrandApertureAnimation,
   BrandFocusRingsAnimation,
 } from '@cinedex/solution';
+import type { BrandSize } from '@cinedex/solution';
+
+const BRAND_SIZES = [
+  'XS',
+  'S',
+  'M',
+  'L',
+  'XL',
+] as const satisfies readonly BrandSize[];
+
+const NUMERIC_BRAND_SIZES = [1, 2, 3, 4, 5, 6] as const;
 
 /**
  * The Cinedex mark: a camera iris forming a "C". `Static` is what every
@@ -55,6 +66,46 @@ export const Static: Story = {
     <BrandRow>
       <Brand />
     </BrandRow>
+  ),
+};
+
+/** Every supported lockup scale. `M` is the component default; `XS` retains
+ *  the lockup dimensions used before sizing was introduced. */
+export const Sizes: Story = {
+  render: () => (
+    <div className="flex flex-wrap items-end gap-x-8 gap-y-5">
+      {BRAND_SIZES.map((size) => (
+        <div key={size} className="flex flex-col items-start gap-2">
+          <p className="font-mono text-label text-text uppercase">
+            {size}
+            {size === 'M' ? ' (default)' : ''}
+          </p>
+          <BrandRow>
+            {size === 'M' ? <Brand /> : <Brand size={size} />}
+          </BrandRow>
+        </div>
+      ))}
+    </div>
+  ),
+};
+
+/** Numeric steps 1–5 alias `XS`–`XL`; larger positive integers continue the
+ *  lockup scale, so 6 is the first size above `XL`. */
+export const NumericSizes: Story = {
+  render: () => (
+    <div className="flex flex-wrap items-end gap-x-8 gap-y-5">
+      {NUMERIC_BRAND_SIZES.map((size) => (
+        <div key={size} className="flex flex-col items-start gap-2">
+          <p className="font-mono text-label text-text uppercase">
+            {size}
+            {size <= 5 ? ` (${BRAND_SIZES[size - 1]})` : ' (above XL)'}
+          </p>
+          <BrandRow>
+            <Brand size={size} />
+          </BrandRow>
+        </div>
+      ))}
+    </div>
   ),
 };
 

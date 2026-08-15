@@ -77,3 +77,200 @@
 :root[data-theme='dark'] {
   color-scheme: dark;
 }
+
+/* Documentation chrome gets the same restrained amethyst treatment as the
+   product: token-derived surfaces, quiet borders, and color reserved for
+   navigation, hierarchy, and interaction. */
+.navbar {
+  border-bottom: 1px solid var(--border);
+  background: color-mix(in oklab, var(--bg) 94%, var(--accent) 6%);
+  box-shadow: none;
+}
+
+.navbar__brand {
+  font-family: var(--mono);
+  letter-spacing: 0.04em;
+}
+
+.navbar__link:hover,
+.navbar__link--active {
+  color: var(--accent);
+}
+
+.menu__link--active:not(.menu__link--sublist) {
+  border-left: 2px solid var(--accent);
+  background: var(--accent-bg);
+  color: var(--accent);
+}
+
+.table-of-contents__link--active {
+  border-left-color: var(--accent);
+  color: var(--accent);
+}
+
+.theme-doc-markdown > header > h1::after,
+.theme-doc-markdown > h1::after {
+  display: block;
+  width: 3rem;
+  height: 0.2rem;
+  margin-top: 0.9rem;
+  background: var(--accent);
+  content: '';
+}
+
+article h2 {
+  margin-top: 2.75rem;
+  padding-top: 0.9rem;
+  border-top: 1px solid var(--border);
+}
+
+article blockquote {
+  background: var(--accent-bg);
+}
+
+.cinedex-home-hero {
+  position: relative;
+  isolation: isolate;
+  overflow: hidden;
+  background:
+    radial-gradient(circle at 50% -20%, var(--accent-bg), transparent 52%),
+    var(--bg);
+}
+
+.cinedex-home-hero::before,
+.cinedex-home-hero::after {
+  position: absolute;
+  z-index: -1;
+  border: 1px solid var(--accent-border);
+  border-radius: 999px;
+  content: '';
+}
+
+.cinedex-home-hero::before {
+  top: -17rem;
+  left: calc(50% - 17rem);
+  width: 34rem;
+  height: 34rem;
+}
+
+.cinedex-home-hero::after {
+  top: -11rem;
+  left: calc(50% - 11rem);
+  width: 22rem;
+  height: 22rem;
+  border-color: color-mix(in oklab, var(--accent-border) 55%, transparent);
+}
+
+.cinedex-home-features {
+  position: relative;
+}
+
+.cinedex-home-card {
+  position: relative;
+  overflow: hidden;
+  border-color: var(--border);
+  background: color-mix(in oklab, var(--bg) 96%, var(--accent) 4%);
+}
+
+.cinedex-home-card::before {
+  position: absolute;
+  top: 0;
+  right: 1.25rem;
+  left: 1.25rem;
+  height: 2px;
+  background: var(--accent);
+  content: '';
+}
+
+.cinedex-home-card:hover {
+  border-color: var(--accent-border);
+  box-shadow: var(--shadow);
+}
+
+/* The token grid in Frontend > Design choices and theme. The swatches use the
+   tokens themselves rather than duplicated CSS values, so changing theme mode
+   verifies the palette's light-dark pairing in the documentation too. */
+.cinedex-palette {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(9rem, 1fr));
+  gap: 1.25rem 0.25rem;
+  margin: 1.5rem 0 2rem;
+}
+
+.cinedex-palette__token {
+  min-width: 0;
+}
+
+.cinedex-palette__swatch {
+  height: 6rem;
+  border: 1px solid var(--border-strong);
+}
+
+.cinedex-palette__token strong,
+.cinedex-palette__token code {
+  display: block;
+  font-family: var(--mono);
+}
+
+.cinedex-palette__token strong {
+  margin-top: 0.5rem;
+  color: var(--text-h);
+  font-size: 0.75rem;
+  letter-spacing: var(--track-label);
+  text-transform: uppercase;
+}
+
+.cinedex-palette__token code {
+  padding: 0;
+  background: transparent;
+  border: 0;
+  border-radius: 0;
+  box-shadow: none;
+  margin-top: 0.2rem;
+  color: var(--text);
+  font-size: 0.7rem;
+}
+
+.cinedex-palette__token code span {
+  display: block;
+}
+
+.cinedex-palette__swatch--bg {
+  background: var(--bg);
+}
+
+.cinedex-palette__swatch--code-bg {
+  background: var(--code-bg);
+}
+
+.cinedex-palette__swatch--border {
+  background: var(--border);
+}
+
+.cinedex-palette__swatch--border-strong {
+  background: var(--border-strong);
+}
+
+.cinedex-palette__swatch--text {
+  background: var(--text);
+}
+
+.cinedex-palette__swatch--text-h {
+  background: var(--text-h);
+}
+
+.cinedex-palette__swatch--accent {
+  background: var(--accent);
+}
+
+.cinedex-palette__swatch--danger {
+  background: var(--danger);
+}
+
+.cinedex-palette__swatch--warning {
+  background: var(--warning);
+}
+
+.cinedex-palette__swatch--success {
+  background: var(--success);
+}

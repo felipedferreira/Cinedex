@@ -1,39 +1,43 @@
 import { useId } from 'react';
-import { renderApertureFrame } from './animations';
+import { resolveBrandSize, type BrandSize } from './brandSize';
 import { MarkBody } from './MarkBody';
-import { useDelayedReveal } from './useDelayedReveal';
-import { useMarkAnimation } from './useMarkAnimation';
+import { buildApertureTimeline } from './timelines';
+import { useMarkTimeline } from './useMarkTimeline';
+import { Wordmark } from './Wordmark';
 
-const DURATION_MS = 1200;
-/** `renderApertureFrame`'s wordP segment starts at t = 0.58 of the sequence. */
-const WORDMARK_DELAY_MS = 700;
+export interface BrandApertureAnimationProps {
+  /**
+   * The lockup scale. Named values run from `XS` through `XL`; `M` is the
+   * default and `XS` preserves the original size. A positive whole number is
+   * also accepted: 1–5 alias `XS`–`XL`, while higher numbers continue the
+   * scale. Zero, negative, fractional, `NaN`, and infinite numbers throw a
+   * `RangeError`.
+   */
+  size?: BrandSize;
+}
 
 /**
- * `Brand`, plus the "lens aperture" intro: the iris opens from closed while
- * the assembly counter-rotates, the rings draw on around the gap, a glint
- * crosses the metal, then the wordmark fades in. Runs once on mount and ends
- * on the exact same settled attributes `Brand` renders statically — swapping
- * one for the other mid-flow (e.g. after `HomeScreen` first paints) shows no
- * pop.
+ * `Brand`, plus the "lens aperture" intro: the iris opens from closed while the
+ * assembly counter-rotates, the rings draw on around the gap, a glint crosses
+ * the metal, then the wordmark fades in. Runs once on mount and ends on the
+ * exact same settled attributes `Brand` renders statically — swapping one for
+ * the other mid-flow (e.g. after `HomeScreen` first paints) shows no pop.
  *
- * The one place this plays today is `HomeScreen`, the app's index/landing
- * screen — everywhere else uses the static `Brand`. `BrandFocusRingsAnimation`
- * is the alternate sequence, built and exported the same way.
+ * The choreography itself is `buildApertureTimeline`; this component is only
+ * the two DOM nodes it drives. `BrandFocusRingsAnimation` is the alternate
+ * sequence, built and exported the same way.
  */
-export function BrandApertureAnimation() {
+export function BrandApertureAnimation({
+  size = 'M',
+}: BrandApertureAnimationProps) {
   const uid = useId();
-  const rootRef = useMarkAnimation(renderApertureFrame, DURATION_MS);
-  const wordmarkRevealed = useDelayedReveal(WORDMARK_DELAY_MS);
+  const resolvedSize = resolveBrandSize(size);
+  const { rootRef, wordmarkRef } = useMarkTimeline(buildApertureTimeline);
 
   return (
     <>
-      <MarkBody uid={uid} ref={rootRef} />
-      <span
-        className="font-mono text-brand font-semibold tracking-eyebrow text-text-h uppercase transition-opacity duration-300"
-        style={{ opacity: wordmarkRevealed ? 1 : 0 }}
-      >
-        Cinedex
-      </span>
+      <MarkBody uid={uid} size={resolvedSize} ref={rootRef} />
+      <Wordmark size={resolvedSize} ref={wordmarkRef} />
     </>
   );
 }

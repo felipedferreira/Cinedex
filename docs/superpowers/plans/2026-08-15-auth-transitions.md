@@ -1436,13 +1436,14 @@ Run: `npm run test:run -w @cinedex/solution -- ScreenTransition`
 
 Expected: PASS — 11 tests.
 
-> **If the two fake-timer tests hang or time out**, GSAP's ticker is not
-> advancing under them. GSAP drives itself with `requestAnimationFrame` when it
-> exists and falls back to `setTimeout` when it does not — and this suite's jsdom
-> has no rAF, which is why fake timers should work. If they do not, switch those
-> two tests to real timers and `await waitFor(..., { timeout: 1500 })` rather
-> than deleting them: completion behaviour and focus handoff are exactly what
-> this layer exists to cover.
+> **Deviation taken during execution.** The two completion tests use **real
+> timers with `waitFor(..., { timeout: 3_000 })`**, not the fake timers written
+> above. GSAP's ticker is a module-level singleton that has already been
+> initialised by the time a test calls `vi.useFakeTimers()`, so swapping the
+> clock underneath it mid-suite is unreliable. Real timers cost about 1.7s of
+> wall clock across the two tests and are deterministic. Completion behaviour and
+> focus handoff are exactly what this layer exists to cover, so neither test was
+> dropped.
 
 - [ ] **Step 5: Export from the barrel**
 

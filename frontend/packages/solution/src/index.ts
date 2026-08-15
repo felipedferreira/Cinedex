@@ -1,6 +1,10 @@
 export { Brand } from './Brand/Brand';
 export { BrandApertureAnimation } from './Brand/BrandApertureAnimation';
 export { BrandFocusRingsAnimation } from './Brand/BrandFocusRingsAnimation';
+export type { BrandSize } from './Brand/brandSize';
+export type { BrandProps } from './Brand/Brand';
+export type { BrandApertureAnimationProps } from './Brand/BrandApertureAnimation';
+export type { BrandFocusRingsAnimationProps } from './Brand/BrandFocusRingsAnimation';
 
 export { AnchorLink } from './link/AnchorLink';
 export { AuthActionLink, AuthLink } from './link/AuthLink';

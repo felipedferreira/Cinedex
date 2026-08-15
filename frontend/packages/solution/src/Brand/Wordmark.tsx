@@ -1,6 +1,8 @@
 import type { Ref } from 'react';
+import type { ResolvedBrandSize } from './brandSize';
 
 export interface WordmarkProps {
+  size: ResolvedBrandSize;
   ref?: Ref<HTMLSpanElement>;
 }
 
@@ -18,11 +20,12 @@ export interface WordmarkProps {
  * system's type scale (`text-brand`) and the screen-reader semantics a
  * geometric wordmark would have to reinvent, for no legibility gain.
  */
-export function Wordmark({ ref }: WordmarkProps) {
+export function Wordmark({ size, ref }: WordmarkProps) {
   return (
     <span
       ref={ref}
-      className="font-mono text-brand font-semibold tracking-eyebrow text-text-h uppercase"
+      className={`font-mono ${size.wordmarkClassName} font-semibold tracking-eyebrow text-text-h uppercase`}
+      style={size.wordmarkStyle}
     >
       Cinedex
     </span>

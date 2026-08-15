@@ -12,10 +12,12 @@ import {
   OUTER_ARC_PATH,
   PIVOT_RADIUS,
 } from './mark';
+import type { ResolvedBrandSize } from './brandSize';
 import { MarkDefs } from './MarkDefs';
 
 export interface MarkBodyProps {
   uid: string;
+  size: ResolvedBrandSize;
   ref?: Ref<SVGSVGElement>;
 }
 
@@ -38,12 +40,13 @@ export interface MarkBodyProps {
  * through a diff. `Brand` itself passes no `ref` and builds no timeline, so
  * these attributes stay inert there.
  */
-export function MarkBody({ uid, ref }: MarkBodyProps) {
+export function MarkBody({ uid, size, ref }: MarkBodyProps) {
   return (
     <svg
       ref={ref}
       viewBox={MARK_VIEW_BOX}
-      className="size-5 shrink-0"
+      className={`${size.markClassName} shrink-0`}
+      style={size.markStyle}
       role="img"
       aria-label="Cinedex"
     >

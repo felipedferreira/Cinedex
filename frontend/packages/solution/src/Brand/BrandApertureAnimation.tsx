@@ -1,8 +1,20 @@
 import { useId } from 'react';
+import { resolveBrandSize, type BrandSize } from './brandSize';
 import { MarkBody } from './MarkBody';
 import { buildApertureTimeline } from './timelines';
 import { useMarkTimeline } from './useMarkTimeline';
 import { Wordmark } from './Wordmark';
+
+export interface BrandApertureAnimationProps {
+  /**
+   * The lockup scale. Named values run from `XS` through `XL`; `M` is the
+   * default and `XS` preserves the original size. A positive whole number is
+   * also accepted: 1–5 alias `XS`–`XL`, while higher numbers continue the
+   * scale. Zero, negative, fractional, `NaN`, and infinite numbers throw a
+   * `RangeError`.
+   */
+  size?: BrandSize;
+}
 
 /**
  * `Brand`, plus the "lens aperture" intro: the iris opens from closed while the
@@ -15,14 +27,17 @@ import { Wordmark } from './Wordmark';
  * the two DOM nodes it drives. `BrandFocusRingsAnimation` is the alternate
  * sequence, built and exported the same way.
  */
-export function BrandApertureAnimation() {
+export function BrandApertureAnimation({
+  size = 'M',
+}: BrandApertureAnimationProps) {
   const uid = useId();
+  const resolvedSize = resolveBrandSize(size);
   const { rootRef, wordmarkRef } = useMarkTimeline(buildApertureTimeline);
 
   return (
     <>
-      <MarkBody uid={uid} ref={rootRef} />
-      <Wordmark ref={wordmarkRef} />
+      <MarkBody uid={uid} size={resolvedSize} ref={rootRef} />
+      <Wordmark size={resolvedSize} ref={wordmarkRef} />
     </>
   );
 }

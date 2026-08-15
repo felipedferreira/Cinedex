@@ -1,8 +1,20 @@
 import { useId } from 'react';
+import { resolveBrandSize, type BrandSize } from './brandSize';
 import { MarkBody } from './MarkBody';
 import { buildFocusRingsTimeline } from './timelines';
 import { useMarkTimeline } from './useMarkTimeline';
 import { Wordmark } from './Wordmark';
+
+export interface BrandFocusRingsAnimationProps {
+  /**
+   * The lockup scale. Named values run from `XS` through `XL`; `M` is the
+   * default and `XS` preserves the original size. A positive whole number is
+   * also accepted: 1–5 alias `XS`–`XL`, while higher numbers continue the
+   * scale. Zero, negative, fractional, `NaN`, and infinite numbers throw a
+   * `RangeError`.
+   */
+  size?: BrandSize;
+}
 
 /**
  * `Brand`, plus the "focus rings" intro — the inverse order from
@@ -17,14 +29,17 @@ import { Wordmark } from './Wordmark';
  * exported so it's a one-line swap if that choice changes, and so it can be
  * reviewed on its own in Storybook.
  */
-export function BrandFocusRingsAnimation() {
+export function BrandFocusRingsAnimation({
+  size = 'M',
+}: BrandFocusRingsAnimationProps) {
   const uid = useId();
+  const resolvedSize = resolveBrandSize(size);
   const { rootRef, wordmarkRef } = useMarkTimeline(buildFocusRingsTimeline);
 
   return (
     <>
-      <MarkBody uid={uid} ref={rootRef} />
-      <Wordmark ref={wordmarkRef} />
+      <MarkBody uid={uid} size={resolvedSize} ref={rootRef} />
+      <Wordmark size={resolvedSize} ref={wordmarkRef} />
     </>
   );
 }

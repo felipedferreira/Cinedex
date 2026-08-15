@@ -15,6 +15,13 @@ describe('BrandFocusRingsAnimation', () => {
     expect(screen.getByText('Cinedex')).toBeInTheDocument();
   });
 
+  it('forwards its size to the mark and wordmark', () => {
+    render(<BrandFocusRingsAnimation size="XS" />);
+
+    expect(screen.getByRole('img', { name: 'Cinedex' })).toHaveClass('size-5');
+    expect(screen.getByText('Cinedex')).toHaveClass('text-brand');
+  });
+
   it('settles on the same fully-open iris as BrandApertureAnimation', () => {
     // Same reasoning as BrandApertureAnimation.test.tsx: the global
     // `matchMedia` stub defaults to reduced motion so this stays on the

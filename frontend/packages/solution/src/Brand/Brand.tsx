@@ -1,6 +1,18 @@
 import { useId } from 'react';
+import { resolveBrandSize, type BrandSize } from './brandSize';
 import { MarkBody } from './MarkBody';
 import { Wordmark } from './Wordmark';
+
+export interface BrandProps {
+  /**
+   * The lockup scale. Named values run from `XS` through `XL`; `M` is the
+   * default and `XS` preserves the original size. A positive whole number is
+   * also accepted: 1–5 alias `XS`–`XL`, while higher numbers continue the
+   * scale. Zero, negative, fractional, `NaN`, and infinite numbers throw a
+   * `RangeError`.
+   */
+  size?: BrandSize;
+}
 
 /**
  * The Cinedex mark and wordmark, for `AuthCard`'s `brand` slot.
@@ -18,13 +30,14 @@ import { Wordmark } from './Wordmark';
  * everywhere else. It pulls in no GSAP: the timelines live behind
  * `useMarkTimeline`, which only the two animated variants call.
  */
-export function Brand() {
+export function Brand({ size = 'M' }: BrandProps) {
   const uid = useId();
+  const resolvedSize = resolveBrandSize(size);
 
   return (
     <>
-      <MarkBody uid={uid} />
-      <Wordmark />
+      <MarkBody uid={uid} size={resolvedSize} />
+      <Wordmark size={resolvedSize} />
     </>
   );
 }

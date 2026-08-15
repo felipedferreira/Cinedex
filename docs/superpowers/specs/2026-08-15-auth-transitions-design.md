@@ -60,24 +60,25 @@ storyable and testable with no router mock, exactly like the screens it animates
 | Keeping the outgoing screen alive | `cloneNode(true)` into an `inert` overlay | `AnimatePresence`-style approaches keep the exiting subtree mounted, but that subtree still contains a live `<Outlet />` which re-renders against the **new** router state — you cross-fade a screen with itself. A DOM clone is frozen by construction, and unlike view-transition pseudo-elements it is real DOM a test can assert on. |
 | Transition trigger | An opaque `transitionKey` string | Half the design's edges are in-screen state changes, not navigations. See above. |
 | Direction source | Edge map, overridden by history delta | The map is the design's `MAP · 2A` table verbatim. The browser Back button must read as backward regardless of what the map says, so a negative history delta wins. |
+| Easing | A hand-rolled cubic-bezier solver, passed to GSAP as a function ease | The design specifies exact beziers. Mapping them onto GSAP's named eases is where this repo has already been bitten: `Brand/timelines.ts` documents that `powerN` is off by one from the usual vocabulary and that "fixing" a cubic ease-out to `power3` overshoots by up to 0.11. Solving them exactly costs ~30 lines and removes the class of problem. |
+| Animated value transport | CSS custom properties, not `style.filter` / `style.transform` | jsdom's `CSSStyleDeclaration` implements only a subset of real properties and can silently drop `filter` — which would leave the screen correct and the tests asserting nothing. Custom properties always round-trip, which is what keeps the sequence scrubbable. |
 | Motion tokens | None added to `@cinedex/theme` | One TS module is the single source of truth. CSS tokens would only earn their place if CSS were also animating these values, and it is not. |
 | Scope | Router-wire the reachable edges only | Seven of ten screens are unreachable by clicking; `05 Verify email` and `06 Account ready` have no component and the design flags their copy as draft. Storybook covers the rest. |
 | E2E framework | **None** | See "Why no Cypress" below. |
 
 ## Module layout
 
-```
-packages/solution/src/transitions/
-├── rackFocus.ts             # buildRackFocusTimeline(out, in, opts) → paused GSAP timeline
-├── rackFocus.test.ts        # the variant table as a describe.each fixture
-├── authEdges.ts             # (from, to, historyDelta) → variant
-├── authEdges.test.ts
-├── ScreenTransition.tsx     # the clone host — router-free, keyed on a string
-└── ScreenTransition.test.tsx
+In `packages/solution/src/transitions/`:
 
-apps/cinedex-app/src/
-└── routes/__root.tsx        # RouterScreenTransition wrapping <Outlet />
-```
+| File | Responsibility |
+| --- | --- |
+| `cubicBezier.ts` | Solves the design's exact CSS beziers into a `(t) => number` GSAP takes as an ease |
+| `rackFocus.ts` | `buildRackFocusTimeline(out, in, opts)` — the variant table, returns a paused timeline |
+| `authEdges.ts` | `variantForEdge(from, to, wentBack)` — the `MAP · 2A` table |
+| `ScreenTransition.tsx` | The clone host and its `useCaptureOutgoing` context — router-free, keyed on a string |
+
+Plus a `.test.ts` beside each. In the app, `routes/__root.tsx` gains a
+`RouterScreenTransition` wrapping its `<Outlet />`.
 
 `rackFocus.ts` mirrors `Brand/timelines.ts`: pure, returns a **paused** timeline, no React, no DOM
 queries beyond the two elements it is handed. `ScreenTransition` mirrors `useMarkTimeline`: a
@@ -303,5 +304,5 @@ Manual verification stays what it is for the brand animations: the dev server in
 | --- | --- |
 | `filter: blur()` on a full card is GPU-expensive and can jank on low-end hardware | Blur is on two elements, not a tree, and both are composited. Verify by hand on the dev server before merge; the reduced-motion path drops blur entirely. |
 | The DOM clone diverges from what React would render (e.g. a portal, a Radix popover anchored outside the subtree) | Auth screens are static cards with no portals today. `AuthCard`'s subtree is self-contained. If a portal appears later, the clone drops it — acceptable for a 340ms overlap. |
-| TanStack Router's history-index accessor is not public API | The implementation plan must verify how to read the history delta from `location.state` and fall back to map-only direction if it is not reliably available. |
+| TanStack Router's history-index accessor is not public API | **Resolved in the plan:** every `popstate` is treated as backward, which needs no router internals. Right for the Back button, wrong for Forward — a deliberate trade, since forward-button use inside an auth flow is vanishingly rare. |
 | The `lockout` timing assumption is wrong | It is one constant. Flagged above so a reviewer can catch it before implementation. |

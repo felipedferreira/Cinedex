@@ -2,6 +2,8 @@ import { useEffect, useState } from 'react';
 import { Alert, Button, TextField } from '@cinedex/atoms';
 import { AuthLayout, InlineActionRow, StatPair } from '@cinedex/compounds';
 import { AuthActionLink, AuthLink } from '../link/AuthLink';
+import { useCaptureOutgoing } from '../transitions/captureContext';
+import { ScreenTransition } from '../transitions/ScreenTransition';
 import { CinedexAuthCard } from './CinedexAuthCard';
 import { formatCountdown } from './formatCountdown';
 
@@ -11,10 +13,46 @@ export interface ForgotPasswordScreenProps {
   onSubmit?: (values: { email: string }) => void;
 }
 
-export function ForgotPasswordScreen({ onSubmit }: ForgotPasswordScreenProps) {
-  const [step, setStep] = useState<'request' | 'sent'>('request');
+type Step = 'request' | 'sent';
+
+/**
+ * The request/sent step is the auth flow's only forward *and* backward edge that
+ * a user can reach by clicking today, and neither move is a navigation — both
+ * are this one component's state. So the transition host sits here rather than
+ * only at the router, with the step as its key.
+ *
+ * Splitting the screen in two is what makes that possible: this wrapper owns the
+ * step so it can key the host on it, while the body renders whichever step it is
+ * handed. The body is not remounted across the change — same element type, same
+ * position — so the email the user typed and the resend countdown both survive.
+ */
+export function ForgotPasswordScreen(props: ForgotPasswordScreenProps) {
+  const [step, setStep] = useState<Step>('request');
+
+  return (
+    <ScreenTransition
+      transitionKey={`/forgot-password#${step}`}
+      // Sending the link advances; starting over pulls back out of the flow.
+      variant={step === 'sent' ? 'forward' : 'back'}
+    >
+      <ForgotPasswordScreenBody {...props} step={step} onStepChange={setStep} />
+    </ScreenTransition>
+  );
+}
+
+interface ForgotPasswordScreenBodyProps extends ForgotPasswordScreenProps {
+  step: Step;
+  onStepChange: (next: Step) => void;
+}
+
+function ForgotPasswordScreenBody({
+  onSubmit,
+  step,
+  onStepChange,
+}: ForgotPasswordScreenBodyProps) {
   const [email, setEmail] = useState('');
   const [resendIn, setResendIn] = useState(RESEND_COOLDOWN_SECONDS);
+  const capture = useCaptureOutgoing();
 
   useEffect(() => {
     if (step !== 'sent') return;
@@ -66,7 +104,8 @@ export function ForgotPasswordScreen({ onSubmit }: ForgotPasswordScreenProps) {
             action={
               <AuthActionLink
                 onClick={() => {
-                  setStep('request');
+                  capture();
+                  onStepChange('request');
                 }}
               >
                 Start over
@@ -92,8 +131,9 @@ export function ForgotPasswordScreen({ onSubmit }: ForgotPasswordScreenProps) {
           className="flex flex-col gap-4"
           onSubmit={(event) => {
             event.preventDefault();
+            capture();
             setResendIn(RESEND_COOLDOWN_SECONDS);
-            setStep('sent');
+            onStepChange('sent');
             onSubmit?.({ email });
           }}
         >

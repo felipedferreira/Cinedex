@@ -4,9 +4,70 @@
     {
       "name": "cinedex-app",
       "runtimeExecutable": "npm",
-      "runtimeArgs": ["run", "start", "-w", "cinedex-app"],
-      "port": 5173,
-      "cwd": "frontend"
+      "runtimeArgs": ["run", "dev", "--prefix", "frontend"],
+      "port": 9000,
+      "autoPort": true
+    },
+    {
+      "name": "storybook",
+      "runtimeExecutable": "npm",
+      "runtimeArgs": ["run", "storybook", "--prefix", "frontend"],
+      "port": 9001,
+      "autoPort": false
+    },
+    {
+      "name": "docs-site",
+      "runtimeExecutable": "npm",
+      "runtimeArgs": ["run", "docs-site", "--prefix", "frontend"],
+      "port": 9004,
+      "autoPort": false
+    },
+    {
+      "name": "docs-site-built",
+      "runtimeExecutable": "npm",
+      "runtimeArgs": [
+        "run",
+        "serve",
+        "-w",
+        "@cinedex/docs-site",
+        "--prefix",
+        "frontend",
+        "--",
+        "--port",
+        "9005"
+      ],
+      "port": 9005,
+      "autoPort": false
+    },
+    {
+      "name": "webservice-api",
+      "runtimeExecutable": "dotnet",
+      "runtimeArgs": [
+        "run",
+        "--project",
+        "backend/src/Presentation/Cinedex.WebService",
+        "--launch-profile",
+        "https-api-docs"
+      ],
+      "port": 7201
+    },
+    {
+      "name": "webservice-static-ui",
+      "runtimeExecutable": "npm",
+      "runtimeArgs": [
+        "run",
+        "dev",
+        "--prefix",
+        "backend/src/Presentation/Cinedex.WebService"
+      ],
+      "port": 5173
+    },
+    {
+      "name": "docker-stack",
+      "runtimeExecutable": "docker",
+      "runtimeArgs": ["compose", "up", "--build"],
+      "port": 9000,
+      "autoPort": false
     }
   ]
 }

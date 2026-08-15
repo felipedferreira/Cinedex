@@ -6,7 +6,7 @@ import {
   type ReactNode,
 } from 'react';
 import type { gsap } from 'gsap';
-import { CaptureContext } from './captureContext';
+import { CaptureContext, useCaptureOutgoing } from './captureContext';
 import {
   buildRackFocusTimeline,
   PANE_STYLE,
@@ -50,9 +50,11 @@ export function ScreenTransition({
   variant,
   children,
 }: ScreenTransitionProps) {
+  const captureParent = useCaptureOutgoing();
   const stageRef = useRef<HTMLDivElement>(null);
   const liveRef = useRef<HTMLDivElement>(null);
   const renderedKey = useRef<string | null>(null);
+  const pendingRef = useRef<HTMLElement | null>(null);
   const cloneRef = useRef<HTMLElement | null>(null);
   const timelineRef = useRef<gsap.core.Timeline | null>(null);
 
@@ -61,10 +63,23 @@ export function ScreenTransition({
     cloneRef.current = null;
   }, []);
 
+  /**
+   * The clone is built here but **not** attached — the layout effect mounts it
+   * only if the key actually changed.
+   *
+   * That split is what makes nesting work. `ForgotPasswordScreen` has its own
+   * `ScreenTransition` inside the router's, and a link click inside it has to
+   * capture at *both* levels, since either one might be the one that moves. If
+   * capture attached eagerly, the level whose key did not change would be left
+   * with a full-screen snapshot pinned over the live UI until its own next
+   * transition. Deferring the attach makes an unused capture free: the detached
+   * node is simply dropped on the next one.
+   */
   const capture = useCallback(() => {
+    captureParent();
+
     const live = liveRef.current;
-    const stage = stageRef.current;
-    if (!live || !stage) {
+    if (!live) {
       return;
     }
 
@@ -79,9 +94,8 @@ export function ScreenTransition({
     clone.setAttribute('aria-hidden', 'true');
     clone.setAttribute('inert', '');
     Object.assign(clone.style, OVERLAY_STYLE, PANE_STYLE);
-    stage.append(clone);
-    cloneRef.current = clone;
-  }, [dropClone]);
+    pendingRef.current = clone;
+  }, [captureParent, dropClone]);
 
   useLayoutEffect(() => {
     if (renderedKey.current === transitionKey) {
@@ -90,11 +104,18 @@ export function ScreenTransition({
     renderedKey.current = transitionKey;
 
     const incoming = liveRef.current;
-    if (!incoming) {
+    const stage = stageRef.current;
+    if (!incoming || !stage) {
       return;
     }
 
-    const outgoing = cloneRef.current;
+    const outgoing = pendingRef.current;
+    pendingRef.current = null;
+    if (outgoing) {
+      stage.append(outgoing);
+      cloneRef.current = outgoing;
+    }
+
     const timeline = buildRackFocusTimeline(outgoing, incoming, {
       // With nothing captured there is no screen to leave, which is exactly
       // what `coldLoad` describes.

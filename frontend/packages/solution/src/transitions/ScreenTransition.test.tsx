@@ -205,6 +205,96 @@ describe('ScreenTransition', () => {
   });
 });
 
+/**
+ * `ForgotPasswordScreen` carries its own `ScreenTransition` for its request/sent
+ * step, and in the app that sits inside the router's. A click inside it has to
+ * capture at both levels — either one might be the one that moves — but only the
+ * level whose key actually changed may mount its snapshot. The other's has to be
+ * dropped, or a full-screen freeze-frame stays pinned over the live UI until
+ * that level's next transition.
+ */
+describe('ScreenTransition nesting', () => {
+  useFullMotion();
+
+  function Leaf({
+    step,
+    onStep,
+    onLeave,
+  }: {
+    step: string;
+    onStep: (next: string) => void;
+    onLeave: () => void;
+  }) {
+    const capture = useCaptureOutgoing();
+
+    return (
+      <div>
+        <h1>Step {step}</h1>
+        <button
+          type="button"
+          onClick={() => {
+            capture();
+            onStep('two');
+          }}
+        >
+          Step
+        </button>
+        <button
+          type="button"
+          onClick={() => {
+            capture();
+            onLeave();
+          }}
+        >
+          Leave
+        </button>
+      </div>
+    );
+  }
+
+  function Nested() {
+    const [outer, setOuter] = useState('x');
+    const [step, setStep] = useState('one');
+
+    return (
+      <ScreenTransition transitionKey={outer} variant="forward">
+        <ScreenTransition transitionKey={step} variant="forward">
+          <Leaf
+            step={step}
+            onStep={setStep}
+            onLeave={() => {
+              setOuter('y');
+            }}
+          />
+        </ScreenTransition>
+      </ScreenTransition>
+    );
+  }
+
+  it('moves the outer level when a nested screen navigates away', () => {
+    const { container } = render(<Nested />);
+
+    fireEvent.click(screen.getByRole('button', { name: 'Leave' }));
+
+    // The outer snapshot mounted; the inner one, whose key did not change,
+    // was dropped rather than pinned over the live UI.
+    expect(
+      container.querySelectorAll('[data-cdx-pane="outgoing"]'),
+    ).toHaveLength(1);
+  });
+
+  it('moves only the inner level on an in-screen step change', () => {
+    const { container } = render(<Nested />);
+
+    fireEvent.click(screen.getByRole('button', { name: 'Step' }));
+
+    expect(
+      container.querySelectorAll('[data-cdx-pane="outgoing"]'),
+    ).toHaveLength(1);
+    expect(screen.getByRole('heading')).toHaveTextContent('Step two');
+  });
+});
+
 describe('useCaptureOutgoing', () => {
   it('is a no-op outside a ScreenTransition, so screens stay storyable', () => {
     function Bare() {

@@ -544,6 +544,21 @@ Expected: FAIL — `Failed to resolve import "./rackFocus"`.
 
 - [ ] **Step 3: Write minimal implementation**
 
+> **Deviation taken during execution — the shipped code differs from the block
+> below, deliberately.** The proxy-object + `onUpdate` flush shown here does not
+> survive backward scrubbing: `Brand/timelines.ts` documents that `onUpdate` does
+> not fire at `progress(0)`, so after `progress(1) → progress(0)` the proxy holds
+> the end values and the DOM is never re-flushed. The "direction" test scrubs
+> exactly that way and would fail.
+>
+> The shipped version tweens the custom properties **directly** with
+> `timeline.fromTo(element, vars(from), vars(to), at)`. GSAP writes on every
+> render, including scrub-to-zero, and `fromTo` hands it both endpoints so
+> nothing is read back out of `getComputedStyle` — which matters because jsdom
+> returns an empty string for an unset custom property, and a plain `to()` would
+> parse that as `0` and animate from the wrong place. Read
+> `packages/solution/src/transitions/rackFocus.ts` for the real implementation.
+
 Create `frontend/packages/solution/src/transitions/rackFocus.ts`:
 
 ```ts

@@ -1,18 +1,17 @@
 import { useId, useMemo } from 'react';
-import type { FC, ReactNode } from 'react';
+import type { FC, PropsWithChildren, ReactNode } from 'react';
 import { Label } from '../Label/Label';
 import { cn } from '../utils/cn';
 import { FieldContext } from './fieldContext';
 
-export interface FieldProps {
+export type FieldProps = PropsWithChildren<{
   label: string;
   /** Rendered at the right of the label row, e.g. a "Forgot?" link. */
   labelExtra?: ReactNode;
   /** When set, the field renders as invalid and the message is announced. */
   error?: string;
   className?: string;
-  children?: ReactNode;
-}
+}>
 
 /**
  * The accessibility half of a form field: a label, a slot for the control, and

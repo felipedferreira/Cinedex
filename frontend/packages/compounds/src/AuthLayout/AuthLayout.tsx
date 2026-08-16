@@ -1,10 +1,9 @@
-import type { FC, ReactNode } from 'react';
+import type { FC, PropsWithChildren } from 'react';
 import { cn } from '@cinedex/atoms';
 
-export interface AuthLayoutProps {
+export type AuthLayoutProps = PropsWithChildren<{
   className?: string;
-  children?: ReactNode;
-}
+}>
 
 /** Centres a narrow column in the viewport — the page frame every auth screen sits in. */
 export const AuthLayout: FC<AuthLayoutProps> = ({ children, className }) => (

@@ -1,12 +1,11 @@
-import type { FC, ReactNode } from 'react';
+import type { FC, PropsWithChildren, ReactNode } from 'react';
 import { cn } from '@cinedex/atoms';
 
-export interface InlineActionRowProps {
+export type InlineActionRowProps = PropsWithChildren<{
   /** The action on the right, usually a link. */
   action: ReactNode;
   className?: string;
-  children?: ReactNode;
-}
+}>
 
 /**
  * The prompt-and-action row that closes a card — "No account? · Create one".

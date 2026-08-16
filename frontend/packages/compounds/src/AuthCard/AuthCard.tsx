@@ -1,9 +1,9 @@
-import type { FC, ReactNode } from 'react';
+import type { FC, PropsWithChildren, ReactNode } from 'react';
 import { Card, cn } from '@cinedex/atoms';
 
 export type AuthCardKickerTone = 'neutral' | 'warning' | 'success' | 'accent';
 
-export interface AuthCardProps {
+export type AuthCardProps = PropsWithChildren<{
   /**
    * The product mark and wordmark, rendered at the left of the row above the
    * card. Injected rather than hardcoded — that is the line between this package
@@ -18,8 +18,7 @@ export interface AuthCardProps {
   kickerTone?: AuthCardKickerTone;
   title: string;
   description?: ReactNode;
-  children?: ReactNode;
-}
+}>
 
 const kickerToneClass: Record<AuthCardKickerTone, string> = {
   neutral: 'text-text',

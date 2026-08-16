@@ -1,16 +1,15 @@
-import type { FC } from 'react';
+import type { FC, PropsWithChildren } from 'react';
 import { AnchorLink } from './AnchorLink';
 import { LinkContext } from './linkContext';
 import type { SolutionLinkComponent } from './linkTypes';
 
-export interface SolutionProviderProps {
+export type SolutionProviderProps = PropsWithChildren<{
   /**
    * The component screens render their internal navigation with. Defaults to a
    * plain `<a>`; a host with a router passes its own `Link`.
    */
   linkComponent?: SolutionLinkComponent;
-  children?: React.ReactNode;
-}
+}>
 
 /**
  * Wraps the app once, at the root, to tell `@cinedex/solution`'s screens how to

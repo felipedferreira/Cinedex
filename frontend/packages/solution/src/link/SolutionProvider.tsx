@@ -1,4 +1,4 @@
-import type { ReactNode } from 'react';
+import type { FC } from 'react';
 import { AnchorLink } from './AnchorLink';
 import { LinkContext } from './linkContext';
 import type { SolutionLinkComponent } from './linkTypes';
@@ -9,7 +9,7 @@ export interface SolutionProviderProps {
    * plain `<a>`; a host with a router passes its own `Link`.
    */
   linkComponent?: SolutionLinkComponent;
-  children: ReactNode;
+  children?: React.ReactNode;
 }
 
 /**
@@ -17,9 +17,9 @@ export interface SolutionProviderProps {
  * navigate. Without it they still render — links just become ordinary anchors,
  * which is what Storybook and the tests want anyway.
  */
-export function SolutionProvider({
+export const SolutionProvider: FC<SolutionProviderProps> = ({
   linkComponent = AnchorLink,
   children,
-}: SolutionProviderProps) {
-  return <LinkContext value={linkComponent}>{children}</LinkContext>;
-}
+}) => (
+  <LinkContext value={linkComponent}>{children}</LinkContext>
+);

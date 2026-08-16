@@ -18,13 +18,13 @@ export interface OtpInputProps {
  * preview API behind an `unstable_` prefix with an open issue on value
  * persistence — worth adopting once it stabilises, not before.
  */
-export function OtpInput({
+export const OtpInput = ({
   length = 6,
   value,
   onChange,
   label,
   className,
-}: OtpInputProps) {
+}: OtpInputProps) => {
   const [focusedIndex, setFocusedIndex] = useState<number | null>(null);
   const inputRefs = useRef<(HTMLInputElement | null)[]>([]);
 
@@ -122,4 +122,4 @@ export function OtpInput({
       })}
     </div>
   );
-}
+};

@@ -9,7 +9,7 @@ export type InputProps = Omit<ComponentProps<'input'>, 'id'>;
  * The bare text-input surface. Inside a `Field` it picks up that field's id and
  * `aria-*` from context; outside one it is just a styled input.
  */
-export function Input({ className, ...rest }: InputProps) {
+export const Input = ({ className, ...rest }: InputProps) => {
   const field = useFieldControl();
 
   return (
@@ -22,4 +22,4 @@ export function Input({ className, ...rest }: InputProps) {
       {...rest}
     />
   );
-}
+};

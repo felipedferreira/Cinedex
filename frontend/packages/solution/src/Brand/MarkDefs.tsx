@@ -22,8 +22,7 @@ export interface MarkDefsProps {
  * Not exported from the package barrel — an internal building block, not part
  * of `@cinedex/solution`'s public surface.
  */
-export function MarkDefs({ uid }: MarkDefsProps) {
-  return (
+export const MarkDefs = ({ uid }: MarkDefsProps) => (
     <defs>
       <linearGradient id={`cdx-ring-${uid}`} x1="0" y1="0" x2="1" y2="1">
         {RING_GRADIENT_STOPS.map((stop) => (
@@ -79,4 +78,3 @@ export function MarkDefs({ uid }: MarkDefsProps) {
       </mask>
     </defs>
   );
-}

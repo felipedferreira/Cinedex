@@ -30,7 +30,7 @@ export interface BrandProps {
  * everywhere else. It pulls in no GSAP: the timelines live behind
  * `useMarkTimeline`, which only the two animated variants call.
  */
-export function Brand({ size = 'M' }: BrandProps) {
+export const Brand = ({ size = 'M' }: BrandProps) => {
   const uid = useId();
   const resolvedSize = resolveBrandSize(size);
 
@@ -40,4 +40,4 @@ export function Brand({ size = 'M' }: BrandProps) {
       <Wordmark size={resolvedSize} />
     </>
   );
-}
+};

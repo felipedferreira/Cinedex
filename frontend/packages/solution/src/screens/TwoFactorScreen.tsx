@@ -17,11 +17,11 @@ export interface TwoFactorScreenProps {
  * Presentational on purpose: the backend has no MFA yet, so nothing can drive
  * this screen for real. It renders against local state, ready to wire.
  */
-export function TwoFactorScreen({
+export const TwoFactorScreen = ({
   codeLength = 6,
   onSubmit,
   onResend,
-}: TwoFactorScreenProps) {
+}: TwoFactorScreenProps) => {
   const [code, setCode] = useState('');
   const [secondsLeft, setSecondsLeft] = useState(CODE_LIFETIME_SECONDS);
 
@@ -42,7 +42,6 @@ export function TwoFactorScreen({
         kickerTone="accent"
         title="Two-factor code"
         description={`${String(codeLength)} digits from your authenticator app for this account.`}
-        footnote="Administrator sessions require MFA. Catalog-only accounts skip this step."
       >
         <form
           className="flex flex-col gap-4"
@@ -94,4 +93,4 @@ export function TwoFactorScreen({
       </CinedexAuthCard>
     </AuthLayout>
   );
-}
+};

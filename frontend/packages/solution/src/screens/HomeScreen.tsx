@@ -72,8 +72,7 @@ const SCREENS: ScreenEntry[] = [
  * need backend support that does not exist yet — so this is the only way to
  * review them short of editing the address bar.
  */
-export function HomeScreen() {
-  return (
+export const HomeScreen = () => (
     <AuthLayout>
       <CinedexAuthCard
         brand={<BrandApertureAnimation />}
@@ -81,7 +80,6 @@ export function HomeScreen() {
         kicker="Catalog · Screens"
         title="Cinedex"
         description="Every screen in the auth flow, in one place. This pass is UI-only — local state and stubbed handlers, no calls to the API yet."
-        footnote="Screens live in @cinedex/solution and render without a router; this app supplies the navigation."
       >
         <nav aria-label="All screens">
           <ul className="m-0 flex list-none flex-col gap-0 p-0">
@@ -111,5 +109,4 @@ export function HomeScreen() {
         </nav>
       </CinedexAuthCard>
     </AuthLayout>
-  );
-}
+);

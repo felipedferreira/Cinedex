@@ -23,8 +23,7 @@ export interface StatPairProps {
  * remaining-attempts count, say. The divider is the container's background
  * showing through a 1px gap, so it stays a single hairline at any zoom.
  */
-export function StatPair({ stats }: StatPairProps) {
-  return (
+export const StatPair = ({ stats }: StatPairProps) => (
     <div className="grid grid-cols-2 gap-px overflow-hidden rounded-xs border border-border bg-border">
       {stats.map((stat) => (
         <div
@@ -41,4 +40,3 @@ export function StatPair({ stats }: StatPairProps) {
       ))}
     </div>
   );
-}

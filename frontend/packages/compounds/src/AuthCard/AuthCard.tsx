@@ -1,4 +1,4 @@
-import type { ReactNode } from 'react';
+import type { FC, ReactNode } from 'react';
 import { Card, cn } from '@cinedex/atoms';
 
 export type AuthCardKickerTone = 'neutral' | 'warning' | 'success' | 'accent';
@@ -18,8 +18,7 @@ export interface AuthCardProps {
   kickerTone?: AuthCardKickerTone;
   title: string;
   description?: ReactNode;
-  children: ReactNode;
-  footnote?: ReactNode;
+  children?: ReactNode;
 }
 
 const kickerToneClass: Record<AuthCardKickerTone, string> = {
@@ -32,9 +31,9 @@ const kickerToneClass: Record<AuthCardKickerTone, string> = {
 /**
  * The panel every auth screen is built on: a brand row, then a card whose header
  * carries a kicker, a title and an optional description, then the screen's own
- * content, then an optional footnote below.
+ * content.
  */
-export function AuthCard({
+export const AuthCard: FC<AuthCardProps> = ({
   brand,
   eyebrow,
   kicker,
@@ -42,42 +41,33 @@ export function AuthCard({
   title,
   description,
   children,
-  footnote,
-}: AuthCardProps) {
-  return (
-    <div className="flex flex-col gap-4 text-text">
-      <div className="flex items-center gap-2">
-        {brand}
-        <span className="ml-auto font-mono text-[10px] tracking-label text-text uppercase">
-          {eyebrow}
-        </span>
-      </div>
-
-      <Card className="flex flex-col gap-4 px-[22px] py-5">
-        <div className="border-b-2 border-text-h pb-3">
-          <p
-            className={cn(
-              'm-0 mb-2 font-mono text-label font-semibold tracking-eyebrow uppercase',
-              kickerToneClass[kickerTone],
-            )}
-          >
-            {kicker}
-          </p>
-          <h1 className="m-0 text-title leading-[1.1] font-bold tracking-tight text-text-h">
-            {title}
-          </h1>
-          {description ? (
-            <p className="mt-2 mb-0 text-body text-text">{description}</p>
-          ) : null}
-        </div>
-        {children}
-      </Card>
-
-      {footnote ? (
-        <p className="m-0 font-mono text-footnote leading-[1.5] text-text">
-          {footnote}
-        </p>
-      ) : null}
+}) => (
+  <div className="flex flex-col gap-4 text-text">
+    <div className="flex items-center gap-2">
+      {brand}
+      <span className="ml-auto font-mono text-[10px] tracking-label text-text uppercase">
+        {eyebrow}
+      </span>
     </div>
-  );
-}
+
+    <Card className="flex flex-col gap-4 px-[22px] py-5">
+      <div className="border-b-2 border-text-h pb-3">
+        <p
+          className={cn(
+            'm-0 mb-2 font-mono text-label font-semibold tracking-eyebrow uppercase',
+            kickerToneClass[kickerTone],
+          )}
+        >
+          {kicker}
+        </p>
+        <h1 className="m-0 text-title leading-[1.1] font-bold tracking-tight text-text-h">
+          {title}
+        </h1>
+        {description ? (
+          <p className="mt-2 mb-0 text-body text-text">{description}</p>
+        ) : null}
+      </div>
+      {children}
+    </Card>
+  </div>
+);

@@ -1,5 +1,5 @@
 import { useId, useMemo } from 'react';
-import type { ReactNode } from 'react';
+import type { FC, ReactNode } from 'react';
 import { Label } from '../Label/Label';
 import { cn } from '../utils/cn';
 import { FieldContext } from './fieldContext';
@@ -11,7 +11,7 @@ export interface FieldProps {
   /** When set, the field renders as invalid and the message is announced. */
   error?: string;
   className?: string;
-  children: ReactNode;
+  children?: ReactNode;
 }
 
 /**
@@ -23,13 +23,13 @@ export interface FieldProps {
  * from context, so the three can never disagree. When there is no error the
  * description is dropped entirely rather than pointing at an empty node.
  */
-export function Field({
+export const Field: FC<FieldProps> = ({
   label,
   labelExtra,
   error,
   className,
   children,
-}: FieldProps) {
+}) => {
   const id = useId();
   const value = useMemo(
     () => ({
@@ -61,4 +61,4 @@ export function Field({
       </div>
     </FieldContext>
   );
-}
+};

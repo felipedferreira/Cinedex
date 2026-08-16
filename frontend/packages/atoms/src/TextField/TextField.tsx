@@ -15,15 +15,13 @@ export interface TextFieldProps extends InputProps {
  * caller wants. Reach for the two separately only when the control is not a
  * plain input — `PasswordField` in `@cinedex/compounds` is the example.
  */
-export function TextField({
+export const TextField = ({
   label,
   labelExtra,
   error,
   ...rest
-}: TextFieldProps) {
-  return (
+}: TextFieldProps) => (
     <Field label={label} labelExtra={labelExtra} error={error}>
       <Input {...rest} />
     </Field>
   );
-}

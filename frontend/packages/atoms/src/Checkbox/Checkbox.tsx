@@ -23,7 +23,7 @@ export interface CheckboxProps extends Omit<
  * but the accessible name of a button is computed from its contents first, and
  * this one has none.
  */
-export function Checkbox({ label, className, ...rest }: CheckboxProps) {
+export const Checkbox = ({ label, className, ...rest }: CheckboxProps) => {
   const id = useId();
   const labelId = `${id}-label`;
 
@@ -57,4 +57,4 @@ export function Checkbox({ label, className, ...rest }: CheckboxProps) {
       </label>
     </span>
   );
-}
+};

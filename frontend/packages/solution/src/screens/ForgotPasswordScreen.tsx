@@ -2,8 +2,6 @@ import { useEffect, useState } from 'react';
 import { Alert, Button, TextField } from '@cinedex/atoms';
 import { AuthLayout, InlineActionRow, StatPair } from '@cinedex/compounds';
 import { AuthActionLink, AuthLink } from '../link/AuthLink';
-import { useCaptureOutgoing } from '../transitions/captureContext';
-import { ScreenTransition } from '../transitions/ScreenTransition';
 import { CinedexAuthCard } from './CinedexAuthCard';
 import { formatCountdown } from './formatCountdown';
 
@@ -13,46 +11,10 @@ export interface ForgotPasswordScreenProps {
   onSubmit?: (values: { email: string }) => void;
 }
 
-type Step = 'request' | 'sent';
-
-/**
- * The request/sent step is the auth flow's only forward *and* backward edge that
- * a user can reach by clicking today, and neither move is a navigation — both
- * are this one component's state. So the transition host sits here rather than
- * only at the router, with the step as its key.
- *
- * Splitting the screen in two is what makes that possible: this wrapper owns the
- * step so it can key the host on it, while the body renders whichever step it is
- * handed. The body is not remounted across the change — same element type, same
- * position — so the email the user typed and the resend countdown both survive.
- */
-export function ForgotPasswordScreen(props: ForgotPasswordScreenProps) {
-  const [step, setStep] = useState<Step>('request');
-
-  return (
-    <ScreenTransition
-      transitionKey={`/forgot-password#${step}`}
-      // Sending the link advances; starting over pulls back out of the flow.
-      variant={step === 'sent' ? 'forward' : 'back'}
-    >
-      <ForgotPasswordScreenBody {...props} step={step} onStepChange={setStep} />
-    </ScreenTransition>
-  );
-}
-
-interface ForgotPasswordScreenBodyProps extends ForgotPasswordScreenProps {
-  step: Step;
-  onStepChange: (next: Step) => void;
-}
-
-function ForgotPasswordScreenBody({
-  onSubmit,
-  step,
-  onStepChange,
-}: ForgotPasswordScreenBodyProps) {
+export const ForgotPasswordScreen = ({ onSubmit }: ForgotPasswordScreenProps) => {
+  const [step, setStep] = useState<'request' | 'sent'>('request');
   const [email, setEmail] = useState('');
   const [resendIn, setResendIn] = useState(RESEND_COOLDOWN_SECONDS);
-  const capture = useCaptureOutgoing();
 
   useEffect(() => {
     if (step !== 'sent') return;
@@ -71,7 +33,6 @@ function ForgotPasswordScreenBody({
           eyebrow="Step 1 of 2"
           kicker="Recovery · Request"
           title="Check your inbox"
-          footnote="Recovery is rate-limited separately from sign-in. Timing is equalised across both outcomes."
         >
           <Alert>
             <p className="m-0">
@@ -104,8 +65,7 @@ function ForgotPasswordScreenBody({
             action={
               <AuthActionLink
                 onClick={() => {
-                  capture();
-                  onStepChange('request');
+                  setStep('request');
                 }}
               >
                 Start over
@@ -131,9 +91,8 @@ function ForgotPasswordScreenBody({
           className="flex flex-col gap-4"
           onSubmit={(event) => {
             event.preventDefault();
-            capture();
             setResendIn(RESEND_COOLDOWN_SECONDS);
-            onStepChange('sent');
+            setStep('sent');
             onSubmit?.({ email });
           }}
         >
@@ -156,4 +115,4 @@ function ForgotPasswordScreenBody({
       </CinedexAuthCard>
     </AuthLayout>
   );
-}
+};

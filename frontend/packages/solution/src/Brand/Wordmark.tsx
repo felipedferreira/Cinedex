@@ -20,8 +20,7 @@ export interface WordmarkProps {
  * system's type scale (`text-brand`) and the screen-reader semantics a
  * geometric wordmark would have to reinvent, for no legibility gain.
  */
-export function Wordmark({ size, ref }: WordmarkProps) {
-  return (
+export const Wordmark = ({ size, ref }: WordmarkProps) => (
     <span
       ref={ref}
       className={`font-mono ${size.wordmarkClassName} font-semibold tracking-eyebrow text-text-h uppercase`}
@@ -30,4 +29,3 @@ export function Wordmark({ size, ref }: WordmarkProps) {
       Cinedex
     </span>
   );
-}

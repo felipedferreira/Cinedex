@@ -14,15 +14,13 @@ export interface PasswordFieldProps extends PasswordInputProps {
  * and its reveal toggle. The counterpart to `TextField`, which pairs `Field`
  * with a plain `Input`.
  */
-export function PasswordField({
+export const PasswordField = ({
   label,
   labelExtra,
   error,
   ...rest
-}: PasswordFieldProps) {
-  return (
+}: PasswordFieldProps) => (
     <Field label={label} labelExtra={labelExtra} error={error}>
       <PasswordInput {...rest} />
     </Field>
   );
-}

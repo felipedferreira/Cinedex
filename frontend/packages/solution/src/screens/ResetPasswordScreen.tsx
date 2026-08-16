@@ -20,10 +20,10 @@ export interface ResetPasswordScreenProps {
   onSubmit?: (values: { password: string; signOutEverywhere: boolean }) => void;
 }
 
-export function ResetPasswordScreen({
+export const ResetPasswordScreen = ({
   email,
   onSubmit,
-}: ResetPasswordScreenProps) {
+}: ResetPasswordScreenProps) => {
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
   const [signOutEverywhere, setSignOutEverywhere] = useState(true);
@@ -55,7 +55,6 @@ export function ResetPasswordScreen({
             ? `Link verified for ${email}.`
             : 'Link verified for this account.'
         }
-        footnote="The reset link is single-use — it stops working once your password changes."
       >
         <form
           className="flex flex-col gap-4"
@@ -101,4 +100,4 @@ export function ResetPasswordScreen({
       </CinedexAuthCard>
     </AuthLayout>
   );
-}
+};

@@ -27,9 +27,9 @@ export interface BrandApertureAnimationProps {
  * the two DOM nodes it drives. `BrandFocusRingsAnimation` is the alternate
  * sequence, built and exported the same way.
  */
-export function BrandApertureAnimation({
+export const BrandApertureAnimation = ({
   size = 'M',
-}: BrandApertureAnimationProps) {
+}: BrandApertureAnimationProps) => {
   const uid = useId();
   const resolvedSize = resolveBrandSize(size);
   const { rootRef, wordmarkRef } = useMarkTimeline(buildApertureTimeline);
@@ -40,4 +40,4 @@ export function BrandApertureAnimation({
       <Wordmark size={resolvedSize} ref={wordmarkRef} />
     </>
   );
-}
+};

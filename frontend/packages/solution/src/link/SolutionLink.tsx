@@ -16,12 +16,12 @@ import type { SolutionLinkProps } from './linkTypes';
  * Renders whatever link component the host injected. Everything in this package
  * that navigates does so through here.
  */
-export function SolutionLink({
+export const SolutionLink = ({
   to,
   search,
   className,
   children,
-}: SolutionLinkProps) {
+}: SolutionLinkProps) => {
   const Link = useLinkComponent();
 
   return (
@@ -29,4 +29,4 @@ export function SolutionLink({
       {children}
     </Link>
   );
-}
+};

@@ -29,9 +29,9 @@ export interface BrandFocusRingsAnimationProps {
  * exported so it's a one-line swap if that choice changes, and so it can be
  * reviewed on its own in Storybook.
  */
-export function BrandFocusRingsAnimation({
+export const BrandFocusRingsAnimation = ({
   size = 'M',
-}: BrandFocusRingsAnimationProps) {
+}: BrandFocusRingsAnimationProps) => {
   const uid = useId();
   const resolvedSize = resolveBrandSize(size);
   const { rootRef, wordmarkRef } = useMarkTimeline(buildFocusRingsTimeline);
@@ -42,4 +42,4 @@ export function BrandFocusRingsAnimation({
       <Wordmark size={resolvedSize} ref={wordmarkRef} />
     </>
   );
-}
+};

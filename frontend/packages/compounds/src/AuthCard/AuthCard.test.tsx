@@ -31,7 +31,7 @@ describe('AuthCard', () => {
     expect(screen.queryByText('Cinedex')).not.toBeInTheDocument();
   });
 
-  it('omits the description and footnote when they are not given', () => {
+  it('omits the description when it is not given', () => {
     const { container } = render(
       <AuthCard eyebrow="e" kicker="k" title="Sign in">
         <p>body</p>
@@ -41,22 +41,18 @@ describe('AuthCard', () => {
     expect(container.querySelectorAll('p')).toHaveLength(2); // kicker + body
   });
 
-  it('renders the description and footnote when they are', () => {
+  it('renders the description when it is given', () => {
     render(
       <AuthCard
         eyebrow="e"
         kicker="k"
         title="Sign in"
         description="Sessions last 30 days."
-        footnote="Rate-limited: 5 attempts per 15 min."
       >
         <p>body</p>
       </AuthCard>,
     );
 
     expect(screen.getByText('Sessions last 30 days.')).toBeInTheDocument();
-    expect(
-      screen.getByText('Rate-limited: 5 attempts per 15 min.'),
-    ).toBeInTheDocument();
   });
 });

@@ -65,6 +65,5 @@ export const WarningKicker: Story = {
     title: 'Too many attempts',
     description:
       'Sign-in for this account is paused. Nothing is wrong with your password.',
-    footnote: 'Lockout applies per account and per IP.',
   },
 };

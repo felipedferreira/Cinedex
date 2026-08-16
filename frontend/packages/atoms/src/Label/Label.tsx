@@ -12,8 +12,7 @@ export interface LabelProps extends ComponentProps<typeof LabelPrimitive.Root> {
  * the text focuses the control even when that control is not a native input —
  * `Checkbox` renders a button.
  */
-export function Label({ tone = 'default', className, ...rest }: LabelProps) {
-  return (
+export const Label = ({ tone = 'default', className, ...rest }: LabelProps) => (
     <LabelPrimitive.Root
       className={cn(
         'font-mono text-label font-medium tracking-label uppercase',
@@ -23,4 +22,3 @@ export function Label({ tone = 'default', className, ...rest }: LabelProps) {
       {...rest}
     />
   );
-}

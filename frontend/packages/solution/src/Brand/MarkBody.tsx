@@ -40,8 +40,7 @@ export interface MarkBodyProps {
  * through a diff. `Brand` itself passes no `ref` and builds no timeline, so
  * these attributes stay inert there.
  */
-export function MarkBody({ uid, size, ref }: MarkBodyProps) {
-  return (
+export const MarkBody = ({ uid, size, ref }: MarkBodyProps) => (
     <svg
       ref={ref}
       viewBox={MARK_VIEW_BOX}
@@ -165,4 +164,3 @@ export function MarkBody({ uid, size, ref }: MarkBodyProps) {
       </g>
     </svg>
   );
-}

@@ -9,12 +9,10 @@ export interface AlertProps extends ComponentProps<'div'>, AlertVariantProps {}
  * suits the lockout and rate-limit copy these carry — a live region, not an
  * interruption.
  */
-export function Alert({ tone, className, ...rest }: AlertProps) {
-  return (
+export const Alert = ({ tone, className, ...rest }: AlertProps) => (
     <div
       role="status"
       className={cn(alertVariants({ tone }), className)}
       {...rest}
     />
   );
-}

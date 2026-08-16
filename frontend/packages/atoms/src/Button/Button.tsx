@@ -23,14 +23,14 @@ export interface ButtonProps
  * The action primitive. Defaults to `type="button"` so it never submits a form
  * by accident — pass `type="submit"` explicitly when that is what you want.
  */
-export function Button({
+export const Button = ({
   variant,
   size,
   asChild = false,
   type = 'button',
   className,
   ...rest
-}: ButtonProps) {
+}: ButtonProps) => {
   const classes = cn(buttonVariants({ variant, size }), className);
 
   if (asChild) {
@@ -40,4 +40,4 @@ export function Button({
   }
 
   return <button type={type} className={classes} {...rest} />;
-}
+};

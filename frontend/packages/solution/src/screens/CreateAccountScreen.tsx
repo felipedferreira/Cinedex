@@ -21,7 +21,7 @@ export interface CreateAccountScreenProps {
   onSubmit?: (values: CreateAccountValues) => void;
 }
 
-export function CreateAccountScreen({ onSubmit }: CreateAccountScreenProps) {
+export const CreateAccountScreen = ({ onSubmit }: CreateAccountScreenProps) => {
   const [email, setEmail] = useState('');
   const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
@@ -50,7 +50,6 @@ export function CreateAccountScreen({ onSubmit }: CreateAccountScreenProps) {
         eyebrow="CIN · Auth"
         kicker="Account · Register"
         title="Create account"
-        footnote="Submitting always shows the same confirmation, registered or not. Email verification is required before privileged use."
       >
         <form
           className="flex flex-col gap-4"
@@ -118,4 +117,4 @@ export function CreateAccountScreen({ onSubmit }: CreateAccountScreenProps) {
       </CinedexAuthCard>
     </AuthLayout>
   );
-}
+};

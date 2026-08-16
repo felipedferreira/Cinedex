@@ -11,7 +11,7 @@ export type PasswordInputProps = Omit<InputProps, 'type'>;
  * primitive is still behind an `unstable_` prefix, and the whole of the
  * behaviour it would replace is the `useState` below.
  */
-export function PasswordInput({ className, ...rest }: PasswordInputProps) {
+export const PasswordInput = ({ className, ...rest }: PasswordInputProps) => {
   const [visible, setVisible] = useState(false);
 
   return (
@@ -32,4 +32,4 @@ export function PasswordInput({ className, ...rest }: PasswordInputProps) {
       </button>
     </div>
   );
-}
+};

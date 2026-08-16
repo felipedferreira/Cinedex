@@ -9,11 +9,10 @@ export interface PasswordStrengthMeterProps {
 }
 
 /** The strength bar and its verdict, side by side. */
-export function PasswordStrengthMeter({
+export const PasswordStrengthMeter = ({
   ratio,
   label,
-}: PasswordStrengthMeterProps) {
-  return (
+}: PasswordStrengthMeterProps) => (
     <div className="flex items-center gap-2.5">
       <ProgressBar ratio={ratio} label="Password strength" className="flex-1" />
       <span className="font-mono text-label font-semibold tracking-label text-accent uppercase">
@@ -21,15 +20,13 @@ export function PasswordStrengthMeter({
       </span>
     </div>
   );
-}
 
 export interface PasswordChecklistProps {
   requirements: PasswordRequirement[];
 }
 
 /** The tick-list of password requirements, met and unmet. */
-export function PasswordChecklist({ requirements }: PasswordChecklistProps) {
-  return (
+export const PasswordChecklist = ({ requirements }: PasswordChecklistProps) => (
     <ul className="m-0 mt-0.5 grid list-none gap-1.5 p-0">
       {requirements.map((requirement) => (
         <li
@@ -51,4 +48,3 @@ export function PasswordChecklist({ requirements }: PasswordChecklistProps) {
       ))}
     </ul>
   );
-}

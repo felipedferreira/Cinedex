@@ -1,0 +1,50 @@
+# The internal edge for the Dokploy deployment. Compare with ./Caddyfile, which is the local
+# Compose one: same routing table, two deliberate differences.
+#
+#  1. It listens on plain :80, not `https://localhost` with `tls internal`. TLS terminates at
+#     Dokploy's Traefik, which holds the real Let's Encrypt certificate; a second certificate
+#     here would only be presented to Traefik over the container network.
+#  2. It trusts the proxy in front of it (below), which the local file has no need to.
+
+{
+	servers {
+		# Load-bearing, and it fails in a way that looks like an application bug.
+		#
+		# Caddy overwrites X-Forwarded-Proto by default — deliberately, to stop clients spoofing
+		# it. Behind Traefik that default is wrong: Traefik sets `X-Forwarded-Proto: https` after
+		# terminating TLS, Caddy would replace it with `http` (the scheme of the hop it received),
+		# and the web service — which trusts that header via ForwardedHeaders__Enabled — would
+		# conclude every request arrived over plain HTTP. `UseHttpsRedirection` then answers API
+		# calls with a 307 to https, the browser retries, and the loop repeats. Trusting the
+		# private-range peer preserves the header Traefik actually set.
+		#
+		# Safe here because nothing outside the Docker networks can reach this container: it
+		# publishes no host port, and the only private-range peer that can open a connection to it
+		# is Traefik on dokploy-network.
+		trusted_proxies static private_ranges
+	}
+	# Belt and braces. A bare `:80` site address gives Caddy no hostname to request a certificate
+	# for, so this is already the effective behaviour — stating it means a later edit that adds a
+	# hostname to the site block cannot accidentally start an ACME challenge from inside the
+	# container network, where it could never be validated.
+	auto_https off
+}
+
+:80 {
+	# The API. Same-origin with the SPA on purpose — the refresh-token cookie is
+	# Secure + SameSite=Strict, so a separate api.* hostname would drop it on every request.
+	redir /movies-svc /movies-svc/ 308
+
+	@api path /movies-svc/*
+	reverse_proxy @api movies.webservice:8080
+
+	# The Docusaurus site is built with DOCUSAURUS_BASE_URL=/documentation/, so it expects to be
+	# mounted here and its nginx.conf strips the prefix itself. Do not rewrite the path.
+	redir /documentation /documentation/ 308
+
+	@documentation path /documentation/*
+	reverse_proxy @documentation cinedex-docs-site:80
+
+	# Everything else is the SPA, whose nginx falls back to index.html for client-side routes.
+	reverse_proxy cinedex-app:8080
+}

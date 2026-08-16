@@ -19,6 +19,7 @@ Compose, plus the one manual setup step (Seq), a "try it out" walkthrough, and t
 |---|---|
 | [Auth Execution Plan](superpowers/plans/2026-07-29-auth-execution-plan.md) | 65-issue roadmap organized in 7 waves (dependency depth) and 6 lanes (staffing themes). Includes the interactive swimlane board, execution order algorithm, and critical path corrections. Start with Wave 0: 21 unblocked issues ready to ship today. |
 | [Auth & Security Model](auth-security-model.md) | JWT access tokens, rotating refresh tokens, the `auth` schema, Identity behind ports, and the known gaps. |
+| [Deploying with Dokploy](deployment/dokploy.md) | Running the stack on your own VPS: the production compose file, the Traefik/Caddy edge split, the environment variables that must be overridden, and why `compose.yaml` is not deployable as-is. |
 
 ## Elsewhere
 

@@ -1,0 +1,251 @@
+# Production stack for a Dokploy "Compose" application on a VPS.
+#
+# How this differs from the local `compose.yaml`, and why:
+#
+#  * **No host port bindings anywhere.** Dokploy's Traefik owns :80 and :443 on the host and
+#    reaches containers over the shared `dokploy-network`. Publishing a port here would either
+#    collide with Traefik or punch a service straight through the firewall — `ports: 5432:5432`
+#    in the local file means the database, which must never be reachable from the internet.
+#    Everything uses `expose` instead, which is container-network only.
+#  * **No `container_name`.** The local file pins them so volume and container names are stable
+#    across differently-named clones. On a VPS that pin is a liability: it makes the stack
+#    un-deployable twice (a staging copy would collide) and breaks Dokploy's isolated
+#    deployments, which suffix container names per deployment.
+#  * **No Mailpit.** It is a dev sink that swallows mail; production points `Smtp__*` at a real
+#    provider. Password-reset email is a real feature of this app — with no working SMTP the
+#    forgot-password flow silently goes nowhere.
+#  * **Every secret comes from the environment.** Dokploy's Environment tab writes these into an
+#    `.env` beside this file at deploy time. `Jwt__SigningKey` in particular MUST be overridden:
+#    `appsettings.json` ships a committed dev key, and leaving it in place means anyone holding
+#    this public repository can mint a valid access token for your deployment.
+#  * **`restart: unless-stopped` on everything long-running**, so the stack survives a VPS reboot.
+#
+# Deploy with: Dokploy -> Create Compose -> Compose Path `./compose.production.yaml`.
+# Full walkthrough in docs/deployment/dokploy.md.
+name: cinedex
+
+services:
+  postgres:
+    image: postgres:17-alpine
+    environment:
+      POSTGRES_USER: movies_rw
+      # Applied only when the postgres_data volume is initialized for the first time. To change
+      # it later, ALTER ROLE inside the running database — editing this value does nothing.
+      POSTGRES_PASSWORD: "${DB_PASSWORD}"
+      POSTGRES_DB: movies
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    # Deliberately no `ports` and not on dokploy-network: the database is reachable only by the
+    # other services in this stack. Connect to it for maintenance through `docker compose exec`.
+    networks:
+      - internal
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U movies_rw -d movies"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    restart: unless-stopped
+
+  # Structured logs + traces over OTLP. Same first-run dance as local: sign in as `admin` with
+  # SEQ_ADMIN_PASSWORD, set a permanent password, create an API key whose token is SEQ_API_KEY,
+  # then redeploy so the services pick it up. It is on dokploy-network so you *can* give it a
+  # domain (e.g. seq.example.com) — until you do, it is private to the stack.
+  seq:
+    image: datalust/seq:latest
+    environment:
+      ACCEPT_EULA: "Y"
+      SEQ_FIRSTRUN_ADMINPASSWORD: "${SEQ_ADMIN_PASSWORD}"
+    expose:
+      - "80"
+    volumes:
+      - seq_data:/data
+    networks:
+      - internal
+      - dokploy-network
+    healthcheck:
+      test: ["CMD-SHELL", "curl -sf http://localhost/health || exit 1"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    restart: unless-stopped
+
+  # Run-to-completion. The web service and the scheduler worker both gate on it finishing, so a
+  # deployment that ships a new migration applies it before anything serves traffic.
+  movies.databasemigrator:
+    image: cinedex/databasemigrator:${IMAGE_TAG:-latest}
+    build:
+      context: ./backend
+      dockerfile: src/Presentation/Cinedex.DatabaseMigrator/Dockerfile
+    depends_on:
+      postgres:
+        condition: service_healthy
+      seq:
+        condition: service_healthy
+    environment:
+      DOTNET_ENVIRONMENT: Production
+      ConnectionStrings__DefaultConnection: "${DB_CONNECTION_STRING}"
+      OTEL_EXPORTER_OTLP_ENDPOINT: "http://seq/ingest/otlp"
+      OTEL_EXPORTER_OTLP_PROTOCOL: "http/protobuf"
+      OTEL_EXPORTER_OTLP_HEADERS: "X-Seq-ApiKey=${SEQ_API_KEY}"
+      OTEL_SERVICE_NAME: "Cinedex.DatabaseMigrator"
+    networks:
+      - internal
+    restart: "no"
+
+  movies.webservice:
+    image: cinedex/webservice:${IMAGE_TAG:-latest}
+    build:
+      context: ./backend
+      dockerfile: src/Presentation/Cinedex.WebService/Dockerfile
+    expose:
+      - "8080"
+    depends_on:
+      postgres:
+        condition: service_healthy
+      movies.databasemigrator:
+        condition: service_completed_successfully
+      seq:
+        condition: service_healthy
+    environment:
+      ASPNETCORE_ENVIRONMENT: Production
+      # Two proxies sit in front of this app now (Traefik, then cinedex-edge), so the original
+      # scheme only survives as X-Forwarded-Proto. Without this the app sees plain http and
+      # `UseHttpsRedirection` bounces every API call — see the trusted_proxies note in
+      # Caddyfile.production, which is the other half of keeping that header honest.
+      ForwardedHeaders__Enabled: "true"
+      Features__ApiDocumentationEnabled: "${API_DOCS_ENABLED:-true}"
+      Authentication__RefreshTokenCookie__Secure: "true"
+      ConnectionStrings__DefaultConnection: "${DB_CONNECTION_STRING}"
+      Kestrel__Endpoints__Http__Url: "http://0.0.0.0:8080"
+      # The committed signing key is a development placeholder. This override is not optional.
+      Jwt__SigningKey: "${JWT_SIGNING_KEY}"
+      Jwt__Issuer: "${PUBLIC_BASE_URL}"
+      Jwt__Audience: "cinedex-api"
+      # Used to build the password-reset link that goes out by email. A wrong value here produces
+      # emails whose links land on the wrong host — the app itself keeps working, so nothing fails
+      # loudly.
+      Frontend__BaseUrl: "${PUBLIC_BASE_URL}"
+      OTEL_EXPORTER_OTLP_ENDPOINT: "http://seq/ingest/otlp"
+      OTEL_EXPORTER_OTLP_PROTOCOL: "http/protobuf"
+      OTEL_EXPORTER_OTLP_HEADERS: "X-Seq-ApiKey=${SEQ_API_KEY}"
+      OTEL_SERVICE_NAME: "Cinedex.WebService"
+      Smtp__Host: "${SMTP_HOST}"
+      Smtp__Port: "${SMTP_PORT}"
+      Smtp__Username: "${SMTP_USERNAME}"
+      Smtp__Password: "${SMTP_PASSWORD}"
+      Smtp__FromAddress: "${SMTP_FROM_ADDRESS}"
+      Smtp__FromName: "${SMTP_FROM_NAME:-Cinedex}"
+      Smtp__SecureSocketOptions: "${SMTP_SECURE_SOCKET_OPTIONS:-StartTls}"
+    networks:
+      - internal
+    # curl is installed in the runtime image; the path carries the /movies-svc base path because
+    # UsePathBase runs before the health endpoints are mapped.
+    healthcheck:
+      test: ["CMD-SHELL", "curl -sf http://localhost:8080/movies-svc/health/live || exit 1"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+      start_period: 30s
+    restart: unless-stopped
+
+  movies.schedulerworker:
+    image: cinedex/schedulerworker:${IMAGE_TAG:-latest}
+    build:
+      context: ./backend
+      dockerfile: src/Presentation/Cinedex.SchedulerWorker/Dockerfile
+    depends_on:
+      postgres:
+        condition: service_healthy
+      movies.databasemigrator:
+        condition: service_completed_successfully
+      seq:
+        condition: service_healthy
+    environment:
+      DOTNET_ENVIRONMENT: Production
+      ConnectionStrings__DefaultConnection: "${DB_CONNECTION_STRING}"
+      OTEL_EXPORTER_OTLP_ENDPOINT: "http://seq/ingest/otlp"
+      OTEL_EXPORTER_OTLP_PROTOCOL: "http/protobuf"
+      OTEL_EXPORTER_OTLP_HEADERS: "X-Seq-ApiKey=${SEQ_API_KEY}"
+      OTEL_SERVICE_NAME: "Cinedex.SchedulerWorker"
+    networks:
+      - internal
+    restart: unless-stopped
+
+  cinedex-app:
+    image: cinedex/app:${IMAGE_TAG:-latest}
+    build:
+      # The frontend is an npm workspace: the context has to be the workspace root so the build
+      # can see the hoisted lockfile and the @cinedex/* packages the app depends on.
+      context: ./frontend
+      dockerfile: apps/cinedex-app/Dockerfile
+    expose:
+      - "8080"
+    networks:
+      - internal
+    restart: unless-stopped
+
+  cinedex-docs-site:
+    image: cinedex/docs-site:${IMAGE_TAG:-latest}
+    build:
+      # Repository root, because /changelog is generated from the root CHANGELOG.md.
+      context: .
+      dockerfile: frontend/apps/docs-site/Dockerfile
+      args:
+        # Baked in at build time — changing it needs a rebuild, not a restart.
+        STORYBOOK_BASE_URL: "${STORYBOOK_BASE_URL}"
+    expose:
+      - "80"
+    networks:
+      - internal
+    restart: unless-stopped
+
+  # Storybook gets its own hostname rather than a path under the main domain. Its bundle is built
+  # with Vite's default base of `/` and references assets as absolute `/assets/...` URLs, so
+  # serving it under a sub-path would 404 every asset while returning a 200 for the shell.
+  cinedex-storybook:
+    image: cinedex/storybook:${IMAGE_TAG:-latest}
+    build:
+      context: ./frontend
+      dockerfile: apps/storybook/Dockerfile
+    expose:
+      - "80"
+    networks:
+      - dokploy-network
+    restart: unless-stopped
+
+  # The single public entry point for the app. Traefik terminates TLS and forwards here over plain
+  # HTTP; this proxy owns the path routing (/movies-svc -> API, /documentation -> docs, / -> SPA).
+  #
+  # Routing here rather than in three separate Dokploy domains is what keeps the SPA and the API on
+  # one origin, which the refresh-token cookie (Secure, SameSite=Strict, same-site only) requires —
+  # and it keeps the routing table in version control instead of in a web UI.
+  cinedex-edge:
+    image: caddy:2.11.4-alpine
+    expose:
+      - "80"
+    volumes:
+      - ./Caddyfile.production:/etc/caddy/Caddyfile:ro
+      - caddy_data:/data
+      - caddy_config:/config
+    depends_on:
+      - cinedex-app
+      - cinedex-docs-site
+      - movies.webservice
+    networks:
+      - internal
+      - dokploy-network
+    restart: unless-stopped
+
+networks:
+  # Private to this stack. Nothing on it is reachable from the host or the internet.
+  internal:
+  # Created by the Dokploy installer; Traefik is attached to it. Only the services that need a
+  # public hostname join it.
+  dokploy-network:
+    external: true
+
+volumes:
+  postgres_data:
+  seq_data:
+  caddy_data:
+  caddy_config:

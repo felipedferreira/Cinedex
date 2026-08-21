@@ -42,6 +42,13 @@ internal static class ApiConstants
         public const string ResetPasswordRoute = $"{Route}/password/reset";
     }
 
+    public static class Security
+    {
+        // The key this scheme is filed under in components.securitySchemes. Scalar's preferred-scheme
+        // setting refers to it by the same name, so the two must not drift apart.
+        public const string BearerScheme = "Bearer";
+    }
+
     public static class Health
     {
         public const string LiveRoute = "/health/live";

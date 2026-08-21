@@ -145,6 +145,15 @@ public static class RequestPipelineExtensions
             options.EnabledTargets = [ScalarTarget.CSharp, ScalarTarget.JavaScript];
             options.Theme = ScalarTheme.Solarized;
             options.Title = "API Documentation - {documentName}";
+
+            // Preselect the bearer scheme so the token box is the first thing the auth panel shows,
+            // rather than a scheme picker the reader has to open first.
+            options.AddPreferredSecuritySchemes(ApiConstants.Security.BearerScheme);
+
+            // Keep the token in local storage across reloads — Swagger UI's Authorize dialog forgets
+            // it on refresh, and re-pasting a 15-minute access token on every reload is the main
+            // friction when trying endpoints by hand.
+            options.EnablePersistentAuthentication();
         });
 
         return app;

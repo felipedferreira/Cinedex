@@ -8,6 +8,7 @@ using Cinedex.WebService.Configuration;
 using Cinedex.WebService.Constants;
 using Cinedex.WebService.ExceptionHandlers;
 using Cinedex.WebService.Http;
+using Cinedex.WebService.OpenApi;
 using FastEndpoints;
 
 namespace Cinedex.WebService.Extensions;
@@ -61,7 +62,13 @@ public static class ServiceRegistrationExtensions
         builder.Services.AddFastEndpoints();
 
         // Learn more about configuring OpenAPI at https://aka.ms/aspnet/openapi
-        builder.Services.AddOpenApi();
+        builder.Services.AddOpenApi(options =>
+        {
+            // Publishes the JWT bearer scheme and flags the operations that require it, which is
+            // what gives the Scalar API reference its authentication panel.
+            options.AddDocumentTransformer<BearerSecuritySchemeDocumentTransformer>();
+            options.AddOperationTransformer<BearerSecurityRequirementOperationTransformer>();
+        });
         builder.Services.AddProblemDetails();
 
         // Startup guard: fail immediately if the key is absent altogether, rather than letting it

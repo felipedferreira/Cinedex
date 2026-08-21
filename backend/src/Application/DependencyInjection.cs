@@ -4,6 +4,7 @@ using Cinedex.Application.Auth.Logout;
 using Cinedex.Application.Auth.RefreshToken;
 using Cinedex.Application.Auth.RegisterUser;
 using Cinedex.Application.Auth.ResetPassword;
+using Cinedex.Application.Auth.RevokeAllSessions;
 using Cinedex.Application.Genres.CreateGenre;
 using Cinedex.Application.Genres.DeleteGenre;
 using Cinedex.Application.Genres.GetGenreById;
@@ -41,6 +42,7 @@ public static class DependencyInjection
         services.AddScoped<IRegisterUserHandler, RegisterUserHandler>();
         services.AddScoped<ILoginHandler, LoginHandler>();
         services.AddScoped<ILogoutHandler, LogoutHandler>();
+        services.AddScoped<IRevokeAllSessionsHandler, RevokeAllSessionsHandler>();
         services.AddScoped<IRefreshTokenHandler, RefreshTokenHandler>();
         services.AddScoped<IForgotPasswordHandler, ForgotPasswordHandler>();
         services.AddScoped<IResetPasswordHandler, ResetPasswordHandler>();

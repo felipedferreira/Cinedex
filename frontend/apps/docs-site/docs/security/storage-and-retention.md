@@ -37,6 +37,12 @@ Two retention windows, because the two kinds of dead row are dead for different 
 | Expired, never revoked | past its expiry by more than `ExpiredRetention`         | 1 day past expiry       |
 | Revoked                | past its revocation by more than `ReuseDetectionWindow` | 14 days past revocation |
 
+The two categories stay disjoint because **every revocation path filters on expiry as well as on
+revocation** — rotation, the reuse response, logout, and sign-out-everywhere alike. An
+already-expired row is dead either way, so stamping it would change no security outcome, but it
+would move the row out of the first category and into the second, keeping a corpse that had all but
+drained for another fortnight.
+
 Neither window shortens a session — a token that hasn't yet expired is never touched by either
 category, no matter how long it's sat unused.
 

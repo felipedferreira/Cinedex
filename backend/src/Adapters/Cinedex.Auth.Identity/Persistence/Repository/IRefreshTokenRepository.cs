@@ -109,12 +109,22 @@ internal interface IRefreshTokenRepository
         CancellationToken cancellationToken);
 
     /// <summary>
-    /// Revokes every active token belonging to one user, whatever family it is in.
+    /// Revokes every active, unexpired token belonging to one user, whatever family it is in —
+    /// the sign-out-everywhere path, and the response to a password reset. Idempotent.
     /// </summary>
+    /// <remarks>
+    /// The only revocation whose unit is the user rather than a family or a single row. That is what
+    /// separates it from <see cref="RevokeActiveFamilyByTokenHashAsync"/>: logout ends the one session
+    /// its cookie identifies and deliberately leaves the user's other devices signed in, while this
+    /// crosses every family the user owns and needs no token presented to do it.
+    /// </remarks>
     /// <param name="userId">The user whose sessions are ending.</param>
-    /// <param name="revokedAtUtc">The revocation stamp.</param>
+    /// <param name="revokedAtUtc">The revocation stamp, also used as the expiry cutoff.</param>
     /// <param name="cancellationToken">A token to observe while waiting for the task to complete.</param>
-    /// <returns>The number of tokens revoked.</returns>
+    /// <returns>
+    /// The number of tokens revoked — sessions that were live when the call landed. Zero when the
+    /// user holds nothing active, which a repeated call always does.
+    /// </returns>
     Task<int> RevokeAllActiveForUserAsync(Guid userId, DateTime revokedAtUtc, CancellationToken cancellationToken);
 
     /// <summary>

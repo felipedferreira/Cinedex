@@ -22,6 +22,7 @@ internal static class TestRouteConstants
         public const string LoginEndpoint = $"{MoviesServiceBasePath}/auth/login";
         public const string RefreshEndpoint = $"{MoviesServiceBasePath}/auth/refresh";
         public const string LogoutEndpoint = $"{MoviesServiceBasePath}/auth/logout";
+        public const string RevokeAllSessionsEndpoint = $"{MoviesServiceBasePath}/auth/sessions/all";
         public const string ForgotPasswordEndpoint = $"{MoviesServiceBasePath}/auth/password/forgot";
         public const string ResetPasswordEndpoint = $"{MoviesServiceBasePath}/auth/password/reset";
     }

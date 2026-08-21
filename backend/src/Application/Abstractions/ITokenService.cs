@@ -63,6 +63,25 @@ public interface ITokenService
     Task<int> RevokeSessionAsync(Guid ownerId, string refreshToken, CancellationToken cancellationToken);
 
     /// <summary>
+    /// Ends every session the user has, on every device — the sign-out-everywhere path.
+    /// </summary>
+    /// <param name="userId">The user whose sessions are ending.</param>
+    /// <param name="cancellationToken">A token to observe while waiting for the task to complete.</param>
+    /// <returns>The number of tokens revoked, which is zero when nothing was live.</returns>
+    /// <remarks>
+    /// Scoped by user id alone. Nothing is presented and nothing is matched on, so — unlike
+    /// <see cref="RevokeSessionAsync"/>, which needs a token and enforces ownership of it — the caller
+    /// must have established whose sessions these are before calling: pass the subject of a validated
+    /// access token, never a value read off the request.
+    /// <para>
+    /// Idempotent: a second call finds nothing active and reports zero. Note the bound this does not
+    /// cross — access tokens are stateless and are not revoked, so one already issued stays valid
+    /// until its own expiry (at most <c>Jwt:AccessTokenMinutes</c>).
+    /// </para>
+    /// </remarks>
+    Task<int> RevokeAllSessionsAsync(Guid userId, CancellationToken cancellationToken);
+
+    /// <summary>
     /// Reports whether a refresh token exists and was issued to somebody other than the requester.
     /// </summary>
     /// <param name="requestingUserId">The user asking, whose own tokens are not a mismatch.</param>

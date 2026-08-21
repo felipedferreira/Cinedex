@@ -114,10 +114,21 @@ internal sealed class RefreshTokenRepository(AuthDbContext dbContext) : IRefresh
                 cancellationToken);
     }
 
+    // The ExpiresAtUtc filter matches the three statements above, and it is not cosmetic here. An
+    // expired row is already dead, so stamping it changes no security outcome — but it does move the
+    // row out of the retention sweep's "expired, never revoked" bucket (DeleteExpiredBatchAsync,
+    // ExpiredRetention: 1 day) and into the "revoked" one (DeleteRevokedBatchAsync,
+    // ReuseDetectionWindow: 14 days), so rows that had drained would linger a fortnight instead.
+    // Excluding them also keeps the count this returns a count of sessions actually ended, which is
+    // what the caller logs.
+
     /// <inheritdoc />
     public Task<int> RevokeAllActiveForUserAsync(Guid userId, DateTime revokedAtUtc, CancellationToken cancellationToken) =>
         dbContext.RefreshTokens
-            .Where(token => token.UserId == userId && token.RevokedAtUtc == null)
+            .Where(token =>
+                token.UserId == userId &&
+                token.RevokedAtUtc == null &&
+                token.ExpiresAtUtc > revokedAtUtc)
             .ExecuteUpdateAsync(
                 setters => setters.SetProperty(token => token.RevokedAtUtc, revokedAtUtc),
                 cancellationToken);

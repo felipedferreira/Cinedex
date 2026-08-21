@@ -33,6 +33,11 @@ internal static class ApiConstants
         public const string LoginRoute = $"{Route}/login";
         public const string RefreshRoute = $"{Route}/refresh";
         public const string LogoutRoute = $"{Route}/logout";
+
+        // Nested under the auth route rather than a sibling /sessions, and that is load-bearing: the
+        // refresh cookie's Path is /movies-svc/auth, so a route outside it would neither receive the
+        // cookie nor be able to clear it.
+        public const string RevokeAllSessionsRoute = $"{Route}/sessions/all";
         public const string ForgotPasswordRoute = $"{Route}/password/forgot";
         public const string ResetPasswordRoute = $"{Route}/password/reset";
     }

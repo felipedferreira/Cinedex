@@ -36,14 +36,31 @@ solution.
 
 All routes are relative to the `/movies-svc` base path.
 
-| Method & route                          | Auth       | Behavior                                                        |
-| --------------------------------------- | ---------- | --------------------------------------------------------------- |
-| `POST /movies-svc/auth/register`        | Anonymous  | Create a user. `201 Created`.                                   |
-| `POST /movies-svc/auth/login`           | Anonymous  | Validate credentials; returns an access token + refresh token.  |
-| `POST /movies-svc/auth/refresh`         | Anonymous  | Exchange a refresh token for a rotated pair.                    |
-| `POST /movies-svc/auth/logout`          | **Bearer** | End the caller's session named by the cookie. `204 No Content`. |
-| `POST /movies-svc/auth/password/forgot` | Anonymous  | Always `202 Accepted`.                                          |
-| `POST /movies-svc/auth/password/reset`  | Anonymous  | Reset the password with a valid reset token. `204 No Content`.  |
+| Method & route                          | Auth       | Behavior                                                                 |
+| --------------------------------------- | ---------- | ------------------------------------------------------------------------ |
+| `POST /movies-svc/auth/register`        | Anonymous  | Create a user. `201 Created`.                                            |
+| `POST /movies-svc/auth/login`           | Anonymous  | Validate credentials; returns an access token + refresh token.           |
+| `POST /movies-svc/auth/refresh`         | Anonymous  | Exchange a refresh token for a rotated pair.                             |
+| `POST /movies-svc/auth/logout`          | **Bearer** | End the caller's session named by the cookie. `204 No Content`.          |
+| `DELETE /movies-svc/auth/sessions/all`  | **Bearer** | End **every** session the caller has, on every device. `204 No Content`. |
+| `POST /movies-svc/auth/password/forgot` | Anonymous  | Always `202 Accepted`.                                                   |
+| `POST /movies-svc/auth/password/reset`  | Anonymous  | Reset the password with a valid reset token. `204 No Content`.           |
+
+### Ending sessions: two endpoints, two units
+
+`logout` and `sessions/all` differ in what they revoke, and the difference is deliberate.
+
+- **`POST /auth/logout` ends one session.** The unit is the _family_ the presented cookie belongs to,
+  and ownership is a condition of the statement that revokes it. Signing out on your laptop must not
+  sign you out on your phone, so the user's other families are untouched.
+- **`DELETE /auth/sessions/all` ends every session.** The unit is the _user_. It presents no token
+  and matches on nothing but the subject of the validated access token, so it crosses every family
+  the account owns — including sessions on devices the caller no longer has. This is the control for
+  "I think my account is compromised".
+
+Because it takes no request input at all, there is no value an attacker could supply to widen its
+scope past themselves. The cost of that design is that it cannot be narrowed either: there's no
+"end this _other_ session" endpoint, which would require exposing session identifiers to the client.
 
 The catalog is members-only: **every Genre and Title endpoint requires a bearer token**, reads and
 writes alike. Those endpoints simply omit `AllowAnonymous()` — FastEndpoints requires an

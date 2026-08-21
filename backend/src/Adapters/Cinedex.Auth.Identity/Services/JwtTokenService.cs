@@ -144,6 +144,13 @@ internal sealed class JwtTokenService(
             DateTime.UtcNow,
             cancellationToken);
 
+    // No transaction and no family lock, for the same reason RevokeSessionAsync needs neither: it is
+    // one conditional statement. It is also the one revocation that takes no token, so there is no
+    // family to serialize on — a rotation racing this either lands first and gets revoked, or lands
+    // after and leaves one live successor the caller can end by calling again.
+    public Task<int> RevokeAllSessionsAsync(Guid userId, CancellationToken cancellationToken) =>
+        refreshTokens.RevokeAllActiveForUserAsync(userId, DateTime.UtcNow, cancellationToken);
+
     public async Task<bool> RefreshTokenBelongsToAnotherUserAsync(
         Guid requestingUserId,
         string refreshToken,

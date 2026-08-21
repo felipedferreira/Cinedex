@@ -751,6 +751,231 @@ public sealed class AuthEndpointTests(WebApplicationFixture fixture)
     }
 
     [Fact]
+    public async Task RevokeAllSessions_WithoutBearerToken_Returns401()
+    {
+        var response = await DeleteAsync(TestRouteConstants.Auth.RevokeAllSessionsEndpoint, refreshCookie: null);
+
+        Assert.Equal(HttpStatusCode.Unauthorized, response.StatusCode);
+    }
+
+    [Fact]
+    public async Task RevokeAllSessions_EndsEverySessionTheUserHas()
+    {
+        var email = NewEmail();
+        await RegisterAsync(email, "revokeallsessions", Password);
+        var (login, firstSession) = await LoginAsync(email, Password);
+        var (_, secondSession) = await LoginAsync(email, Password);
+        var (_, thirdSession) = await LoginAsync(email, Password);
+
+        var revokeAll = await DeleteAsync(
+            TestRouteConstants.Auth.RevokeAllSessionsEndpoint,
+            firstSession,
+            login.AccessToken);
+
+        Assert.Equal(HttpStatusCode.NoContent, revokeAll.StatusCode);
+
+        // Every login starts its own family, which is exactly what logout deliberately leaves alone.
+        // Crossing those boundaries is the whole reason this endpoint exists, so all three must die —
+        // including the two whose tokens the request never carried.
+        foreach (var session in new[] { firstSession, secondSession, thirdSession })
+        {
+            var refresh = await PostAsync(TestRouteConstants.Auth.RefreshEndpoint, session);
+            Assert.Equal(HttpStatusCode.Unauthorized, refresh.StatusCode);
+        }
+    }
+
+    [Fact]
+    public async Task RevokeAllSessions_ClearsTheRefreshCookie()
+    {
+        var email = NewEmail();
+        await RegisterAsync(email, "revokeallcookie", Password);
+        var (login, refreshCookie) = await LoginAsync(email, Password);
+
+        var revokeAll = await DeleteAsync(
+            TestRouteConstants.Auth.RevokeAllSessionsEndpoint,
+            refreshCookie,
+            login.AccessToken);
+
+        // The calling browser is holding a cookie this call just killed. Leaving it in place would
+        // have the client presenting a corpse on its next refresh.
+        Assert.Equal(string.Empty, ReadRefreshCookieValue(revokeAll));
+    }
+
+    [Fact]
+    public async Task RevokeAllSessions_WithoutCookie_Returns204()
+    {
+        var email = NewEmail();
+        await RegisterAsync(email, "revokeallnocookie", Password);
+        var (login, _) = await LoginAsync(email, Password);
+
+        // The bearer alone decides whose sessions end, so a caller with no cookie — a second device,
+        // or a client that dropped it — can still sign every session out.
+        var revokeAll = await DeleteAsync(
+            TestRouteConstants.Auth.RevokeAllSessionsEndpoint,
+            refreshCookie: null,
+            login.AccessToken);
+
+        Assert.Equal(HttpStatusCode.NoContent, revokeAll.StatusCode);
+    }
+
+    [Fact]
+    public async Task RevokeAllSessions_CalledTwice_IsIdempotent()
+    {
+        var email = NewEmail();
+        await RegisterAsync(email, "revokealltwice", Password);
+        var (login, refreshCookie) = await LoginAsync(email, Password);
+
+        var first = await DeleteAsync(
+            TestRouteConstants.Auth.RevokeAllSessionsEndpoint,
+            refreshCookie,
+            login.AccessToken);
+
+        Assert.Equal(HttpStatusCode.NoContent, first.StatusCode);
+
+        // Nothing is left to match. That the second call is even reachable is the SES-07 caveat made
+        // concrete: the access token outlives the refresh tokens revoked alongside it, so it still
+        // authorises this request until its own expiry.
+        var second = await DeleteAsync(
+            TestRouteConstants.Auth.RevokeAllSessionsEndpoint,
+            refreshCookie,
+            login.AccessToken);
+
+        Assert.Equal(HttpStatusCode.NoContent, second.StatusCode);
+    }
+
+    [Fact]
+    public async Task RevokeAllSessions_LeavesAnotherUsersSessionsAlone()
+    {
+        var revokingEmail = NewEmail();
+        var bystanderEmail = NewEmail();
+        await RegisterAsync(revokingEmail, "revokinguser", Password);
+        await RegisterAsync(bystanderEmail, "bystanderuser", Password);
+        var (revokingLogin, revokingSession) = await LoginAsync(revokingEmail, Password);
+        var (_, bystanderSession) = await LoginAsync(bystanderEmail, Password);
+
+        var revokeAll = await DeleteAsync(
+            TestRouteConstants.Auth.RevokeAllSessionsEndpoint,
+            revokingSession,
+            revokingLogin.AccessToken);
+
+        Assert.Equal(HttpStatusCode.NoContent, revokeAll.StatusCode);
+
+        // Scope is read from the validated access token's subject and from nothing the request
+        // carries, so no input exists that could widen it past the caller.
+        var refresh = await PostAsync(TestRouteConstants.Auth.RefreshEndpoint, bystanderSession);
+        Assert.Equal(HttpStatusCode.OK, refresh.StatusCode);
+    }
+
+    [Fact]
+    public async Task RevokeAllSessions_AlsoRevokesRotatedSuccessors()
+    {
+        var email = NewEmail();
+        await RegisterAsync(email, "revokeallrotated", Password);
+        var (login, original) = await LoginAsync(email, Password);
+
+        var rotation = await PostAsync(TestRouteConstants.Auth.RefreshEndpoint, original);
+        Assert.Equal(HttpStatusCode.OK, rotation.StatusCode);
+        var successor = ReadRefreshCookieValue(rotation);
+        Assert.False(string.IsNullOrWhiteSpace(successor));
+
+        var revokeAll = await DeleteAsync(
+            TestRouteConstants.Auth.RevokeAllSessionsEndpoint,
+            original,
+            login.AccessToken);
+
+        Assert.Equal(HttpStatusCode.NoContent, revokeAll.StatusCode);
+
+        // Revocation matches on owner, not on the presented hash or its family, so a successor some
+        // other tab rotated into existence is caught without the caller ever having held it.
+        var refresh = await PostAsync(TestRouteConstants.Auth.RefreshEndpoint, successor);
+        Assert.Equal(HttpStatusCode.Unauthorized, refresh.StatusCode);
+    }
+
+    [Fact]
+    public async Task RevokeAllSessions_LeavesAlreadyExpiredTokensUnrevoked()
+    {
+        var email = NewEmail();
+        await RegisterAsync(email, "revokeallexpired", Password);
+        var (login, expiredSession) = await LoginAsync(email, Password);
+        var (_, liveSession) = await LoginAsync(email, Password);
+        await ExpireTokenAsync(expiredSession);
+
+        var revokeAll = await DeleteAsync(
+            TestRouteConstants.Auth.RevokeAllSessionsEndpoint,
+            liveSession,
+            login.AccessToken);
+
+        Assert.Equal(HttpStatusCode.NoContent, revokeAll.StatusCode);
+
+        // Stamping an already-expired row changes no security outcome — it is dead either way — but it
+        // does move the row out of the retention sweep's "expired, never revoked" bucket and into the
+        // far longer "revoked" one, so it would linger for weeks it has not earned.
+        Assert.Null(await GetTokenRevokedAtAsync(expiredSession));
+        Assert.NotNull(await GetTokenRevokedAtAsync(liveSession));
+    }
+
+    [Fact]
+    public async Task RevokeAllSessions_EmitsPiiSafeStructuredAuditEvent()
+    {
+        var email = NewEmail();
+        const string username = "revokeallevent";
+        await RegisterAsync(email, username, Password);
+        var (login, firstSession) = await LoginAsync(email, Password);
+        var (_, secondSession) = await LoginAsync(email, Password);
+        var userId = new JwtSecurityTokenHandler().ReadJwtToken(login.AccessToken).Subject;
+        var familyId = await GetTokenFamilyIdAsync(firstSession);
+
+        fixture.LoggerProvider.Clear();
+        var revokeAll = await DeleteAsync(
+            TestRouteConstants.Auth.RevokeAllSessionsEndpoint,
+            firstSession,
+            login.AccessToken);
+
+        Assert.Equal(HttpStatusCode.NoContent, revokeAll.StatusCode);
+
+        CapturedLogEntry auditEvent = Assert.Single(
+            fixture.LoggerProvider.Entries,
+            entry => entry.EventId.Id == 1003);
+        Assert.Equal(LogLevel.Information, auditEvent.Level);
+        Assert.Equal("AllSessionsRevoked", auditEvent.EventId.Name);
+        Assert.Equal(
+            "Cinedex.Application.Auth.RevokeAllSessions.RevokeAllSessionsHandler",
+            auditEvent.Category);
+
+        var eventProperties = auditEvent.State
+            .Where(property => property.Key != "{OriginalFormat}")
+            .ToArray();
+        var revokedCount = Assert.Single(eventProperties);
+        Assert.Equal("RevokedTokenCount", revokedCount.Key);
+        Assert.Equal(2, Assert.IsType<int>(revokedCount.Value));
+
+        // The incident-response record is a count plus the request's trace context, never a list of
+        // who was signed in — the same rule the reuse event at 1001 and the ownership mismatch at
+        // 1002 already follow.
+        var emittedText = auditEvent.Message + "|" + string.Join(
+            "|",
+            auditEvent.State.Select(property => $"{property.Key}={property.Value}"));
+        var sensitiveValues = new[]
+        {
+            email,
+            username,
+            userId,
+            familyId.ToString(),
+            firstSession,
+            Uri.UnescapeDataString(firstSession),
+            HashRefreshToken(firstSession),
+            secondSession,
+            Uri.UnescapeDataString(secondSession),
+            HashRefreshToken(secondSession),
+        };
+
+        foreach (var sensitiveValue in sensitiveValues)
+        {
+            Assert.DoesNotContain(sensitiveValue, emittedText, StringComparison.OrdinalIgnoreCase);
+        }
+    }
+
+    [Fact]
     public async Task ForgotPassword_WithUnknownEmail_Returns202()
     {
         var response = await fixture.CookielessClient.PostAsJsonAsync(
@@ -1058,6 +1283,31 @@ public sealed class AuthEndpointTests(WebApplicationFixture fixture)
         return (long)(await command.ExecuteScalarAsync() ?? 0L);
     }
 
+    /// <summary>
+    /// Returns a token row's <c>revokedAtUtc</c>, or <see langword="null"/> when it is still active.
+    /// </summary>
+    private async Task<DateTime?> GetTokenRevokedAtAsync(string rawRefreshToken)
+    {
+        await using var connection = new NpgsqlConnection(fixture.ConnectionString);
+        await connection.OpenAsync();
+
+        await using var command = new NpgsqlCommand(
+            """
+            SELECT "revokedAtUtc"
+            FROM auth."refreshTokens"
+            WHERE "tokenHash" = @tokenHash;
+            """,
+            connection);
+        command.Parameters.AddWithValue("tokenHash", HashRefreshToken(rawRefreshToken));
+
+        var revokedAtUtc = await command.ExecuteScalarAsync();
+
+        // Distinguishes "the row is active" from "there is no row": the caller asserts on the former,
+        // so a lookup that silently matched nothing would pass for the wrong reason.
+        Assert.NotNull(revokedAtUtc);
+        return revokedAtUtc is DBNull ? null : Assert.IsType<DateTime>(revokedAtUtc);
+    }
+
     private async Task ExpireTokenAsync(string rawRefreshToken)
     {
         await using var connection = new NpgsqlConnection(fixture.ConnectionString);
@@ -1099,9 +1349,19 @@ public sealed class AuthEndpointTests(WebApplicationFixture fixture)
         return (body, refreshCookie!);
     }
 
-    private Task<HttpResponseMessage> PostAsync(string route, string? refreshCookie, string? accessToken = null)
+    private Task<HttpResponseMessage> PostAsync(string route, string? refreshCookie, string? accessToken = null) =>
+        SendAsync(HttpMethod.Post, route, refreshCookie, accessToken);
+
+    private Task<HttpResponseMessage> DeleteAsync(string route, string? refreshCookie, string? accessToken = null) =>
+        SendAsync(HttpMethod.Delete, route, refreshCookie, accessToken);
+
+    private Task<HttpResponseMessage> SendAsync(
+        HttpMethod method,
+        string route,
+        string? refreshCookie,
+        string? accessToken)
     {
-        var request = new HttpRequestMessage(HttpMethod.Post, route);
+        var request = new HttpRequestMessage(method, route);
 
         if (refreshCookie is not null)
         {

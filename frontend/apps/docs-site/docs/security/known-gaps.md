@@ -19,6 +19,18 @@ on top of this system.
   observation. See [Password reset](./password-reset.md#a-residual-timing-signal-and-why-its-acceptable)
   for the detail. Closing it entirely would need a constant-time response — padding every response
   to a fixed latency floor, or moving token generation off the request path as well.
+- **Revoking sessions does not revoke access tokens (SES-07).** `DELETE /auth/sessions/all`,
+  `POST /auth/logout`, a password reset, and the reuse response all revoke _refresh_ tokens
+  immediately — but access tokens are stateless JWTs, validated by signature and expiry alone, with
+  nothing consulted at request time that revocation could change. **An access token already issued
+  stays valid until it expires**, up to `Jwt:AccessTokenMinutes` (15 by default, 5 minimum) after it
+  was minted. So "sign out everywhere" closes the ability to _obtain_ new access tokens instantly,
+  while leaving a window of at most that long in which an already-stolen one still works.
+  Closing the window means giving up statelessness — a per-request revocation check (a denylist of
+  `jti` values, or a per-user "tokens issued before" watermark, both needing a lookup on every
+  authenticated request), which is the trade JWT bearer exists to avoid. The mitigation actually in
+  place is the short lifetime: the 5-to-15-minute range enforced by `JwtOptions` validation is what
+  bounds the exposure, which is why raising `AccessTokenMinutes` is capped rather than free.
 - **No rate limiting anywhere in the service.** `POST /auth/password/forgot` is anonymous and
   unthrottled, so nothing caps the sample size an attacker could collect against the residual
   timing signal above, and nothing stops them enqueuing reset emails to a known address in a loop.

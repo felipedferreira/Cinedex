@@ -36,8 +36,26 @@ All routes are relative to the `/movies-svc` base path.
 | `POST /movies-svc/auth/login` | Anonymous | Validate credentials; returns an access token + refresh token. |
 | `POST /movies-svc/auth/refresh` | Anonymous | Exchange a refresh token for a rotated pair. |
 | `POST /movies-svc/auth/logout` | **Bearer** | End the session the cookie's refresh token belongs to, if the bearer owns that token. `204 No Content`. |
+| `DELETE /movies-svc/auth/sessions/all` | **Bearer** | End **every** session the bearer has, on every device. No body, no parameters. Idempotent. `204 No Content`. |
 | `POST /movies-svc/auth/password/forgot` | Anonymous | Always `202 Accepted`. |
 | `POST /movies-svc/auth/password/reset` | Anonymous | Reset the password with a valid reset token. `204 No Content`. |
+
+### Ending sessions: two endpoints, two units
+
+`logout` and `sessions/all` differ in what they revoke, and the difference is deliberate.
+
+- **`POST /auth/logout` ends one session.** The unit is the *family* the presented cookie belongs to,
+  and ownership is a condition of the statement that revokes it. Signing out on your laptop must not
+  sign you out on your phone, so the user's other families are untouched.
+- **`DELETE /auth/sessions/all` ends every session.** The unit is the *user*. It presents no token
+  and matches on nothing but the subject of the validated access token, so it crosses every family
+  the account owns — including sessions on devices the caller no longer has. This is the control for
+  "I think my account is compromised", which is also why the audit event is emitted on every call
+  rather than only when something was revoked.
+
+Because it takes no request input at all, there is no value an attacker could supply to widen its
+scope past themselves. The cost of that design is that it cannot be narrowed either: there is no
+"end this *other* session" endpoint, which would require exposing session identifiers to the client.
 
 The catalog is members-only: **every Genre and Title endpoint requires a bearer token**, reads and
 writes alike. Those endpoints simply omit `AllowAnonymous()` — FastEndpoints requires an
@@ -78,11 +96,17 @@ sequenceDiagram
         API-->>B: new token pair, fresh Set-Cookie<br/>rotation stays in the same family
     end
 
-    Note over B,DB: POST /auth/logout — idempotent, and the only auth route needing a bearer
+    Note over B,DB: POST /auth/logout — idempotent, and one of the two routes needing a bearer
 
     B->>API: cookie plus bearer access token
     API->>DB: RevokedAtUtc = now for every active token<br/>in the cookie's family, but only if that<br/>token was issued to the bearer's user
     API-->>B: 204, and the cookie is cleared<br/>an absent, unknown, already-revoked<br/>or someone else's cookie is a silent<br/>no-op that still clears
+
+    Note over B,DB: DELETE /auth/sessions/all — sign out everywhere, bearer only, no cookie needed
+
+    B->>API: bearer access token, nothing else
+    API->>DB: RevokedAtUtc = now for every active token<br/>owned by the bearer's user, across all families
+    API-->>B: 204, and the cookie is cleared<br/>the bearer's own access token keeps working<br/>until it expires — see SES-07 in Known gaps
 ```
 
 Logout ends the **family**, not the row the cookie names. A session is a family — one login opens
@@ -273,6 +297,14 @@ Two retention windows, because the two kinds of dead row are dead for different 
 |---|---|---|
 | Expired, never revoked | `expiresAtUtc` is older than `ExpiredRetention` | 1 day past expiry |
 | Revoked | `revokedAtUtc` is older than `ReuseDetectionWindow` (and the row has expired) | 14 days past revocation |
+
+The two categories stay disjoint because **every revocation path filters on `expiresAtUtc` as well
+as `revokedAtUtc`** — rotation, the reuse response, logout, and sign-out-everywhere alike. An
+already-expired row is dead either way, so stamping it would change no security outcome, but it
+would move the row out of the first category and into the second, keeping a corpse that had all but
+drained for another fortnight. Sign-out-everywhere is the path where that matters most: it is the
+one revocation whose reach is the whole account, so it is also the one that would sweep up the most
+long-expired rows.
 
 Neither window shortens a session. A token that has not yet expired is never touched by either
 category, no matter how long it has sat unused — closing the browser with a still-valid refresh
@@ -467,6 +499,20 @@ build on this.
   low-noise vantage point rather than a single observation — a narrow residue, not a closed hole.
   Closing it entirely would require a constant-time response: padding every response to a fixed
   latency floor, or moving token generation off the request path as well.
+- **Revoking sessions does not revoke access tokens (SES-07).** `DELETE /auth/sessions/all`, `POST
+  /auth/logout`, a password reset, and the reuse response all revoke *refresh* tokens immediately —
+  but access tokens are stateless JWTs, validated by signature and expiry alone, with nothing
+  consulted at request time that revocation could change. **An access token already issued stays
+  valid until it expires**, up to `Jwt:AccessTokenMinutes` (15 by default, 5 minimum) after it was
+  minted. So "sign out everywhere" closes the ability to *obtain* new access tokens instantly, while
+  leaving a window of at most that long in which an already-stolen one still works. The integration
+  test `RevokeAllSessions_CalledTwice_IsIdempotent` demonstrates this directly: the second call is
+  authorised by an access token whose entire session was revoked by the first.
+  Closing the window means giving up statelessness — a per-request revocation check (a denylist of
+  `jti` values, or a per-user "tokens issued before" watermark, both needing a lookup on every
+  authenticated request), which is the trade JWT bearer exists to avoid. The mitigation actually in
+  place is the short lifetime: the 5-to-15-minute range enforced by `JwtOptions` validation is what
+  bounds the exposure, which is why raising `AccessTokenMinutes` is capped rather than free.
 - **No rate limiting anywhere in the service.** `POST /auth/password/forgot` is anonymous and
   unthrottled, so nothing caps the sample size an attacker can collect against the residual timing
   signal above, and nothing stops them enqueuing reset emails to a known address in a loop. This is

@@ -35,11 +35,17 @@ sequenceDiagram
         API-->>B: new token pair, fresh Set-Cookie<br/>rotation stays in the same family
     end
 
-    Note over B,DB: POST /auth/logout — idempotent, and the only auth route needing a bearer
+    Note over B,DB: POST /auth/logout — idempotent, and one of the two routes needing a bearer
 
     B->>API: cookie plus bearer access token
     API->>DB: RevokedAtUtc = now for every active token<br/>in the cookie's family, but only if that<br/>token was issued to the bearer's user
     API-->>B: 204, and the cookie is cleared<br/>an absent, unknown, already-revoked<br/>or someone else's cookie is a silent<br/>no-op that still clears
+
+    Note over B,DB: DELETE /auth/sessions/all — sign out everywhere, bearer only, no cookie needed
+
+    B->>API: bearer access token, nothing else
+    API->>DB: RevokedAtUtc = now for every active token<br/>owned by the bearer's user, across all families
+    API-->>B: 204, and the cookie is cleared<br/>the bearer's own access token keeps working<br/>until it expires — see SES-07 in Known gaps
 ```
 
 Logout ends the **family**, not the row the cookie names. A session is a family — one login opens

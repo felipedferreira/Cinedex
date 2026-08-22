@@ -10,7 +10,9 @@ npm run storybook        # from frontend/ → http://localhost:9001
 
 You do not have to start this yourself: `dotnet run --project aspire/Cinedex.AppHost` (from `backend/`) runs this same script as one of its resources, serving it on the same port 9001 and installing dependencies first when `node_modules` is missing. It references no other resource and waits on nothing — Storybook renders the libraries in isolation and calls no API — so it comes up even with the rest of the stack switched off. Turn the resource off there with `Features:EnableStorybookSvc`.
 
-With the Compose stack running, the built Storybook is also served at **http://localhost:9001**. That is the static bundle on Nginx; the two paths above are the dev server with hot reload.
+With the Compose stack running, the built Storybook is also served at **http://localhost:9001**, and through the Caddy edge at **https://localhost:9000/storybook/**. That is the static bundle on Nginx; the two paths above are the dev server with hot reload.
+
+The Nginx container serves the bundle under the `/storybook/` prefix — the public path it is deployed at — and redirects a bare `/` there, which is what keeps the 9001 URL working. See [Deploying the frontend with Dokploy](../../../docs/deployment-dokploy.md) for why the prefix reaches the container instead of being stripped by the proxy.
 
 ## 📁 Layout
 
@@ -75,4 +77,4 @@ The image builds from the workspace root, because the lockfile is there:
 docker build -f apps/storybook/Dockerfile -t cinedex-storybook .
 ```
 
-It is a two-stage build — Node builds the static bundle, Nginx serves it on port 80 — published on host port 9001 by `compose.yaml`. Plain HTTP, unlike the SPA image: this container is not the stack's reverse proxy and Storybook makes no API calls, so there is nothing to terminate TLS for.
+It is a two-stage build — Node builds the static bundle, Nginx serves it on port 80 under the `/storybook/` prefix — published on host port 9001 by `compose.yaml` and proxied at `/storybook/` by Caddy. Plain HTTP, unlike the SPA image: this container is not the stack's reverse proxy and Storybook makes no API calls, so there is nothing to terminate TLS for.

@@ -11,5 +11,15 @@ https://localhost {
 	@documentation path /documentation/*
 	reverse_proxy @documentation cinedex-docs-site:80
 
+	# Mirrors the deployed layout so the path-based routing is exercised locally as well as in
+	# production: every site sits on one origin, the SPA at the root and the two static bundles
+	# under a prefix. Both containers are handed the prefix intact — their nginx configs serve it
+	# and own the no-trailing-slash redirect, which is the only place that can be fixed.
+	# Storybook stays published on 9001 as well; the container redirects `/` there to `/storybook/`.
+	redir /storybook /storybook/ 308
+
+	@storybook path /storybook/*
+	reverse_proxy @storybook cinedex-storybook:80
+
 	reverse_proxy cinedex-app:8080
 }

@@ -189,10 +189,16 @@ services:
     depends_on:
       - cinedex-app
       - cinedex-docs-site
+      - cinedex-storybook
       - movies.webservice
 
   # The component libraries' Storybook, served as a static bundle. No depends_on and no API proxy —
   # it renders @cinedex/atoms, /compounds and /solution in isolation and calls nothing.
+  #
+  # Reached two ways, both valid: directly on 9001, and through the Caddy edge at
+  # /storybook/ — the same public path it is deployed at, so the prefix routing is exercised
+  # locally rather than first discovered in production. The container serves the bundle under
+  # that prefix either way and redirects a bare `/` to it, which is what keeps 9001 working.
   cinedex-storybook:
     image: cinedex-storybook
     build:

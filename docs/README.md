@@ -19,6 +19,7 @@ Compose, plus the one manual setup step (Seq), a "try it out" walkthrough, and t
 |---|---|
 | [Auth Execution Plan](superpowers/plans/2026-07-29-auth-execution-plan.md) | 65-issue roadmap organized in 7 waves (dependency depth) and 6 lanes (staffing themes). Includes the interactive swimlane board, execution order algorithm, and critical path corrections. Start with Wave 0: 21 unblocked issues ready to ship today. |
 | [Auth & Security Model](auth-security-model.md) | JWT access tokens, rotating refresh tokens, the `auth` schema, Identity behind ports, and the known gaps. |
+| [Deploying the frontend with Dokploy](deployment-dokploy.md) | Serving the SPA, Storybook and the docs site from one domain on a Dokploy VPS. The three application configs, and the path-prefix rule that fails silently when it is wrong. |
 
 ## Elsewhere
 

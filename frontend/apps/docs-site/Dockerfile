@@ -21,7 +21,7 @@ COPY CHANGELOG.md /app/CHANGELOG.md
 COPY frontend/ .
 ARG DOCUSAURUS_BASE_URL=/documentation/
 ENV DOCUSAURUS_BASE_URL=${DOCUSAURUS_BASE_URL}
-ARG STORYBOOK_BASE_URL=https://cinedex.online/storybook
+ARG STORYBOOK_BASE_URL=https://cinedex.online/storybook/
 ENV STORYBOOK_BASE_URL=${STORYBOOK_BASE_URL}
 RUN npm run build -w @cinedex/docs-site
 

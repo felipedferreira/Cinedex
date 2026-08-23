@@ -34,13 +34,21 @@ The documentation site is accessible at `https://localhost:9000/documentation/` 
 The documentation site includes a link to Storybook in the **Design choices and theme** section. By default, this link points to:
 
 - **Development**: `http://localhost:9001`
-- **Production**: `https://cinedex.online/storybook`
+- **Production**: `https://cinedex.online/storybook/`
+
+:::warning[The trailing slash is load-bearing]
+
+Keep the trailing slash on any URL that serves Storybook under a path prefix. Storybook's built `index.html` references its assets **relatively** (`./sb-manager/runtime.js`), so a browser sitting at `https://cinedex.online/storybook` resolves them against `/` and requests `https://cinedex.online/sb-manager/runtime.js`. On a host where another app holds the catch-all route, that returns **HTML with a 200 status**, the browser tries to execute it as JavaScript, and Storybook renders a blank page with no meaningful console error.
+
+With the slash, the same relative paths resolve under `/storybook/` and every asset loads. A bare origin such as `http://localhost:9001` needs no slash — browsers normalise a path-less URL to `/` on their own.
+
+:::
 
 To deploy to a different environment and point to a different Storybook URL, set the `STORYBOOK_BASE_URL` build argument when building the Docker image:
 
 ```bash
 docker build \
-  --build-arg STORYBOOK_BASE_URL=https://your-domain.com/storybook \
+  --build-arg STORYBOOK_BASE_URL=https://your-domain.com/storybook/ \
   -f frontend/apps/docs-site/Dockerfile \
   -t cinedex-docs-site .
 ```
@@ -51,7 +59,7 @@ Or with Docker Compose, update the `cinedex-docs-site` service in `compose.yaml`
 cinedex-docs-site:
   build:
     args:
-      STORYBOOK_BASE_URL: 'https://your-domain.com/storybook'
+      STORYBOOK_BASE_URL: 'https://your-domain.com/storybook/'
 ```
 
 ### Base URL path
@@ -67,7 +75,7 @@ For example, in a production Docker build:
 ```bash
 docker build \
   --build-arg DOCUSAURUS_BASE_URL=/docs/ \
-  --build-arg STORYBOOK_BASE_URL=https://cinedex.online/storybook \
+  --build-arg STORYBOOK_BASE_URL=https://cinedex.online/storybook/ \
   -f frontend/apps/docs-site/Dockerfile \
   -t cinedex-docs-site .
 ```

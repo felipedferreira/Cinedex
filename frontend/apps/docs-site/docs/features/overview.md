@@ -7,7 +7,7 @@ sidebar_position: 1
 Cinedex is a full-stack portfolio application for cataloging movie titles and their genres —
 inspired by IMDB — with JWT-based authentication in front of a members-only catalog.
 
-:::info Adapted from the repository's READMEs
+:::info[Adapted from the repository's READMEs]
 This section is a curated adaptation of the root `README.md`,
 [`backend/README.md`](https://github.com/felipedferreira/Cinedex/blob/main/backend/README.md), and
 the frontend package READMEs. It is **not** regenerated from them, so if these pages ever disagree

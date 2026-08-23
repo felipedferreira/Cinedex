@@ -24,6 +24,17 @@ const config: Config = {
   // `/documentation/` because Compose publishes the site behind Caddy there.
   baseUrl: process.env.DOCUSAURUS_BASE_URL ?? '/',
 
+  // Emit directory URLs with the trailing slash already on them, so no static
+  // host ever has to redirect to add one. Docusaurus writes
+  // `docs/features/overview/index.html` but links to it without the slash by
+  // default, and nginx answers that with a 301 to the directory form. Under
+  // `nginx.conf`'s `/documentation/` location that redirect is generated from
+  // the *rewritten* path, so it comes back missing the prefix and lands on
+  // Caddy's catch-all — the SPA — instead of the docs. A prefix-stripping proxy
+  // (Dokploy's Traefik) loses the prefix the same way. Emitting the slash up
+  // front means the directory index resolves directly and no redirect happens.
+  trailingSlash: true,
+
   organizationName: 'felipedferreira',
   projectName: 'Cinedex',
 

@@ -5,8 +5,9 @@ on:
     branches: [main]
   pull_request:
     branches: [main]
-  # Lets the images job be re-run by hand against main without waiting for a
-  # new commit. Dispatching from any other branch still skips the images job.
+  # Lets the whole pipeline—images job included—be run by hand against any ref,
+  # not just main. See the tag note on the images job for what a dispatch off
+  # main publishes.
   workflow_dispatch:
 
 permissions:
@@ -117,11 +118,11 @@ jobs:
   images:
     name: Build & push ${{ matrix.name }}
     needs: [backend, frontend]
-    # Publish only from main, once both test jobs are green: a push that lands
-    # there, or a manual re-run of that same ref. Never on a pull request.
+    # Publish once both test jobs are green: a push that lands on main, or a
+    # manual dispatch of any ref. Never on a pull request.
     if: >
-      github.ref == 'refs/heads/main' &&
-      (github.event_name == 'push' || github.event_name == 'workflow_dispatch')
+      (github.event_name == 'push' && github.ref == 'refs/heads/main') ||
+      github.event_name == 'workflow_dispatch'
     runs-on: ubuntu-latest
     permissions:
       contents: read
@@ -192,6 +193,20 @@ jobs:
           echo "version=$version" >> "$GITHUB_OUTPUT"
           echo "Tagging images \`$version\`" >> "$GITHUB_STEP_SUMMARY"
 
+      # A Docker tag admits only [A-Za-z0-9_.-] and cannot lead with . or -,
+      # while a branch name can hold slashes and much else, so the ref name is
+      # squashed to that set before it becomes a tag. Only non-main dispatches
+      # use it; on main it is computed and ignored.
+      - id: slug
+        run: |
+          slug="$(printf '%s' "$GITHUB_REF_NAME" | tr -c 'A-Za-z0-9_.-' '-' | sed 's/^[.-]*//')"
+          slug="${slug:0:100}"
+          if [ -z "$slug" ]; then
+            echo "Could not derive a tag slug from ref '$GITHUB_REF_NAME'" >&2
+            exit 1
+          fi
+          echo "slug=$slug" >> "$GITHUB_OUTPUT"
+
       - uses: docker/setup-buildx-action@v3
 
       - uses: docker/login-action@v3
@@ -251,9 +266,15 @@ jobs:
         uses: docker/metadata-action@v5
         with:
           images: ${{ env.IMAGE_PREFIX }}-${{ matrix.name }}
+          # `latest` and the bare release version are main's to own. A dispatch
+          # off any other ref publishes under that ref's slug instead
+          # (`branch-my-feature`), so a hand-run build can be pulled and tried
+          # without displacing what production resolves `latest` to. The sha tag
+          # is unconditional and unique either way.
           tags: |
-            type=raw,value=latest
-            type=raw,value=${{ steps.version.outputs.version }}
+            type=raw,value=latest,enable=${{ github.ref == 'refs/heads/main' }}
+            type=raw,value=${{ steps.version.outputs.version }},enable=${{ github.ref == 'refs/heads/main' }}
+            type=raw,value=branch-${{ steps.slug.outputs.slug }},enable=${{ github.ref != 'refs/heads/main' }}
             type=sha,format=short,prefix=sha-
           labels: |
             org.opencontainers.image.title=${{ matrix.title }}

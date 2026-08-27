@@ -133,56 +133,43 @@ jobs:
       fail-fast: false
       matrix:
         include:
-          # title/description become org.opencontainers.image.{title,description},
-          # overriding metadata-action's repository-level defaults. The
-          # description is what GHCR prints under the package name, so it is
-          # written to stand alone there—one line, plain text, well under the
-          # registry's 512-character ceiling. Each is the opening sentence of
-          # that image's own README; see the note above the meta step.
+          # title becomes org.opencontainers.image.title, overriding
+          # metadata-action's repository-level default. The matching
+          # description is not written here: `readme` points at the image's own
+          # README and the description step below lifts its opening paragraph,
+          # so the registry text has a single source and cannot drift from the
+          # doc. See the note above that step.
           - name: webservice
             context: ./backend
             dockerfile: backend/src/Presentation/Cinedex.WebService/Dockerfile
             title: Cinedex Web Service
-            description: >-
-              The Cinedex REST API—the catalog of titles, cast and crew, plus
-              authentication. Serves /movies-svc and its Scalar API reference.
+            readme: backend/src/Presentation/Cinedex.WebService/README.md
           - name: migrator
             context: ./backend
             dockerfile: backend/src/Presentation/Cinedex.DatabaseMigrator/Dockerfile
             title: Cinedex Database Migrator
-            description: >-
-              A one-shot console application that applies all pending Entity
-              Framework Core migrations for both the film and auth databases,
-              then exits. Run it to completion before the web service starts.
+            readme: backend/src/Presentation/Cinedex.DatabaseMigrator/README.md
           - name: schedulerworker
             context: ./backend
             dockerfile: backend/src/Presentation/Cinedex.SchedulerWorker/Dockerfile
             title: Cinedex Scheduler Worker
-            description: >-
-              The Cinedex background worker, running scheduled maintenance jobs
-              such as the expired refresh-token cleanup.
+            readme: backend/src/Presentation/Cinedex.SchedulerWorker/README.md
           - name: app
             context: ./frontend
             dockerfile: frontend/apps/cinedex-app/Dockerfile
             title: Cinedex App
-            description: >-
-              The Cinedex single-page app—a React 19 and Vite bundle served as
-              static files by Nginx.
+            readme: frontend/apps/cinedex-app/README.md
           - name: storybook
             context: ./frontend
             dockerfile: frontend/apps/storybook/Dockerfile
             title: Cinedex Storybook
-            description: >-
-              The Storybook for Cinedex's three component tiers—@cinedex/atoms,
-              @cinedex/compounds and @cinedex/solution—built as a static site.
+            readme: frontend/apps/storybook/README.md
           # Root context: /changelog is generated from the root CHANGELOG.md.
           - name: docs-site
             context: .
             dockerfile: frontend/apps/docs-site/Dockerfile
             title: Cinedex Docs Site
-            description: >-
-              A Docusaurus documentation site for Cinedex, branded to match the
-              SPA and Storybook. Published at /documentation/.
+            readme: frontend/apps/docs-site/README.md
             build-args: |
               DOCUSAURUS_BASE_URL=/documentation/
               STORYBOOK_BASE_URL=https://cinedex.online/storybook
@@ -213,6 +200,33 @@ jobs:
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
 
+      # The GHCR description is the image README's opening paragraph—the text
+      # between the H1 and the first blank line—so the registry blurb and the
+      # doc cannot drift apart. Newlines collapse to spaces because a label is
+      # a single value and several of these paragraphs are hard-wrapped; the
+      # text is otherwise passed through verbatim, markdown and all, which is
+      # what the registry will render literally (it does not parse markdown).
+      # A missing file or empty paragraph fails the job rather than shipping
+      # an image whose description silently falls back to the repository's.
+      - id: description
+        run: |
+          readme='${{ matrix.readme }}'
+          if [ ! -f "$readme" ]; then
+            echo "No README at $readme" >&2
+            exit 1
+          fi
+          description="$(awk '
+            NR == 1 { next }
+            /^[[:space:]]*$/ { if (seen) exit; next }
+            { seen = 1; printf "%s%s", sep, $0; sep = " " }
+          ' "$readme")"
+          if [ -z "$description" ]; then
+            echo "No opening paragraph in $readme" >&2
+            exit 1
+          fi
+          echo "description=$description" >> "$GITHUB_OUTPUT"
+          echo "${{ matrix.name }}: $description" >> "$GITHUB_STEP_SUMMARY"
+
       # Also emits org.opencontainers.image.source, which links the GHCR
       # package back to this repository.
       #
@@ -221,7 +235,7 @@ jobs:
       # this repo's root one. The only per-image prose the registry renders is
       # `description`, the line beneath the package name—which otherwise
       # defaults to the repository description, identical across all six. The
-      # matrix carries the per-image text.
+      # description step above carries the per-image text.
       #
       # It has to be set twice. Labels live in the image config, which GHCR
       # reads only for a plain single-arch image; when the push produces a
@@ -243,10 +257,10 @@ jobs:
             type=sha,format=short,prefix=sha-
           labels: |
             org.opencontainers.image.title=${{ matrix.title }}
-            org.opencontainers.image.description=${{ matrix.description }}
+            org.opencontainers.image.description=${{ steps.description.outputs.description }}
           annotations: |
             org.opencontainers.image.title=${{ matrix.title }}
-            org.opencontainers.image.description=${{ matrix.description }}
+            org.opencontainers.image.description=${{ steps.description.outputs.description }}
         env:
           DOCKER_METADATA_ANNOTATIONS_LEVELS: manifest,index
 

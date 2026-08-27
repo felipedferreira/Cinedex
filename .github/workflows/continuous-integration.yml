@@ -5,8 +5,8 @@ on:
     branches: [main]
   pull_request:
     branches: [main]
-  # Lets the images job be run by hand from any branch while it's being
-  # proven out, without waiting for a merge to main.
+  # Lets the images job be re-run by hand against main without waiting for a
+  # new commit. Dispatching from any other branch still skips the images job.
   workflow_dispatch:
 
 permissions:
@@ -117,11 +117,11 @@ jobs:
   images:
     name: Build & push ${{ matrix.name }}
     needs: [backend, frontend]
-    # Manual trigger for proving this out from a branch; otherwise only a
-    # push that lands on main, once both test jobs are green.
+    # Publish only from main, once both test jobs are green: a push that lands
+    # there, or a manual re-run of that same ref. Never on a pull request.
     if: >
-      github.event_name == 'workflow_dispatch' ||
-      (github.event_name == 'push' && github.ref == 'refs/heads/main')
+      github.ref == 'refs/heads/main' &&
+      (github.event_name == 'push' || github.event_name == 'workflow_dispatch')
     runs-on: ubuntu-latest
     permissions:
       contents: read

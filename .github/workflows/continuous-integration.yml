@@ -133,31 +133,77 @@ jobs:
       fail-fast: false
       matrix:
         include:
+          # title/description become org.opencontainers.image.{title,description},
+          # overriding metadata-action's repository-level defaults. The
+          # description is what GHCR prints under the package name, so it is
+          # written to stand alone there—one line, plain text, well under the
+          # registry's 512-character ceiling. Each is the opening sentence of
+          # that image's own README; see the note above the meta step.
           - name: webservice
             context: ./backend
             dockerfile: backend/src/Presentation/Cinedex.WebService/Dockerfile
+            title: Cinedex Web Service
+            description: >-
+              The Cinedex REST API—the catalog of titles, cast and crew, plus
+              authentication. Serves /movies-svc and its Scalar API reference.
           - name: migrator
             context: ./backend
             dockerfile: backend/src/Presentation/Cinedex.DatabaseMigrator/Dockerfile
+            title: Cinedex Database Migrator
+            description: >-
+              A one-shot console application that applies all pending Entity
+              Framework Core migrations for both the film and auth databases,
+              then exits. Run it to completion before the web service starts.
           - name: schedulerworker
             context: ./backend
             dockerfile: backend/src/Presentation/Cinedex.SchedulerWorker/Dockerfile
+            title: Cinedex Scheduler Worker
+            description: >-
+              The Cinedex background worker, running scheduled maintenance jobs
+              such as the expired refresh-token cleanup.
           - name: app
             context: ./frontend
             dockerfile: frontend/apps/cinedex-app/Dockerfile
+            title: Cinedex App
+            description: >-
+              The Cinedex single-page app—a React 19 and Vite bundle served as
+              static files by Nginx.
           - name: storybook
             context: ./frontend
             dockerfile: frontend/apps/storybook/Dockerfile
+            title: Cinedex Storybook
+            description: >-
+              The Storybook for Cinedex's three component tiers—@cinedex/atoms,
+              @cinedex/compounds and @cinedex/solution—built as a static site.
           # Root context: /changelog is generated from the root CHANGELOG.md.
           - name: docs-site
             context: .
             dockerfile: frontend/apps/docs-site/Dockerfile
+            title: Cinedex Docs Site
+            description: >-
+              A Docusaurus documentation site for Cinedex, branded to match the
+              SPA and Storybook. Published at /documentation/.
             build-args: |
               DOCUSAURUS_BASE_URL=/documentation/
               STORYBOOK_BASE_URL=https://cinedex.online/storybook
 
     steps:
       - uses: actions/checkout@v6
+
+      # The frontend workspace root's version is the repo's release version—the
+      # release bumps it and backend/Directory.Build.props in one step, so either
+      # would serve. This one reads without the .NET SDK, which this job (unlike
+      # the backend one) does not install; node is preinstalled on ubuntu-latest.
+      # The guard keeps a missing version from tagging six images "undefined".
+      - id: version
+        run: |
+          version="$(node -p "require('./frontend/package.json').version")"
+          if [ -z "$version" ] || [ "$version" = "undefined" ]; then
+            echo "No version field in frontend/package.json" >&2
+            exit 1
+          fi
+          echo "version=$version" >> "$GITHUB_OUTPUT"
+          echo "Tagging images \`$version\`" >> "$GITHUB_STEP_SUMMARY"
 
       - uses: docker/setup-buildx-action@v3
 
@@ -169,13 +215,25 @@ jobs:
 
       # Also emits org.opencontainers.image.source, which links the GHCR
       # package back to this repository.
+      #
+      # GHCR has no per-image README: the body of a package page is the README
+      # of whatever repository `source` points at, so all six necessarily show
+      # this repo's root one. The only per-image prose the registry renders is
+      # `description`, the line beneath the package name—which otherwise
+      # defaults to the repository description, identical across all six. The
+      # labels below override that and `title` per image; the matrix carries
+      # the text.
       - id: meta
         uses: docker/metadata-action@v5
         with:
           images: ${{ env.IMAGE_PREFIX }}-${{ matrix.name }}
           tags: |
             type=raw,value=latest
+            type=raw,value=${{ steps.version.outputs.version }}
             type=sha,format=short,prefix=sha-
+          labels: |
+            org.opencontainers.image.title=${{ matrix.title }}
+            org.opencontainers.image.description=${{ matrix.description }}
 
       - uses: docker/build-push-action@v6
         with:

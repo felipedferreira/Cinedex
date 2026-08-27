@@ -7,7 +7,7 @@ sidebar_position: 1
 How authentication works in Cinedex: JWT access tokens, rotating refresh tokens, and where ASP.NET
 Core Identity is allowed to live.
 
-:::info Adapted from the repository's design docs
+:::info[Adapted from the repository's design docs]
 This section is a curated adaptation of
 [`docs/auth-security-model.md`](https://github.com/felipedferreira/Cinedex/blob/main/docs/auth-security-model.md)
 and the auth design specs under `docs/superpowers/specs/`. It is **not** regenerated from them, so

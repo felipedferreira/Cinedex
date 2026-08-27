@@ -221,8 +221,18 @@ jobs:
       # this repo's root one. The only per-image prose the registry renders is
       # `description`, the line beneath the package name—which otherwise
       # defaults to the repository description, identical across all six. The
-      # labels below override that and `title` per image; the matrix carries
-      # the text.
+      # matrix carries the per-image text.
+      #
+      # It has to be set twice. Labels live in the image config, which GHCR
+      # reads only for a plain single-arch image; when the push produces a
+      # manifest list—any multi-arch build, and also a single-platform one
+      # once build-push-action v6 attaches its default provenance
+      # attestation—the package page reads the description off the index
+      # instead, and an unannotated index falls back to the repository
+      # description. So the same two keys go out as annotations as well.
+      # metadata-action writes those at `manifest` level by default; `index`
+      # is the level GHCR actually reads, and naming both keeps this correct
+      # whichever shape the push takes.
       - id: meta
         uses: docker/metadata-action@v5
         with:
@@ -234,6 +244,11 @@ jobs:
           labels: |
             org.opencontainers.image.title=${{ matrix.title }}
             org.opencontainers.image.description=${{ matrix.description }}
+          annotations: |
+            org.opencontainers.image.title=${{ matrix.title }}
+            org.opencontainers.image.description=${{ matrix.description }}
+        env:
+          DOCKER_METADATA_ANNOTATIONS_LEVELS: manifest,index
 
       - uses: docker/build-push-action@v6
         with:
@@ -242,6 +257,7 @@ jobs:
           push: true
           tags: ${{ steps.meta.outputs.tags }}
           labels: ${{ steps.meta.outputs.labels }}
+          annotations: ${{ steps.meta.outputs.annotations }}
           build-args: ${{ matrix.build-args }}
           # Scoped per image or the six builds evict each other's cache.
           cache-from: type=gha,scope=${{ matrix.name }}

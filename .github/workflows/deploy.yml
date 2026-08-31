@@ -50,22 +50,24 @@ jobs:
       contents: read
       packages: read
 
+    # IMAGE_REF is job-level because `inputs` IS available here. The two secret
+    # lookups are NOT: `secrets` is unavailable in a job-level env block—it is
+    # evaluated before the job's environment is set up—and putting them here
+    # makes the whole workflow fail to start with `startup_failure` and no log.
+    # They are resolved per step instead, which is also what the images job does
+    # with secrets[matrix.webhook-secret].
     env:
-      # The per-service secrets arrive as NAMES, not values: GitHub expressions
-      # cannot index `secrets` with a dynamic key inside an `if:`, so each is
-      # resolved into an env var here and the steps read that. Same pattern the
-      # images job already uses for secrets[matrix.webhook-secret].
-      #
-      # A name that does not exist yields an EMPTY STRING rather than an error,
-      # so a typo in a caller is silent. The guard step below is what turns it
-      # into a failed run.
-      DOKPLOY_APP_ID: ${{ secrets[inputs.app-id-secret] }}
-      WEBHOOK_URL: ${{ secrets[inputs.webhook-secret] }}
       IMAGE_REF: ${{ inputs.image }}:${{ inputs.image-tag }}
 
     steps:
       - name: Check required secrets are present
         env:
+          # The per-service secrets arrive as NAMES, not values, and are resolved
+          # here. A name that does not exist yields an EMPTY STRING rather than an
+          # error, so a typo in a caller is silent—this step is what turns it into
+          # a failed run.
+          DOKPLOY_APP_ID: ${{ secrets[inputs.app-id-secret] }}
+          WEBHOOK_URL: ${{ secrets[inputs.webhook-secret] }}
           DOKPLOY_URL: ${{ secrets.DOKPLOY_URL }}
           DOKPLOY_API_TOKEN: ${{ secrets.DOKPLOY_API_TOKEN }}
           GHCR_PULL_USERNAME: ${{ secrets.GHCR_PULL_USERNAME }}
@@ -111,6 +113,7 @@ jobs:
       # a quote or backslash cannot break out of the payload.
       - name: Pin ${{ inputs.service-name }} to ${{ inputs.image-tag }}
         env:
+          DOKPLOY_APP_ID: ${{ secrets[inputs.app-id-secret] }}
           DOKPLOY_URL: ${{ secrets.DOKPLOY_URL }}
           DOKPLOY_API_TOKEN: ${{ secrets.DOKPLOY_API_TOKEN }}
           GHCR_PULL_USERNAME: ${{ secrets.GHCR_PULL_USERNAME }}
@@ -139,6 +142,7 @@ jobs:
       # application is now pinned to, which the previous step just set.
       - name: Trigger the Dokploy deploy webhook
         env:
+          WEBHOOK_URL: ${{ secrets[inputs.webhook-secret] }}
           SERVICE_NAME: ${{ inputs.service-name }}
         run: |
           curl --fail --silent --show-error --location \

@@ -50,12 +50,8 @@ jobs:
       contents: read
       packages: read
 
-    # IMAGE_REF is job-level because `inputs` IS available here. The two secret
-    # lookups are NOT: `secrets` is unavailable in a job-level env block—it is
-    # evaluated before the job's environment is set up—and putting them here
-    # makes the whole workflow fail to start with `startup_failure` and no log.
-    # They are resolved per step instead, which is also what the images job does
-    # with secrets[matrix.webhook-secret].
+    # The per-service secrets are resolved per step rather than here, matching
+    # what the images job does with secrets[matrix.webhook-secret].
     env:
       IMAGE_REF: ${{ inputs.image }}:${{ inputs.image-tag }}
 

@@ -12,6 +12,10 @@ on:
 
 permissions:
   contents: read
+  # The called workflow pulls the image manifest from GHCR, and a reusable
+  # workflow cannot request more than its caller grants—without this the run
+  # fails at parse time with startup_failure and no log.
+  packages: read
 
 jobs:
   deploy:

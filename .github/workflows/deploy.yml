@@ -1,0 +1,162 @@
+name: Deploy (reusable)
+
+# The only copy of the deploy body. Four thin callers—cd-app, cd-storybook,
+# cd-docs-site and cd-webservice—supply what differs and inherit the secrets.
+# Behaviour lives here; a caller only names a service.
+#
+# Adding a service is a new caller plus two secrets, with no change here. The
+# scheduler worker is the outstanding one: its image is built, but it has no
+# Dokploy application yet.
+#
+# Why pin before deploying: the Dokploy webhook carries no payload. It tells an
+# application to redeploy whatever image it is already configured for, so
+# without the pin step it would redeploy the *previous* tag.
+on:
+  workflow_call:
+    inputs:
+      service-name:
+        description: Human-readable service name. Safe to log—never the application ID.
+        required: true
+        type: string
+      image:
+        description: GHCR image path with no tag, e.g. ghcr.io/felipedferreira/cinedex-app
+        required: true
+        type: string
+      image-tag:
+        description: Image tag to deploy, e.g. sha-abc1234
+        required: true
+        type: string
+      app-id-secret:
+        description: NAME of the secret holding this service's Dokploy application ID.
+        required: true
+        type: string
+      webhook-secret:
+        description: NAME of the secret holding this service's Dokploy deploy webhook URL.
+        required: true
+        type: string
+
+permissions:
+  contents: read
+
+jobs:
+  deploy:
+    name: Deploy ${{ inputs.service-name }}
+    runs-on: ubuntu-latest
+    # The environment gates the job that actually uses the secrets, so it lives
+    # here rather than on the callers—one place, and a future reviewer gate
+    # would then cover all five services at once.
+    environment: production
+    permissions:
+      contents: read
+      packages: read
+
+    env:
+      # The per-service secrets arrive as NAMES, not values: GitHub expressions
+      # cannot index `secrets` with a dynamic key inside an `if:`, so each is
+      # resolved into an env var here and the steps read that. Same pattern the
+      # images job already uses for secrets[matrix.webhook-secret].
+      #
+      # A name that does not exist yields an EMPTY STRING rather than an error,
+      # so a typo in a caller is silent. The guard step below is what turns it
+      # into a failed run.
+      DOKPLOY_APP_ID: ${{ secrets[inputs.app-id-secret] }}
+      WEBHOOK_URL: ${{ secrets[inputs.webhook-secret] }}
+      IMAGE_REF: ${{ inputs.image }}:${{ inputs.image-tag }}
+
+    steps:
+      - name: Check required secrets are present
+        env:
+          DOKPLOY_URL: ${{ secrets.DOKPLOY_URL }}
+          DOKPLOY_API_TOKEN: ${{ secrets.DOKPLOY_API_TOKEN }}
+          GHCR_PULL_USERNAME: ${{ secrets.GHCR_PULL_USERNAME }}
+          GHCR_PULL_TOKEN: ${{ secrets.GHCR_PULL_TOKEN }}
+          APP_ID_SECRET_NAME: ${{ inputs.app-id-secret }}
+          WEBHOOK_SECRET_NAME: ${{ inputs.webhook-secret }}
+          SERVICE_NAME: ${{ inputs.service-name }}
+        run: |
+          missing=""
+          [ -n "$DOKPLOY_APP_ID" ]     || missing="$missing $APP_ID_SECRET_NAME"
+          [ -n "$WEBHOOK_URL" ]        || missing="$missing $WEBHOOK_SECRET_NAME"
+          [ -n "$DOKPLOY_URL" ]        || missing="$missing DOKPLOY_URL"
+          [ -n "$DOKPLOY_API_TOKEN" ]  || missing="$missing DOKPLOY_API_TOKEN"
+          [ -n "$GHCR_PULL_USERNAME" ] || missing="$missing GHCR_PULL_USERNAME"
+          [ -n "$GHCR_PULL_TOKEN" ]    || missing="$missing GHCR_PULL_TOKEN"
+          if [ -n "$missing" ]; then
+            echo "::error::Missing or empty secrets for $SERVICE_NAME:$missing"
+            echo "A per-service secret resolves by NAME, so check the caller's app-id-secret and webhook-secret spelling as well as the environment." >&2
+            exit 1
+          fi
+
+      - uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      # Validate BEFORE touching Dokploy: a missing tag must fail here, leaving
+      # the application pinned to whatever it was already running.
+      - name: Verify the image tag exists in GHCR
+        run: |
+          if ! docker manifest inspect "$IMAGE_REF" > /dev/null 2>&1; then
+            echo "::error::$IMAGE_REF not found in GHCR. Dokploy was not touched."
+            exit 1
+          fi
+          echo "Found $IMAGE_REF"
+
+      # Pins the application to this exact tag. Also flips sourceType to
+      # "docker" as a side effect, which is how Cinedex.WebService is converted
+      # off building from source on the server.
+      #
+      # jq builds the body: --arg values are JSON-escaped, so a token containing
+      # a quote or backslash cannot break out of the payload.
+      - name: Pin ${{ inputs.service-name }} to ${{ inputs.image-tag }}
+        env:
+          DOKPLOY_URL: ${{ secrets.DOKPLOY_URL }}
+          DOKPLOY_API_TOKEN: ${{ secrets.DOKPLOY_API_TOKEN }}
+          GHCR_PULL_USERNAME: ${{ secrets.GHCR_PULL_USERNAME }}
+          GHCR_PULL_TOKEN: ${{ secrets.GHCR_PULL_TOKEN }}
+          SERVICE_NAME: ${{ inputs.service-name }}
+        run: |
+          body="$(jq -n \
+            --arg applicationId "$DOKPLOY_APP_ID" \
+            --arg dockerImage "$IMAGE_REF" \
+            --arg registryUrl "ghcr.io" \
+            --arg username "$GHCR_PULL_USERNAME" \
+            --arg password "$GHCR_PULL_TOKEN" \
+            '{applicationId: $applicationId, dockerImage: $dockerImage, registryUrl: $registryUrl, username: $username, password: $password}')"
+
+          # --fail-with-body so a 4xx still prints Dokploy's message before exiting non-zero.
+          curl --fail-with-body --silent --show-error --location \
+            --max-time 60 --retry 3 --retry-connrefused \
+            -X POST "${DOKPLOY_URL%/}/api/application.saveDockerProvider" \
+            -H "Content-Type: application/json" \
+            -H "Authorization: $DOKPLOY_API_TOKEN" \
+            -d "$body"
+
+          echo "Pinned $SERVICE_NAME to $IMAGE_REF"
+
+      # The webhook takes no payload—it tells Dokploy to redeploy whatever the
+      # application is now pinned to, which the previous step just set.
+      - name: Trigger the Dokploy deploy webhook
+        env:
+          SERVICE_NAME: ${{ inputs.service-name }}
+        run: |
+          curl --fail --silent --show-error --location \
+            --max-time 60 --retry 3 --retry-connrefused \
+            -X POST "$WEBHOOK_URL"
+          echo "Deploy triggered for $SERVICE_NAME"
+
+      # Logs the SERVICE NAME, never the application ID: the ID is a secret and
+      # would render as ***, leaving a failed run untraceable to a service.
+      - name: Record what was deployed
+        env:
+          SERVICE_NAME: ${{ inputs.service-name }}
+        run: |
+          {
+            echo "### Deployed $SERVICE_NAME"
+            echo ""
+            echo "- Image: \`$IMAGE_REF\`"
+            echo "- Triggered by: ${{ github.event_name }}"
+            echo ""
+            echo "Dokploy accepted the deployment. This does **not** confirm the container is healthy."
+          } >> "$GITHUB_STEP_SUMMARY"

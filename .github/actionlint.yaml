@@ -1,0 +1,7 @@
+# Custom labels for the self-hosted runner the backend and frontend jobs use.
+# Without these, actionlint flags `runs-on: [self-hosted, cinedex, production]`
+# as an unknown-label error and can't be used as a clean pass/fail gate.
+self-hosted-runner:
+  labels:
+    - cinedex
+    - production

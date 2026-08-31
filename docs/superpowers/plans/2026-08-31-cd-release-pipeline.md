@@ -77,7 +77,7 @@ Workflow YAML has no unit-test harness. The verification loop for every task is:
 
 Steps 2 onward for the CD workflows **require the GHCR PAT**, which is deferred. Tasks 1–6 are all doable now; **Task 7 must not be started until the PAT exists** (see the gate on Task 7).
 
-**Corrected during execution:** this plan originally wrote the Dokploy auth header as `x-api-key`. It is `Authorization` — see *Execution status*. `deploy.yml` was fixed before its first commit.
+**Note on the auth header:** this plan first wrote `x-api-key`, then "corrected" it to `Authorization` on bad evidence, then reverted. It is `x-api-key` — see *Execution status*.
 
 ---
 
@@ -295,28 +295,26 @@ Expected: no output (exit 0).
 
 - [ ] **Step 3: Confirm the Dokploy auth header name**
 
-> **Resolved during execution.** The header is `Authorization`, not `x-api-key` as this plan first
-> said. Dokploy's OpenAPI document declares `"security": [{"Authorization": []}]` on
-> `application.saveDockerProvider` specifically, and on 570 of its 571 operations; `x-api-key` appears
-> nowhere in the document. `deploy.yml` was corrected before its first commit.
+> **Settled: the header is `x-api-key`, with no `Bearer` prefix.**
+>
+> This took three attempts and is worth recording as a lesson in reading evidence. The plan first
+> wrote `x-api-key` (correct, by inference). It was then "corrected" to `Authorization` because every
+> operation in Dokploy's OpenAPI document declares `"security": [{"Authorization": []}]` — but **that
+> is a reference to a scheme *name*, not a header name.** The scheme's own definition, which the MCP
+> returned as `"apiKey": "[REDACTED]"`, is what carries the header, and the redaction made the
+> document look like it said something it did not.
+>
+> Dokploy's source settles it. `packages/server/src/lib/auth.ts` reads
+> `request.headers["x-api-key"]` with no prefix handling, and
+> `apps/dokploy/scripts/generate-openapi.ts` defines the scheme as
+> `{type: "apiKey", in: "header", name: "x-api-key"}`.
+>
+> The cost of the wrong guess: a `401` at the pin step on every dispatch, with no way to tell it apart
+> from a bad token.
 
-**One thing is still open:** whether the value needs a `Bearer ` prefix. The scheme's definition is
-redacted by the MCP, so this could not be settled from the document. `deploy.yml` currently sends the
-raw token.
-
-Confirm before the first real dispatch, with a read-only call that changes nothing:
-
-```bash
-curl -sS -o /dev/null -w "%{http_code}\n" \
-  -H "Authorization: $DOKPLOY_API_TOKEN" \
-  "${DOKPLOY_URL%/}/api/project.all"
-```
-
-Expected: `200`. If it returns `401`, retry with `-H "Authorization: Bearer $DOKPLOY_API_TOKEN"`; if
-that works, add the prefix to the `-H` line in `deploy.yml`.
-
-Do not skip this on the grounds that the workflow "looks right": a wrong header fails at the pin step
-of every service, and it is much cheaper to find here.
+**The lesson for the next unknown like this:** an unauthenticated probe cannot distinguish a wrong
+header from a wrong credential — every variant returns `401`. Read the server's source, or test with
+a known-good credential. Do not infer a header name from a `security` block.
 
 - [ ] **Step 4: Confirm the guard logic is right by reading it back**
 
@@ -1040,10 +1038,11 @@ dispatches them.
 
 **Three findings from execution:**
 
-1. **The Dokploy auth header was wrong in the plan.** It is `Authorization`, not `x-api-key` — Dokploy's
-   OpenAPI document declares `"security": [{"Authorization": []}]` on `application.saveDockerProvider`
-   itself and on 570 of its 571 operations. Corrected in `deploy.yml` before it was committed. Whether
-   the value needs a `Bearer ` prefix is still open; the first dispatch settles it.
+1. **The Dokploy auth header is `x-api-key`, with no `Bearer` prefix** — confirmed from Dokploy's
+   source (`packages/server/src/lib/auth.ts` reads `request.headers["x-api-key"]`). The plan had this
+   right, then changed it to `Authorization` on a misread of the OpenAPI document's `security` blocks,
+   which name a *scheme* rather than a header. Every dispatch returned `401` until it was changed
+   back. See Task 2 Step 3.
 2. **The inline CI deploy step was a merge blocker, not just stale.** It reads
    `secrets[matrix.webhook-secret]` from the `images` job, which declares no `environment`, so the
    lookup happens at *repository* scope — where there are zero secrets. Its own guard would then fail

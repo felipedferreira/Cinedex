@@ -129,7 +129,7 @@ jobs:
             --max-time 60 --retry 3 --retry-connrefused \
             -X POST "${DOKPLOY_URL%/}/api/application.saveDockerProvider" \
             -H "Content-Type: application/json" \
-            -H "Authorization: $DOKPLOY_API_TOKEN" \
+            -H "x-api-key: $DOKPLOY_API_TOKEN" \
             -d "$body"
 
           echo "Pinned $SERVICE_NAME to $IMAGE_REF"

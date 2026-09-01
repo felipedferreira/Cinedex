@@ -6,8 +6,9 @@ on:
   workflow_dispatch:
     inputs:
       image-tag:
-        description: Image tag to deploy, e.g. sha-abc1234
-        required: true
+        description: Image tag to deploy, e.g. sha-abc1234. Defaults to latest, the tag CI moves to the newest main build.
+        required: false
+        default: latest
         type: string
 
 permissions:
@@ -24,6 +25,6 @@ jobs:
     with:
       service-name: storybook
       image: ghcr.io/felipedferreira/cinedex-storybook
-      image-tag: ${{ inputs.image-tag }}
+      image-tag: ${{ inputs.image-tag || 'latest' }}
       app-id-secret: DOKPLOY_APP_ID_STORYBOOK
       webhook-secret: DOKPLOY_WEBHOOK_STORYBOOK

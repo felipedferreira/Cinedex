@@ -11,6 +11,14 @@ name: Deploy (reusable)
 # Why pin before deploying: the Dokploy webhook carries no payload. It tells an
 # application to redeploy whatever image it is already configured for, so
 # without the pin step it would redeploy the *previous* tag.
+#
+# image-tag defaults to `latest`, which CI moves to the newest main build, so a
+# caller run with no input deploys current main. Note what that costs: `latest`
+# is a moving tag, so the pinned application no longer records which build it is
+# running, and re-triggering the webhook later pulls whatever `latest` points at
+# by then rather than the image this run verified. Pass an explicit sha- or
+# version tag for a deploy that must stay reproducible or be rolled back to.
+# Either way the resolved digest goes in the run summary.
 on:
   workflow_call:
     inputs:
@@ -23,8 +31,9 @@ on:
         required: true
         type: string
       image-tag:
-        description: Image tag to deploy, e.g. sha-abc1234
-        required: true
+        description: Image tag to deploy, e.g. sha-abc1234. Defaults to latest.
+        required: false
+        default: latest
         type: string
       app-id-secret:
         description: NAME of the secret holding this service's Dokploy application ID.
@@ -93,13 +102,30 @@ jobs:
 
       # Validate BEFORE touching Dokploy: a missing tag must fail here, leaving
       # the application pinned to whatever it was already running.
+      #
+      # The digest is also captured for the summary. It is the only durable
+      # record of what shipped when the tag is a moving one like `latest`:
+      # `latest` names a different image after the next merge to main, so a run
+      # that logged the tag alone would not say which build went out.
+      #
+      # buildx imagetools, not `docker manifest inspect`, because the wanted
+      # value is the digest the TAG resolves to. These images are manifest
+      # lists—CI's build-push attaches a provenance attestation, so even the
+      # single-platform ones push an index—and `docker manifest inspect` prints
+      # only what is inside that index: --verbose gives a Descriptor per
+      # platform, plain gives the child `manifests` entries. Both are the
+      # per-platform digests, none of which equals the index's own. imagetools
+      # reports the index digest directly.
       - name: Verify the image tag exists in GHCR
+        id: image
         run: |
-          if ! docker manifest inspect "$IMAGE_REF" > /dev/null 2>&1; then
+          if ! digest="$(docker buildx imagetools inspect "$IMAGE_REF" --format '{{.Manifest.Digest}}' 2>/dev/null)" \
+             || [ -z "$digest" ]; then
             echo "::error::$IMAGE_REF not found in GHCR. Dokploy was not touched."
             exit 1
           fi
-          echo "Found $IMAGE_REF"
+          echo "digest=$digest" >> "$GITHUB_OUTPUT"
+          echo "Found $IMAGE_REF ($digest)"
 
       # Pins the application to this exact tag. Also flips sourceType to
       # "docker" as a side effect, which is how Cinedex.WebService is converted
@@ -151,11 +177,13 @@ jobs:
       - name: Record what was deployed
         env:
           SERVICE_NAME: ${{ inputs.service-name }}
+          IMAGE_DIGEST: ${{ steps.image.outputs.digest }}
         run: |
           {
             echo "### Deployed $SERVICE_NAME"
             echo ""
             echo "- Image: \`$IMAGE_REF\`"
+            echo "- Digest: \`$IMAGE_DIGEST\`"
             echo "- Triggered by: ${{ github.event_name }}"
             echo ""
             echo "Dokploy accepted the deployment. This does **not** confirm the container is healthy."

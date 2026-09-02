@@ -1,4 +1,4 @@
-import type { ReactNode } from 'react';
+import type { FC, PropsWithChildren, ReactNode } from 'react';
 import { Card, cn } from '@cinedex/atoms';
 
 export type AuthCardKickerTone = 'neutral' | 'warning' | 'success' | 'accent';
@@ -11,14 +11,20 @@ export interface AuthCardProps {
    * `@cinedex/solution`'s `Brand` knows *which* brand.
    */
   brand?: ReactNode;
-  /** Right-aligned label in the brand row, e.g. "CIN · Auth" or "Step 2 of 2". */
-  eyebrow: string;
-  /** Small uppercase mono label above the heading, e.g. "Session · Sign in". */
-  kicker: string;
+  /**
+   * Right-aligned label in the brand row, e.g. "Step 2 of 2". Optional: a screen
+   * with nothing to say there leaves the row to the brand alone.
+   */
+  eyebrow?: string;
+  /**
+   * Small uppercase mono label above the heading, e.g. "Catalog · Screens".
+   * Optional for the same reason, and worth omitting rather than filling: on a
+   * screen whose title already says it, it is a second copy of the heading.
+   */
+  kicker?: string;
   kickerTone?: AuthCardKickerTone;
   title: string;
   description?: ReactNode;
-  children: ReactNode;
   footnote?: ReactNode;
 }
 
@@ -34,7 +40,7 @@ const kickerToneClass: Record<AuthCardKickerTone, string> = {
  * carries a kicker, a title and an optional description, then the screen's own
  * content, then an optional footnote below.
  */
-export function AuthCard({
+export const AuthCard: FC<PropsWithChildren<AuthCardProps>> = ({
   brand,
   eyebrow,
   kicker,
@@ -43,26 +49,30 @@ export function AuthCard({
   description,
   children,
   footnote,
-}: AuthCardProps) {
+}) => {
   return (
     <div className="flex flex-col gap-4 text-text">
       <div className="flex items-center gap-2">
         {brand}
-        <span className="ml-auto font-mono text-[10px] tracking-label text-text uppercase">
-          {eyebrow}
-        </span>
+        {eyebrow ? (
+          <span className="ml-auto font-mono text-[10px] tracking-label text-text uppercase">
+            {eyebrow}
+          </span>
+        ) : null}
       </div>
 
       <Card className="flex flex-col gap-4 px-[22px] py-5">
         <div className="border-b-2 border-text-h pb-3">
-          <p
-            className={cn(
-              'm-0 mb-2 font-mono text-label font-semibold tracking-eyebrow uppercase',
-              kickerToneClass[kickerTone],
-            )}
-          >
-            {kicker}
-          </p>
+          {kicker ? (
+            <p
+              className={cn(
+                'm-0 mb-2 font-mono text-label font-semibold tracking-eyebrow uppercase',
+                kickerToneClass[kickerTone],
+              )}
+            >
+              {kicker}
+            </p>
+          ) : null}
           <h1 className="m-0 text-title leading-[1.1] font-bold tracking-tight text-text-h">
             {title}
           </h1>
@@ -80,4 +90,4 @@ export function AuthCard({
       ) : null}
     </div>
   );
-}
+};

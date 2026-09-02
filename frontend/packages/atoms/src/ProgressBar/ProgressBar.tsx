@@ -1,3 +1,4 @@
+import type { FC } from 'react';
 import { Progress as ProgressPrimitive } from 'radix-ui';
 import { cn } from '../utils/cn';
 
@@ -16,7 +17,11 @@ export interface ProgressBarProps {
  * which the hand-rolled `<span><i/></span>` this replaces did not have — the
  * password strength meter previously announced nothing at all.
  */
-export function ProgressBar({ ratio, label, className }: ProgressBarProps) {
+export const ProgressBar: FC<ProgressBarProps> = ({
+  ratio,
+  label,
+  className,
+}) => {
   const percent = Math.round(Math.min(Math.max(ratio, 0), 1) * 100);
 
   return (
@@ -35,4 +40,4 @@ export function ProgressBar({ ratio, label, className }: ProgressBarProps) {
       />
     </ProgressPrimitive.Root>
   );
-}
+};

@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import type { FC } from 'react';
 import { Input, type InputProps } from '../Input/Input';
 import { cn } from '../utils/cn';
 
@@ -11,7 +12,10 @@ export type PasswordInputProps = Omit<InputProps, 'type'>;
  * primitive is still behind an `unstable_` prefix, and the whole of the
  * behaviour it would replace is the `useState` below.
  */
-export function PasswordInput({ className, ...rest }: PasswordInputProps) {
+export const PasswordInput: FC<PasswordInputProps> = ({
+  className,
+  ...rest
+}) => {
   const [visible, setVisible] = useState(false);
 
   return (
@@ -32,4 +36,4 @@ export function PasswordInput({ className, ...rest }: PasswordInputProps) {
       </button>
     </div>
   );
-}
+};

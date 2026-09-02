@@ -1,7 +1,7 @@
-import type { ReactNode } from 'react';
+import type { FC } from 'react';
 import useDocusaurusContext from '@docusaurus/useDocusaurusContext';
 
-export default function StoryboookLink(): ReactNode {
+const StoryboookLink: FC = () => {
   const { siteConfig } = useDocusaurusContext();
   const storybookUrl = (siteConfig.customFields as { storybookBaseUrl: string })
     .storybookBaseUrl;
@@ -11,4 +11,6 @@ export default function StoryboookLink(): ReactNode {
       Storybook workbench
     </a>
   );
-}
+};
+
+export default StoryboookLink;

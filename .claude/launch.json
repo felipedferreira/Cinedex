@@ -4,7 +4,7 @@
     {
       "name": "cinedex-app",
       "runtimeExecutable": "npm",
-      "runtimeArgs": ["run", "dev", "--prefix", "frontend"],
+      "runtimeArgs": ["run", "start", "--prefix", "frontend"],
       "port": 9000,
       "autoPort": true
     },

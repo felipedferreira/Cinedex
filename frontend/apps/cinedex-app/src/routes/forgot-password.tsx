@@ -1,12 +1,9 @@
+import type { FC } from 'react';
 import { createFileRoute } from '@tanstack/react-router';
 import { ForgotPasswordScreen } from '@cinedex/solution';
 import { toast } from 'sonner';
 
-export const Route = createFileRoute('/forgot-password')({
-  component: RouteComponent,
-});
-
-function RouteComponent() {
+const RouteComponent: FC = () => {
   return (
     <ForgotPasswordScreen
       onSubmit={() => {
@@ -16,4 +13,8 @@ function RouteComponent() {
       }}
     />
   );
-}
+};
+
+export const Route = createFileRoute('/forgot-password')({
+  component: RouteComponent,
+});

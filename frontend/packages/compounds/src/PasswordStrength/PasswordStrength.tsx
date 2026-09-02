@@ -1,3 +1,4 @@
+import type { FC } from 'react';
 import { ProgressBar } from '@cinedex/atoms';
 import type { PasswordRequirement } from './strengthFromRequirements';
 
@@ -9,10 +10,10 @@ export interface PasswordStrengthMeterProps {
 }
 
 /** The strength bar and its verdict, side by side. */
-export function PasswordStrengthMeter({
+export const PasswordStrengthMeter: FC<PasswordStrengthMeterProps> = ({
   ratio,
   label,
-}: PasswordStrengthMeterProps) {
+}) => {
   return (
     <div className="flex items-center gap-2.5">
       <ProgressBar ratio={ratio} label="Password strength" className="flex-1" />
@@ -21,14 +22,16 @@ export function PasswordStrengthMeter({
       </span>
     </div>
   );
-}
+};
 
 export interface PasswordChecklistProps {
   requirements: PasswordRequirement[];
 }
 
 /** The tick-list of password requirements, met and unmet. */
-export function PasswordChecklist({ requirements }: PasswordChecklistProps) {
+export const PasswordChecklist: FC<PasswordChecklistProps> = ({
+  requirements,
+}) => {
   return (
     <ul className="m-0 mt-0.5 grid list-none gap-1.5 p-0">
       {requirements.map((requirement) => (
@@ -51,4 +54,4 @@ export function PasswordChecklist({ requirements }: PasswordChecklistProps) {
       ))}
     </ul>
   );
-}
+};

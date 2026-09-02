@@ -1,3 +1,4 @@
+import type { FC, PropsWithChildren } from 'react';
 import { AuthCard, type AuthCardProps } from '@cinedex/compounds';
 import { Brand } from '../Brand/Brand';
 
@@ -9,9 +10,9 @@ export type CinedexAuthCardProps = AuthCardProps;
  * them repeats `brand={<Brand />}`. `HomeScreen` overrides it with an animated
  * intro, since it's the app's one landing moment.
  */
-export function CinedexAuthCard({
+export const CinedexAuthCard: FC<PropsWithChildren<CinedexAuthCardProps>> = ({
   brand = <Brand />,
   ...props
-}: CinedexAuthCardProps) {
+}) => {
   return <AuthCard brand={brand} {...props} />;
-}
+};

@@ -19,7 +19,7 @@ const meta = {
   args: {
     children: (
       <AuthCard
-        eyebrow="CIN · Auth"
+        eyebrow="Step 1 of 2"
         kicker="Session · Sign in"
         title="Sign in"
         description="Cinedex catalog — production."
@@ -43,7 +43,7 @@ export const StackedChildren: Story = {
     children: (
       <>
         <AuthCard
-          eyebrow="CIN · Auth"
+          eyebrow="Step 1 of 2"
           kicker="Session · Sign in"
           title="Sign in"
           description="Cinedex catalog — production."

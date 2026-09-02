@@ -1,4 +1,5 @@
 import { useId } from 'react';
+import type { FC } from 'react';
 import { resolveBrandSize, type BrandSize } from './brandSize';
 import { MarkBody } from './MarkBody';
 import { buildApertureTimeline } from './timelines';
@@ -27,9 +28,9 @@ export interface BrandApertureAnimationProps {
  * the two DOM nodes it drives. `BrandFocusRingsAnimation` is the alternate
  * sequence, built and exported the same way.
  */
-export function BrandApertureAnimation({
+export const BrandApertureAnimation: FC<BrandApertureAnimationProps> = ({
   size = 'M',
-}: BrandApertureAnimationProps) {
+}) => {
   const uid = useId();
   const resolvedSize = resolveBrandSize(size);
   const { rootRef, wordmarkRef } = useMarkTimeline(buildApertureTimeline);
@@ -40,4 +41,4 @@ export function BrandApertureAnimation({
       <Wordmark size={resolvedSize} ref={wordmarkRef} />
     </>
   );
-}
+};

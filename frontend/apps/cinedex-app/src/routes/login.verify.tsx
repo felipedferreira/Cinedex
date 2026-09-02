@@ -1,12 +1,9 @@
+import type { FC } from 'react';
 import { createFileRoute } from '@tanstack/react-router';
 import { TwoFactorScreen } from '@cinedex/solution';
 import { toast } from 'sonner';
 
-export const Route = createFileRoute('/login/verify')({
-  component: RouteComponent,
-});
-
-function RouteComponent() {
+const RouteComponent: FC = () => {
   return (
     <TwoFactorScreen
       codeLength={4}
@@ -22,4 +19,8 @@ function RouteComponent() {
       }}
     />
   );
-}
+};
+
+export const Route = createFileRoute('/login/verify')({
+  component: RouteComponent,
+});

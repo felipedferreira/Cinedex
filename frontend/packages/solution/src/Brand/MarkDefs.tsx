@@ -1,3 +1,4 @@
+import type { FC } from 'react';
 import {
   BLADE_GRADIENT_STOPS,
   BLADE_GRADIENT_VECTOR,
@@ -22,7 +23,7 @@ export interface MarkDefsProps {
  * Not exported from the package barrel — an internal building block, not part
  * of `@cinedex/solution`'s public surface.
  */
-export function MarkDefs({ uid }: MarkDefsProps) {
+export const MarkDefs: FC<MarkDefsProps> = ({ uid }) => {
   return (
     <defs>
       <linearGradient id={`cdx-ring-${uid}`} x1="0" y1="0" x2="1" y2="1">
@@ -79,4 +80,4 @@ export function MarkDefs({ uid }: MarkDefsProps) {
       </mask>
     </defs>
   );
-}
+};

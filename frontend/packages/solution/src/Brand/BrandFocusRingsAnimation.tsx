@@ -1,4 +1,5 @@
 import { useId } from 'react';
+import type { FC } from 'react';
 import { resolveBrandSize, type BrandSize } from './brandSize';
 import { MarkBody } from './MarkBody';
 import { buildFocusRingsTimeline } from './timelines';
@@ -29,9 +30,9 @@ export interface BrandFocusRingsAnimationProps {
  * exported so it's a one-line swap if that choice changes, and so it can be
  * reviewed on its own in Storybook.
  */
-export function BrandFocusRingsAnimation({
+export const BrandFocusRingsAnimation: FC<BrandFocusRingsAnimationProps> = ({
   size = 'M',
-}: BrandFocusRingsAnimationProps) {
+}) => {
   const uid = useId();
   const resolvedSize = resolveBrandSize(size);
   const { rootRef, wordmarkRef } = useMarkTimeline(buildFocusRingsTimeline);
@@ -42,4 +43,4 @@ export function BrandFocusRingsAnimation({
       <Wordmark size={resolvedSize} ref={wordmarkRef} />
     </>
   );
-}
+};

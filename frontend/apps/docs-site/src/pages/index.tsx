@@ -1,4 +1,5 @@
-import { Fragment, type ReactNode } from 'react';
+import { Fragment } from 'react';
+import type { FC } from 'react';
 import BrowserOnly from '@docusaurus/BrowserOnly';
 import Link from '@docusaurus/Link';
 import useDocusaurusContext from '@docusaurus/useDocusaurusContext';
@@ -23,7 +24,7 @@ import HomepageFeatures from '@site/src/components/HomepageFeatures';
  * replays once when hydration swaps them, which reads as an intro rather than
  * as a glitch.
  */
-function BrandLockup() {
+const BrandLockup: FC = () => {
   return (
     <span className="flex items-center gap-2">
       <BrowserOnly fallback={<Brand size={10} />}>
@@ -31,9 +32,9 @@ function BrandLockup() {
       </BrowserOnly>
     </span>
   );
-}
+};
 
-function HomepageHeader() {
+const HomepageHeader: FC = () => {
   const { siteConfig } = useDocusaurusContext();
 
   return (
@@ -58,7 +59,7 @@ function HomepageHeader() {
       </div>
     </header>
   );
-}
+};
 
 const STACK = [
   '.NET 10',
@@ -68,7 +69,7 @@ const STACK = [
   'OpenTelemetry',
 ] as const;
 
-function StackRow() {
+const StackRow: FC = () => {
   return (
     <section
       aria-labelledby="stack-label"
@@ -93,7 +94,7 @@ function StackRow() {
       </ul>
     </section>
   );
-}
+};
 
 /**
  * The homepage content, remounted whenever the colour mode changes.
@@ -115,7 +116,7 @@ function StackRow() {
  * merely loads under a theme resolves everything correctly. Only Storybook's
  * toolbar and this site's navbar toggle are affected.
  */
-function HomeContent(): ReactNode {
+const HomeContent: FC = () => {
   const { colorMode } = useColorMode();
 
   return (
@@ -127,9 +128,9 @@ function HomeContent(): ReactNode {
       </main>
     </Fragment>
   );
-}
+};
 
-export default function Home(): ReactNode {
+const Home: FC = () => {
   const { siteConfig } = useDocusaurusContext();
 
   // `useColorMode` reads Layout's ColorModeProvider, so it has to be called by a
@@ -139,4 +140,6 @@ export default function Home(): ReactNode {
       <HomeContent />
     </Layout>
   );
-}
+};
+
+export default Home;

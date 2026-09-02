@@ -1,12 +1,9 @@
+import type { FC } from 'react';
 import { createFileRoute } from '@tanstack/react-router';
 import { SignInScreen } from '@cinedex/solution';
 import { toast } from 'sonner';
 
-export const Route = createFileRoute('/login/')({
-  component: RouteComponent,
-});
-
-function RouteComponent() {
+const RouteComponent: FC = () => {
   const { state } = Route.useSearch();
   return (
     <SignInScreen
@@ -18,4 +15,8 @@ function RouteComponent() {
       }}
     />
   );
-}
+};
+
+export const Route = createFileRoute('/login/')({
+  component: RouteComponent,
+});

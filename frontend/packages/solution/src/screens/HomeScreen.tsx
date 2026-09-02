@@ -1,3 +1,4 @@
+import type { FC } from 'react';
 import { Separator } from '@cinedex/atoms';
 import { AuthLayout } from '@cinedex/compounds';
 import { BrandApertureAnimation } from '../Brand/BrandApertureAnimation';
@@ -72,7 +73,7 @@ const SCREENS: ScreenEntry[] = [
  * need backend support that does not exist yet — so this is the only way to
  * review them short of editing the address bar.
  */
-export function HomeScreen() {
+export const HomeScreen: FC = () => {
   return (
     <AuthLayout>
       <CinedexAuthCard
@@ -112,4 +113,4 @@ export function HomeScreen() {
       </CinedexAuthCard>
     </AuthLayout>
   );
-}
+};

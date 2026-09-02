@@ -7,7 +7,7 @@ const meta = {
   component: AuthCard,
   tags: ['autodocs'],
   args: {
-    eyebrow: 'CIN · Auth',
+    eyebrow: 'Step 1 of 2',
     kicker: 'Session · Sign in',
     title: 'Sign in',
     description: 'Cinedex catalog — production.',
@@ -38,7 +38,7 @@ type Story = StoryObj<typeof meta>;
 /**
  * With no `brand`, the row above the card holds only the eyebrow. That is the
  * package boundary working: `@cinedex/compounds` knows *where* a brand goes,
- * not which one — see `Solution/Screens` for the same card wearing Cinedex's.
+ * not which one — see `Solution/Auth Stories` for the same card wearing Cinedex's.
  */
 export const Unbranded: Story = {};
 

@@ -1,4 +1,4 @@
-import type { Ref } from 'react';
+import type { FC, Ref } from 'react';
 import type { ResolvedBrandSize } from './brandSize';
 
 export interface WordmarkProps {
@@ -20,7 +20,7 @@ export interface WordmarkProps {
  * system's type scale (`text-brand`) and the screen-reader semantics a
  * geometric wordmark would have to reinvent, for no legibility gain.
  */
-export function Wordmark({ size, ref }: WordmarkProps) {
+export const Wordmark: FC<WordmarkProps> = ({ size, ref }) => {
   return (
     <span
       ref={ref}
@@ -30,4 +30,4 @@ export function Wordmark({ size, ref }: WordmarkProps) {
       Cinedex
     </span>
   );
-}
+};

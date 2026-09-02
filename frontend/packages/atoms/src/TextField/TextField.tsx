@@ -1,4 +1,4 @@
-import type { ReactNode } from 'react';
+import type { FC, ReactNode } from 'react';
 import { Field } from '../Field/Field';
 import { Input, type InputProps } from '../Input/Input';
 
@@ -15,15 +15,15 @@ export interface TextFieldProps extends InputProps {
  * caller wants. Reach for the two separately only when the control is not a
  * plain input — `PasswordField` in `@cinedex/compounds` is the example.
  */
-export function TextField({
+export const TextField: FC<TextFieldProps> = ({
   label,
   labelExtra,
   error,
   ...rest
-}: TextFieldProps) {
+}) => {
   return (
     <Field label={label} labelExtra={labelExtra} error={error}>
       <Input {...rest} />
     </Field>
   );
-}
+};

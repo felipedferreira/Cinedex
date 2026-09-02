@@ -1,7 +1,8 @@
 name: Deploy (reusable)
 
-# The only copy of the deploy body. Four thin callers—cd-app, cd-storybook,
-# cd-docs-site and cd-webservice—supply what differs and inherit the secrets.
+# The only copy of the deploy body. Four thin callers—deploy-app,
+# deploy-storybook, deploy-docs-site and deploy-webservice—supply what differs
+# and inherit the secrets.
 # Behaviour lives here; a caller only names a service.
 #
 # Adding a service is a new caller plus two secrets, with no change here. The

@@ -1,0 +1,47 @@
+name: Deploy all services
+
+# Fans out through the same thin per-service callers used for manual deploys, so
+# service-specific image names and Dokploy secret names stay in one place.
+on:
+  workflow_dispatch:
+    inputs:
+      image-tag:
+        description: Image tag to deploy to every service, e.g. sha-abc1234. Defaults to latest.
+        required: false
+        default: latest
+        type: string
+
+permissions:
+  contents: read
+  # The nested deploy workflow pulls image manifests from GHCR; each layer in
+  # the reusable workflow chain must grant this permission.
+  packages: read
+
+jobs:
+  deploy-app:
+    name: Deploy cinedex-app
+    uses: ./.github/workflows/deploy-app.yml
+    secrets: inherit
+    with:
+      image-tag: ${{ inputs.image-tag || 'latest' }}
+
+  deploy-docs-site:
+    name: Deploy docs-site
+    uses: ./.github/workflows/deploy-docs-site.yml
+    secrets: inherit
+    with:
+      image-tag: ${{ inputs.image-tag || 'latest' }}
+
+  deploy-storybook:
+    name: Deploy storybook
+    uses: ./.github/workflows/deploy-storybook.yml
+    secrets: inherit
+    with:
+      image-tag: ${{ inputs.image-tag || 'latest' }}
+
+  deploy-webservice:
+    name: Deploy Cinedex.WebService
+    uses: ./.github/workflows/deploy-webservice.yml
+    secrets: inherit
+    with:
+      image-tag: ${{ inputs.image-tag || 'latest' }}

@@ -35,6 +35,18 @@ const FeatureList: FeatureItem[] = [
     ),
   },
   {
+    kicker: 'CI / Dokploy',
+    title: 'Operations',
+    description: (
+      <>
+        GitHub Actions builds immutable GHCR images, then pins and triggers
+        Dokploy deployments. The{' '}
+        <Link to="/docs/operations/build-and-deploy-pipelines">Operations</Link>{' '}
+        section maps the build and deploy pipelines end to end.
+      </>
+    ),
+  },
+  {
     kicker: 'Repo · Generated',
     title: 'Always up to date',
     description: (
@@ -70,8 +82,8 @@ const Feature: FC<FeatureItem> = ({ kicker, title, description }) => {
 
 const HomepageFeatures: FC = () => {
   return (
-    <section className="cinedex-home-features mx-auto max-w-[900px] px-6 py-12">
-      <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+    <section className="cinedex-home-features mx-auto max-w-[1100px] px-6 py-12">
+      <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
         {FeatureList.map((props) => (
           <Feature key={props.title} {...props} />
         ))}

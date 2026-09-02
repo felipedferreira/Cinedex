@@ -1,12 +1,9 @@
+import type { FC } from 'react';
 import { createFileRoute } from '@tanstack/react-router';
 import { CreateAccountScreen } from '@cinedex/solution';
 import { toast } from 'sonner';
 
-export const Route = createFileRoute('/register')({
-  component: RouteComponent,
-});
-
-function RouteComponent() {
+const RouteComponent: FC = () => {
   return (
     <CreateAccountScreen
       onSubmit={() => {
@@ -16,4 +13,8 @@ function RouteComponent() {
       }}
     />
   );
-}
+};
+
+export const Route = createFileRoute('/register')({
+  component: RouteComponent,
+});

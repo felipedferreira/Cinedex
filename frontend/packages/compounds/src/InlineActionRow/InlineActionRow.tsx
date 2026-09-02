@@ -1,23 +1,22 @@
-import type { ReactNode } from 'react';
+import type { FC, PropsWithChildren, ReactNode } from 'react';
 import { cn } from '@cinedex/atoms';
 
 export interface InlineActionRowProps {
-  /** The prompt on the left, e.g. "No account?". */
-  children: ReactNode;
   /** The action on the right, usually a link. */
   action: ReactNode;
   className?: string;
 }
 
 /**
- * The prompt-and-action row that closes a card — "No account? · Create one".
+ * The prompt-and-action row that closes a card. `children` is the prompt on
+ * the left, e.g. "No account?" — "No account? · Create one".
  * Was inlined in three screens with the same six utilities each time.
  */
-export function InlineActionRow({
+export const InlineActionRow: FC<PropsWithChildren<InlineActionRowProps>> = ({
   children,
   action,
   className,
-}: InlineActionRowProps) {
+}) => {
   return (
     <div
       className={cn(
@@ -29,4 +28,4 @@ export function InlineActionRow({
       {action}
     </div>
   );
-}
+};

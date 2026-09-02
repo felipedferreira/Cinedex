@@ -10,8 +10,16 @@ on:
   workflow_dispatch:
     inputs:
       image-tag:
-        description: Image tag to deploy, e.g. sha-abc1234
-        required: true
+        description: Image tag to deploy, e.g. sha-abc1234. Defaults to latest, the tag CI moves to the newest main build.
+        required: false
+        default: latest
+        type: string
+  workflow_call:
+    inputs:
+      image-tag:
+        description: Image tag to deploy, e.g. sha-abc1234. Defaults to latest.
+        required: false
+        default: latest
         type: string
 
 permissions:
@@ -28,6 +36,6 @@ jobs:
     with:
       service-name: Cinedex.WebService
       image: ghcr.io/felipedferreira/cinedex-webservice
-      image-tag: ${{ inputs.image-tag }}
+      image-tag: ${{ inputs.image-tag || 'latest' }}
       app-id-secret: DOKPLOY_APP_ID_WEBSERVICE
       webhook-secret: DOKPLOY_WEBHOOK_WEBSERVICE

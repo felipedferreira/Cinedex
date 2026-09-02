@@ -1,4 +1,4 @@
-import type { ReactNode } from 'react';
+import type { FC, ReactNode } from 'react';
 import Link from '@docusaurus/Link';
 import Heading from '@theme/Heading';
 import { Card } from '@cinedex/atoms';
@@ -51,7 +51,7 @@ const FeatureList: FeatureItem[] = [
  * `Card` is the design system's raised surface and owns no padding of its own,
  * so the inset here is this component's to supply — same as every other caller.
  */
-function Feature({ kicker, title, description }: FeatureItem) {
+const Feature: FC<FeatureItem> = ({ kicker, title, description }) => {
   return (
     <Card className="cinedex-home-card flex flex-col gap-2 p-5">
       <p className="m-0 font-mono text-label font-semibold tracking-eyebrow text-accent uppercase">
@@ -66,9 +66,9 @@ function Feature({ kicker, title, description }: FeatureItem) {
       <p className="m-0 text-body leading-[1.5] text-text">{description}</p>
     </Card>
   );
-}
+};
 
-export default function HomepageFeatures(): ReactNode {
+const HomepageFeatures: FC = () => {
   return (
     <section className="cinedex-home-features mx-auto max-w-[900px] px-6 py-12">
       <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
@@ -78,4 +78,6 @@ export default function HomepageFeatures(): ReactNode {
       </div>
     </section>
   );
-}
+};
+
+export default HomepageFeatures;

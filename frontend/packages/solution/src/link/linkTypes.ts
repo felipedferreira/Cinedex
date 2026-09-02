@@ -1,6 +1,6 @@
-import type { ComponentType, ReactNode } from 'react';
+import type { ComponentType, PropsWithChildren } from 'react';
 
-export interface SolutionLinkProps {
+export interface SolutionLinkProps extends PropsWithChildren {
   /** Destination path, e.g. `/forgot-password`. Pathname only — see `search`. */
   to: string;
   /**
@@ -11,7 +11,6 @@ export interface SolutionLinkProps {
    */
   search?: Record<string, string>;
   className?: string;
-  children?: ReactNode;
 }
 
 /**

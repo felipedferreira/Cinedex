@@ -5,7 +5,11 @@ import { AuthCard } from './AuthCard';
 describe('AuthCard', () => {
   it('renders the title as the page heading', () => {
     render(
-      <AuthCard eyebrow="CIN · Auth" kicker="Session · Sign in" title="Sign in">
+      <AuthCard
+        eyebrow="Step 1 of 2"
+        kicker="Session · Sign in"
+        title="Sign in"
+      >
         <p>body</p>
       </AuthCard>,
     );
@@ -41,6 +45,23 @@ describe('AuthCard', () => {
     expect(container.querySelectorAll('p')).toHaveLength(2); // kicker + body
   });
 
+  // Both header labels are optional, and every Cinedex auth screen now omits at
+  // least one of them. Asserting the *elements* are gone rather than the text:
+  // rendering an empty <span>/<p> would still satisfy a text query, while
+  // leaving the brand row a pixel taller than a screen without an eyebrow.
+  it('omits the eyebrow and kicker elements when they are not given', () => {
+    const { container } = render(
+      <AuthCard title="Sign in">
+        <p>body</p>
+      </AuthCard>,
+    );
+
+    expect(container.querySelector('span')).toBeNull();
+    expect(container.querySelectorAll('p')).toHaveLength(1); // body only
+    expect(
+      screen.getByRole('heading', { level: 1, name: 'Sign in' }),
+    ).toBeInTheDocument();
+  });
   it('renders the description and footnote when they are', () => {
     render(
       <AuthCard

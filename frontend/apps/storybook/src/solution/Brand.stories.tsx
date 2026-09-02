@@ -1,4 +1,5 @@
 import { useState, type ReactNode } from 'react';
+import type { FC, PropsWithChildren } from 'react';
 import type { Meta, StoryObj } from '@storybook/react-vite';
 import { Button } from '@cinedex/atoms';
 import {
@@ -20,7 +21,7 @@ const NUMERIC_BRAND_SIZES = [1, 2, 3, 4, 5, 6] as const;
 
 /**
  * The Cinedex mark: a camera iris forming a "C". `Static` is what every
- * `AuthCard`-based screen shows via `Brand` — see `Solution/Screens`. The two
+ * `AuthCard`-based screen shows via `Brand` — see `Solution/Auth Stories`. The two
  * animated variants each run their 1.2s sequence once on mount and settle
  * into that exact same static look; `HomeScreen` is the only current
  * consumer, using the aperture sequence. Both ship so either is a one-line
@@ -36,13 +37,13 @@ type Story = StoryObj<typeof meta>;
 
 /** `AuthCard`'s own brand-row layout, reproduced here since these stories
  *  show `Brand` outside that context — see `AuthCard.tsx`'s header row. */
-function BrandRow({ children }: { children: ReactNode }) {
+const BrandRow: FC<PropsWithChildren> = ({ children }) => {
   return <div className="flex items-center gap-2">{children}</div>;
-}
+};
 
 /** Remounts its brand on every "Replay" click — the same key-remount
  *  technique `preview.tsx` uses to force the theme toolbar to retake effect. */
-function ReplayableBrand({ children }: { children: () => ReactNode }) {
+const ReplayableBrand: FC<{ children: () => ReactNode }> = ({ children }) => {
   const [run, setRun] = useState(0);
 
   return (
@@ -59,7 +60,7 @@ function ReplayableBrand({ children }: { children: () => ReactNode }) {
       </Button>
     </div>
   );
-}
+};
 
 export const Static: Story = {
   render: () => (

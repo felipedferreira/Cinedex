@@ -1,4 +1,4 @@
-import type { ComponentProps } from 'react';
+import type { FC, ComponentProps } from 'react';
 import { VisuallyHidden as VisuallyHiddenPrimitive } from 'radix-ui';
 
 export type VisuallyHiddenProps = ComponentProps<
@@ -9,6 +9,6 @@ export type VisuallyHiddenProps = ComponentProps<
  * Content available to screen readers but not painted — for a heading or a
  * status message that the visual design carries some other way.
  */
-export function VisuallyHidden(props: VisuallyHiddenProps) {
+export const VisuallyHidden: FC<VisuallyHiddenProps> = (props) => {
   return <VisuallyHiddenPrimitive.Root {...props} />;
-}
+};

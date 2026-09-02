@@ -21,18 +21,16 @@ class ResizeObserverStub implements ResizeObserver {
 globalThis.ResizeObserver = ResizeObserverStub;
 
 /**
- * jsdom has no `matchMedia` either, and `__root.tsx` now renders
- * `@cinedex/solution`'s `ScreenTransition`, which checks
- * `prefers-reduced-motion` before building its timeline. Without this every
- * routed test throws inside a layout effect.
+ * jsdom has no `matchMedia` either, and `HomeScreen` renders
+ * `@cinedex/solution`'s `BrandApertureAnimation`, which checks
+ * `prefers-reduced-motion` before starting its intro. Without this a test
+ * landing on the index throws inside a layout effect.
  *
  * `matches` defaults to `true` for the same reason it does in
- * `packages/solution/src/test/setup.ts`: it keeps these tests on the short
- * reduced-motion cross-fade rather than the full 820ms move, so nothing here
- * waits on an animation it does not assert about. The transition's own motion is
- * covered by `rackFocus.test.ts`, and its structure by
- * `ScreenTransition.test.tsx` — what the routing tests care about is that the
- * host is wired up at all.
+ * `packages/solution/src/test/setup.ts`: it keeps these tests on the
+ * "settle immediately" branch, so nothing here waits on an animation it does
+ * not assert about. The sequence itself is covered by `Brand/timelines.test.ts`
+ * upstream.
  */
 class MediaQueryListStub implements MediaQueryList {
   matches = true;

@@ -1,5 +1,5 @@
 import { useId } from 'react';
-import type { ComponentProps, ReactNode } from 'react';
+import type { FC, ComponentProps, ReactNode } from 'react';
 import { Checkbox as CheckboxPrimitive } from 'radix-ui';
 import { cn } from '../utils/cn';
 
@@ -23,7 +23,7 @@ export interface CheckboxProps extends Omit<
  * but the accessible name of a button is computed from its contents first, and
  * this one has none.
  */
-export function Checkbox({ label, className, ...rest }: CheckboxProps) {
+export const Checkbox: FC<CheckboxProps> = ({ label, className, ...rest }) => {
   const id = useId();
   const labelId = `${id}-label`;
 
@@ -57,4 +57,4 @@ export function Checkbox({ label, className, ...rest }: CheckboxProps) {
       </label>
     </span>
   );
-}
+};

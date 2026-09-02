@@ -1,3 +1,4 @@
+import type { FC } from 'react';
 import { createFileRoute, Outlet } from '@tanstack/react-router';
 
 interface LoginSearch {
@@ -8,6 +9,10 @@ interface LoginSearch {
   state?: 'locked';
 }
 
+const RouteComponent: FC = () => {
+  return <Outlet />;
+};
+
 /** Layout only. The sign-in form lives in `login.index.tsx` so that
  *  `/login/verify` has somewhere to render — a parent that renders a screen
  *  instead of an `<Outlet />` swallows its children. */
@@ -17,7 +22,3 @@ export const Route = createFileRoute('/login')({
   }),
   component: RouteComponent,
 });
-
-function RouteComponent() {
-  return <Outlet />;
-}

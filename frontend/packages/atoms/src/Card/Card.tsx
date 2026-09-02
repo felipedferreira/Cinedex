@@ -1,4 +1,4 @@
-import type { ComponentProps } from 'react';
+import type { FC, ComponentProps } from 'react';
 import { cn } from '../utils/cn';
 
 export type CardProps = ComponentProps<'div'>;
@@ -9,11 +9,11 @@ export type CardProps = ComponentProps<'div'>;
  * Surface only — it owns no padding and no internal layout, so a compound can
  * lay its own content out without first undoing a default.
  */
-export function Card({ className, ...rest }: CardProps) {
+export const Card: FC<CardProps> = ({ className, ...rest }) => {
   return (
     <div
       className={cn('rounded-sm border border-border bg-bg shadow', className)}
       {...rest}
     />
   );
-}
+};

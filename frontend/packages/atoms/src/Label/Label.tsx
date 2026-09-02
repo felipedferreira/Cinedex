@@ -1,4 +1,4 @@
-import type { ComponentProps } from 'react';
+import type { FC, ComponentProps } from 'react';
 import { Label as LabelPrimitive } from 'radix-ui';
 import { cn } from '../utils/cn';
 
@@ -12,7 +12,11 @@ export interface LabelProps extends ComponentProps<typeof LabelPrimitive.Root> {
  * the text focuses the control even when that control is not a native input —
  * `Checkbox` renders a button.
  */
-export function Label({ tone = 'default', className, ...rest }: LabelProps) {
+export const Label: FC<LabelProps> = ({
+  tone = 'default',
+  className,
+  ...rest
+}) => {
   return (
     <LabelPrimitive.Root
       className={cn(
@@ -23,4 +27,4 @@ export function Label({ tone = 'default', className, ...rest }: LabelProps) {
       {...rest}
     />
   );
-}
+};

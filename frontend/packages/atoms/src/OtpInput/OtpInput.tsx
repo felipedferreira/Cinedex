@@ -1,5 +1,5 @@
 import { useRef, useState } from 'react';
-import type { ClipboardEvent, KeyboardEvent } from 'react';
+import type { FC, ClipboardEvent, KeyboardEvent } from 'react';
 import { cn } from '../utils/cn';
 
 export interface OtpInputProps {
@@ -18,13 +18,13 @@ export interface OtpInputProps {
  * preview API behind an `unstable_` prefix with an open issue on value
  * persistence — worth adopting once it stabilises, not before.
  */
-export function OtpInput({
+export const OtpInput: FC<OtpInputProps> = ({
   length = 6,
   value,
   onChange,
   label,
   className,
-}: OtpInputProps) {
+}) => {
   const [focusedIndex, setFocusedIndex] = useState<number | null>(null);
   const inputRefs = useRef<(HTMLInputElement | null)[]>([]);
 
@@ -122,4 +122,4 @@ export function OtpInput({
       })}
     </div>
   );
-}
+};

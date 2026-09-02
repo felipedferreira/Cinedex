@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import type { FC } from 'react';
 import { Alert, Button, Checkbox, TextField } from '@cinedex/atoms';
 import {
   AuthLayout,
@@ -26,7 +27,10 @@ export interface SignInScreenProps {
   onSubmit?: (values: SignInValues) => void;
 }
 
-export function SignInScreen({ locked = false, onSubmit }: SignInScreenProps) {
+export const SignInScreen: FC<SignInScreenProps> = ({
+  locked = false,
+  onSubmit,
+}) => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [keepSignedIn, setKeepSignedIn] = useState(true);
@@ -35,12 +39,8 @@ export function SignInScreen({ locked = false, onSubmit }: SignInScreenProps) {
     return (
       <AuthLayout>
         <CinedexAuthCard
-          eyebrow="CIN · Auth"
-          kicker="Session · Locked"
-          kickerTone="warning"
           title="Too many attempts"
           description="Sign-in for this account is paused. Nothing is wrong with your password — the limiter does not say either way."
-          footnote="Lockout applies per account and per IP. Both counters must cool down."
         >
           <StatPair
             stats={[
@@ -82,11 +82,8 @@ export function SignInScreen({ locked = false, onSubmit }: SignInScreenProps) {
   return (
     <AuthLayout>
       <CinedexAuthCard
-        eyebrow="CIN · Auth"
-        kicker="Session · Sign in"
         title="Sign in"
         description="Cinedex catalog — production. Sessions last 30 days on trusted devices."
-        footnote="Rate-limited: 5 attempts per 15 min, per account and per IP."
       >
         <form
           className="flex flex-col gap-4"
@@ -132,4 +129,4 @@ export function SignInScreen({ locked = false, onSubmit }: SignInScreenProps) {
       </CinedexAuthCard>
     </AuthLayout>
   );
-}
+};

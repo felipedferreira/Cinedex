@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import type { FC } from 'react';
 import { Button, Checkbox, TextField } from '@cinedex/atoms';
 import {
   AuthLayout,
@@ -21,7 +22,9 @@ export interface CreateAccountScreenProps {
   onSubmit?: (values: CreateAccountValues) => void;
 }
 
-export function CreateAccountScreen({ onSubmit }: CreateAccountScreenProps) {
+export const CreateAccountScreen: FC<CreateAccountScreenProps> = ({
+  onSubmit,
+}) => {
   const [email, setEmail] = useState('');
   const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
@@ -46,12 +49,7 @@ export function CreateAccountScreen({ onSubmit }: CreateAccountScreenProps) {
 
   return (
     <AuthLayout>
-      <CinedexAuthCard
-        eyebrow="CIN · Auth"
-        kicker="Account · Register"
-        title="Create account"
-        footnote="Submitting always shows the same confirmation, registered or not. Email verification is required before privileged use."
-      >
+      <CinedexAuthCard title="Create account">
         <form
           className="flex flex-col gap-4"
           onSubmit={(event) => {
@@ -118,4 +116,4 @@ export function CreateAccountScreen({ onSubmit }: CreateAccountScreenProps) {
       </CinedexAuthCard>
     </AuthLayout>
   );
-}
+};

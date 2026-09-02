@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import type { FC } from 'react';
 import { Button, Checkbox } from '@cinedex/atoms';
 import { AuthLayout, PasswordField } from '@cinedex/compounds';
 import { CinedexAuthCard } from './CinedexAuthCard';
@@ -20,10 +21,10 @@ export interface ResetPasswordScreenProps {
   onSubmit?: (values: { password: string; signOutEverywhere: boolean }) => void;
 }
 
-export function ResetPasswordScreen({
+export const ResetPasswordScreen: FC<ResetPasswordScreenProps> = ({
   email,
   onSubmit,
-}: ResetPasswordScreenProps) {
+}) => {
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
   const [signOutEverywhere, setSignOutEverywhere] = useState(true);
@@ -48,14 +49,12 @@ export function ResetPasswordScreen({
     <AuthLayout>
       <CinedexAuthCard
         eyebrow="Step 2 of 2"
-        kicker="Recovery · New password"
         title="Set a new password"
         description={
           email
             ? `Link verified for ${email}.`
             : 'Link verified for this account.'
         }
-        footnote="The reset link is single-use — it stops working once your password changes."
       >
         <form
           className="flex flex-col gap-4"
@@ -101,4 +100,4 @@ export function ResetPasswordScreen({
       </CinedexAuthCard>
     </AuthLayout>
   );
-}
+};

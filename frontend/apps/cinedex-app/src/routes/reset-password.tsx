@@ -1,3 +1,4 @@
+import type { FC } from 'react';
 import { createFileRoute } from '@tanstack/react-router';
 import { ResetPasswordScreen } from '@cinedex/solution';
 
@@ -6,6 +7,11 @@ interface ResetPasswordSearch {
   token?: string;
 }
 
+const RouteComponent: FC = () => {
+  const { email } = Route.useSearch();
+  return <ResetPasswordScreen email={email} />;
+};
+
 export const Route = createFileRoute('/reset-password')({
   validateSearch: (search: Record<string, unknown>): ResetPasswordSearch => ({
     email: typeof search.email === 'string' ? search.email : undefined,
@@ -13,8 +19,3 @@ export const Route = createFileRoute('/reset-password')({
   }),
   component: RouteComponent,
 });
-
-function RouteComponent() {
-  const { email } = Route.useSearch();
-  return <ResetPasswordScreen email={email} />;
-}

@@ -1,3 +1,4 @@
+import type { FC } from 'react';
 /* eslint-disable react-hooks/static-components --
  * The link component is not created by this render: it comes from context, and
  * both the value `SolutionProvider` takes as a prop and the `AnchorLink` default
@@ -16,12 +17,12 @@ import type { SolutionLinkProps } from './linkTypes';
  * Renders whatever link component the host injected. Everything in this package
  * that navigates does so through here.
  */
-export function SolutionLink({
+export const SolutionLink: FC<SolutionLinkProps> = ({
   to,
   search,
   className,
   children,
-}: SolutionLinkProps) {
+}) => {
   const Link = useLinkComponent();
 
   return (
@@ -29,4 +30,4 @@ export function SolutionLink({
       {children}
     </Link>
   );
-}
+};

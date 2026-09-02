@@ -1,4 +1,4 @@
-import type { ReactNode } from 'react';
+import type { FC, ReactNode } from 'react';
 import { Field, PasswordInput, type PasswordInputProps } from '@cinedex/atoms';
 
 export interface PasswordFieldProps extends PasswordInputProps {
@@ -14,15 +14,15 @@ export interface PasswordFieldProps extends PasswordInputProps {
  * and its reveal toggle. The counterpart to `TextField`, which pairs `Field`
  * with a plain `Input`.
  */
-export function PasswordField({
+export const PasswordField: FC<PasswordFieldProps> = ({
   label,
   labelExtra,
   error,
   ...rest
-}: PasswordFieldProps) {
+}) => {
   return (
     <Field label={label} labelExtra={labelExtra} error={error}>
       <PasswordInput {...rest} />
     </Field>
   );
-}
+};

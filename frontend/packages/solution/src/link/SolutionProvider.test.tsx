@@ -3,6 +3,7 @@ import { render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { SignInScreen } from '../screens/SignInScreen';
 import { SolutionProvider } from './SolutionProvider';
+import type { FC } from 'react';
 import type { SolutionLinkProps } from './linkTypes';
 
 describe('SolutionProvider', () => {
@@ -19,7 +20,7 @@ describe('SolutionProvider', () => {
     const navigate = vi.fn();
     const user = userEvent.setup();
 
-    function RouterLink({ to, children, className }: SolutionLinkProps) {
+    const RouterLink: FC<SolutionLinkProps> = ({ to, children, className }) => {
       return (
         <button
           type="button"
@@ -31,7 +32,7 @@ describe('SolutionProvider', () => {
           {children}
         </button>
       );
-    }
+    };
 
     render(
       <SolutionProvider linkComponent={RouterLink}>

@@ -68,5 +68,32 @@ export default defineConfig([
       globals: globals.vitest,
     },
   },
+  {
+    // Components are arrow functions typed with `FC`, never `function`
+    // declarations. Enforced with AST selectors rather than
+    // `react/function-component-definition`, because `eslint-plugin-react`
+    // still caps its peer range at ESLint 9 and this repo is on 10 — and with
+    // selectors rather than `func-style`, because that rule cannot tell a
+    // component from a helper and would take `cn`, `resolveBrandSize` and the
+    // GSAP timeline builders with it. The capitalised-name convention is the
+    // only signal available here, which is why both selectors key off it.
+    files: ['**/*.{ts,tsx}'],
+    rules: {
+      'no-restricted-syntax': [
+        'error',
+        {
+          selector: 'FunctionDeclaration[id.name=/^[A-Z]/]',
+          message:
+            'React components must be arrow functions: `const Foo: FC<FooProps> = (props) => { … }`.',
+        },
+        {
+          selector:
+            'VariableDeclarator[id.name=/^[A-Z]/]:not([id.typeAnnotation]) > ArrowFunctionExpression',
+          message:
+            'Annotate the component with `FC<Props>` (or `FC<PropsWithChildren<Props>>` when it takes children).',
+        },
+      ],
+    },
+  },
   prettier,
 ]);

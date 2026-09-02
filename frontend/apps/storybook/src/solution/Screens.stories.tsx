@@ -18,7 +18,7 @@ import {
  * screens live in a package instead of in the app.
  */
 const meta = {
-  title: 'Solution/Screens',
+  title: 'Solution/Auth Stories',
   tags: ['autodocs'],
   parameters: { layout: 'fullscreen' },
 } satisfies Meta;

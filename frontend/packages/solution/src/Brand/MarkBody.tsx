@@ -1,4 +1,4 @@
-import type { Ref } from 'react';
+import type { FC, Ref } from 'react';
 import {
   BLADE_PATH,
   BLADE_PIVOT_ANGLES_DEG,
@@ -40,7 +40,7 @@ export interface MarkBodyProps {
  * through a diff. `Brand` itself passes no `ref` and builds no timeline, so
  * these attributes stay inert there.
  */
-export function MarkBody({ uid, size, ref }: MarkBodyProps) {
+export const MarkBody: FC<MarkBodyProps> = ({ uid, size, ref }) => {
   return (
     <svg
       ref={ref}
@@ -165,4 +165,4 @@ export function MarkBody({ uid, size, ref }: MarkBodyProps) {
       </g>
     </svg>
   );
-}
+};

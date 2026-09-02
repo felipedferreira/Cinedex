@@ -1,4 +1,5 @@
 import { useId } from 'react';
+import type { FC } from 'react';
 import { resolveBrandSize, type BrandSize } from './brandSize';
 import { MarkBody } from './MarkBody';
 import { Wordmark } from './Wordmark';
@@ -30,7 +31,7 @@ export interface BrandProps {
  * everywhere else. It pulls in no GSAP: the timelines live behind
  * `useMarkTimeline`, which only the two animated variants call.
  */
-export function Brand({ size = 'M' }: BrandProps) {
+export const Brand: FC<BrandProps> = ({ size = 'M' }) => {
   const uid = useId();
   const resolvedSize = resolveBrandSize(size);
 
@@ -40,4 +41,4 @@ export function Brand({ size = 'M' }: BrandProps) {
       <Wordmark size={resolvedSize} />
     </>
   );
-}
+};

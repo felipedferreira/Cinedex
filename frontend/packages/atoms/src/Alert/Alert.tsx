@@ -1,4 +1,4 @@
-import type { ComponentProps } from 'react';
+import type { FC, ComponentProps } from 'react';
 import { cn } from '../utils/cn';
 import { alertVariants, type AlertVariantProps } from './alertVariants';
 
@@ -9,7 +9,7 @@ export interface AlertProps extends ComponentProps<'div'>, AlertVariantProps {}
  * suits the lockout and rate-limit copy these carry — a live region, not an
  * interruption.
  */
-export function Alert({ tone, className, ...rest }: AlertProps) {
+export const Alert: FC<AlertProps> = ({ tone, className, ...rest }) => {
   return (
     <div
       role="status"
@@ -17,4 +17,4 @@ export function Alert({ tone, className, ...rest }: AlertProps) {
       {...rest}
     />
   );
-}
+};

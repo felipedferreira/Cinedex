@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import type { FC } from 'react';
 import { Button } from '@cinedex/atoms';
 import { AuthLayout, StatPair } from '@cinedex/compounds';
 import { SolutionLink } from '../link/SolutionLink';
@@ -17,10 +18,10 @@ export interface SignedOutScreenProps {
  * Presentational on purpose: there is no session-listing or revoke-all endpoint
  * to drive this yet. See `docs/auth-security-model.md`'s "Known gaps".
  */
-export function SignedOutScreen({
+export const SignedOutScreen: FC<SignedOutScreenProps> = ({
   initialOtherSessions = 2,
   onSignOutEverywhere,
-}: SignedOutScreenProps) {
+}) => {
   const [revokedAt] = useState(() =>
     new Date().toLocaleTimeString([], {
       hour: '2-digit',
@@ -33,12 +34,8 @@ export function SignedOutScreen({
   return (
     <AuthLayout>
       <CinedexAuthCard
-        eyebrow="Session ended"
-        kicker="Session · Revoked"
-        kickerTone="success"
         title="You're signed out"
         description={`This device's refresh-token family was revoked at ${revokedAt}.`}
-        footnote="Revocation is bound to the authenticated subject — a stolen token cannot end someone else's session."
       >
         <StatPair
           stats={[
@@ -65,4 +62,4 @@ export function SignedOutScreen({
       </CinedexAuthCard>
     </AuthLayout>
   );
-}
+};

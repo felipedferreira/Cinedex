@@ -1,4 +1,4 @@
-import type { ComponentProps } from 'react';
+import type { FC, ComponentProps } from 'react';
 import { cn } from '@cinedex/atoms';
 import { SolutionLink } from './SolutionLink';
 import type { SolutionLinkProps } from './linkTypes';
@@ -17,24 +17,28 @@ const inlineLinkClass =
   'border-b border-accent-border text-caption text-accent no-underline hover:border-accent';
 
 /** An inline underlined link, navigating through whatever the host injected. */
-export function AuthLink({ to, className, children }: SolutionLinkProps) {
+export const AuthLink: FC<SolutionLinkProps> = ({
+  to,
+  className,
+  children,
+}) => {
   return (
     <SolutionLink to={to} className={cn(inlineLinkClass, className)}>
       {children}
     </SolutionLink>
   );
-}
+};
 
 /**
  * The same look as `AuthLink`, but for an in-page action rather than navigation
  * — "Resend", "Start over". A real `<button>`, so it is keyboard-operable and
  * announced as a button rather than a link that goes nowhere.
  */
-export function AuthActionLink({
+export const AuthActionLink: FC<ComponentProps<'button'>> = ({
   className,
   type = 'button',
   ...rest
-}: ComponentProps<'button'>) {
+}) => {
   return (
     <button
       type={type}
@@ -46,4 +50,4 @@ export function AuthActionLink({
       {...rest}
     />
   );
-}
+};

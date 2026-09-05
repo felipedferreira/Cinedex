@@ -1,6 +1,6 @@
 # Built from the `frontend/` workspace root, not this directory — the lockfile
-# is hoisted there and the app depends on the `@cinedex/solution` workspace package
-# (and, through it, on compounds, atoms and theme).
+# is hoisted there and the app depends on the `@cinedex/scenes` workspace package
+# (and, through it, on shots, frames and theme).
 # compose.yaml sets `context: ./frontend` and points `dockerfile` at this file.
 FROM node:22-alpine AS build
 WORKDIR /app
@@ -24,9 +24,9 @@ COPY package.json package-lock.json .npmrc ./
 COPY apps/cinedex-app/package.json apps/cinedex-app/
 COPY apps/docs-site/package.json apps/docs-site/
 COPY apps/storybook/package.json apps/storybook/
-COPY packages/atoms/package.json packages/atoms/
-COPY packages/compounds/package.json packages/compounds/
-COPY packages/solution/package.json packages/solution/
+COPY packages/frames/package.json packages/frames/
+COPY packages/shots/package.json packages/shots/
+COPY packages/scenes/package.json packages/scenes/
 COPY packages/theme/package.json packages/theme/
 # Scoped to the app's workspace so the image build skips the Storybook, docs-site
 # and test toolchains it does not need. The workspace links to the four library

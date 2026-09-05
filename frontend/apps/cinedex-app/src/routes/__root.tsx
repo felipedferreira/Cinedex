@@ -1,27 +1,27 @@
 import type { FC } from 'react';
 import { createRootRoute, Link, Outlet } from '@tanstack/react-router';
-import { SolutionProvider, type SolutionLinkProps } from '@cinedex/solution';
+import { SceneProvider, type SceneLinkProps } from '@cinedex/scenes';
 import { Toaster } from 'sonner';
 
 /**
- * Adapts `@cinedex/solution`'s router-agnostic link contract to TanStack Router.
+ * Adapts `@cinedex/scenes`'s router-agnostic link contract to TanStack Router.
  *
  * This component is the entire coupling between the screen library and the
- * router, and the cast is where their two type systems meet: `@cinedex/solution`
+ * router, and the cast is where their two type systems meet: `@cinedex/scenes`
  * deals in plain path strings so it can stay router-free and storyable, while
  * TanStack narrows `to` to the union of generated route paths. The paths the
  * screens use are real routes — `login-routing.test.tsx` is what keeps that
  * honest.
  */
-const RouterLink: FC<SolutionLinkProps> = ({ to, search, ...rest }) => {
+const RouterLink: FC<SceneLinkProps> = ({ to, search, ...rest }) => {
   return <Link to={to as never} search={search as never} {...rest} />;
 };
 
 export const Route = createRootRoute({
   component: () => (
-    <SolutionProvider linkComponent={RouterLink}>
+    <SceneProvider linkComponent={RouterLink}>
       <Outlet />
       <Toaster />
-    </SolutionProvider>
+    </SceneProvider>
   ),
 });

@@ -4,7 +4,7 @@ import babel from '@rolldown/plugin-babel';
 import tailwindcss from '@tailwindcss/vite';
 
 // Storybook's `@storybook/react-vite` framework auto-loads this file. Vite applies these plugins to
-// the linked `@cinedex/atoms`, `@cinedex/compounds` and `@cinedex/solution` workspace source as well
+// the linked `@cinedex/frames`, `@cinedex/shots` and `@cinedex/scenes` workspace source as well
 // as to the stories, so library components compile here exactly the way they do in the SPA — same
 // React Compiler output, not an approximation of it.
 //

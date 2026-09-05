@@ -101,26 +101,26 @@ jobs:
 
       # One per library tier. @cinedex/theme is absent on purpose—it ships CSS
       # and no JavaScript, so it has no test suite to report on.
-      - name: Coverage summary (@cinedex/atoms)
+      - name: Coverage summary (@cinedex/frames)
         if: always()
         uses: davelosert/vitest-coverage-report-action@v2
         with:
-          name: "@cinedex/atoms"
-          working-directory: frontend/packages/atoms
+          name: "@cinedex/frames"
+          working-directory: frontend/packages/frames
 
-      - name: Coverage summary (@cinedex/compounds)
+      - name: Coverage summary (@cinedex/shots)
         if: always()
         uses: davelosert/vitest-coverage-report-action@v2
         with:
-          name: "@cinedex/compounds"
-          working-directory: frontend/packages/compounds
+          name: "@cinedex/shots"
+          working-directory: frontend/packages/shots
 
-      - name: Coverage summary (@cinedex/solution)
+      - name: Coverage summary (@cinedex/scenes)
         if: always()
         uses: davelosert/vitest-coverage-report-action@v2
         with:
-          name: "@cinedex/solution"
-          working-directory: frontend/packages/solution
+          name: "@cinedex/scenes"
+          working-directory: frontend/packages/scenes
 
   images:
     name: Build & push ${{ matrix.name }}
@@ -181,8 +181,8 @@ jobs:
             dockerfile: frontend/apps/storybook/Dockerfile
             title: Cinedex Storybook
             description: >-
-              The Storybook for Cinedex's three component tiers—@cinedex/atoms,
-              @cinedex/compounds and @cinedex/solution—built as a static site.
+              The Storybook for Cinedex's three component tiers—@cinedex/frames,
+              @cinedex/shots and @cinedex/scenes—built as a static site.
           # Root context: /changelog is generated from the root CHANGELOG.md.
           - name: docs-site
             context: .

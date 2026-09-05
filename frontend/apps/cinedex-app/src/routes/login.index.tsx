@@ -1,6 +1,6 @@
 import type { FC } from 'react';
 import { createFileRoute } from '@tanstack/react-router';
-import { SignInScreen } from '@cinedex/solution';
+import { SignInScreen } from '@cinedex/scenes';
 import { toast } from 'sonner';
 
 const RouteComponent: FC = () => {

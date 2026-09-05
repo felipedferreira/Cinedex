@@ -192,6 +192,6 @@ Almost always a missing or incomplete root `.env` — see [step 1](#1-configure-
 | Doc | For |
 |---|---|
 | [Backend README](../backend/README.md) | Architecture, local (non-Docker) dev, EF migrations, testing & coverage |
-| [Frontend README](../frontend/README.md) | Workspace layout, scripts, linting, testing; the `cinedex-app` app and the `@cinedex/theme`/`atoms`/`compounds`/`solution` packages |
+| [Frontend README](../frontend/README.md) | Workspace layout, scripts, linting, testing; the `cinedex-app` app and the `@cinedex/theme`/`frames`/`shots`/`scenes` packages |
 | [Auth & Security Model](auth-security-model.md) | JWT design, refresh-token rotation, known gaps |
 | [CONTRIBUTING](../CONTRIBUTING.md) | Workflow, code standards, PR checklist |

@@ -11,9 +11,9 @@ COPY frontend/package.json frontend/package-lock.json frontend/.npmrc ./
 COPY frontend/apps/cinedex-app/package.json apps/cinedex-app/
 COPY frontend/apps/docs-site/package.json apps/docs-site/
 COPY frontend/apps/storybook/package.json apps/storybook/
-COPY frontend/packages/atoms/package.json packages/atoms/
-COPY frontend/packages/compounds/package.json packages/compounds/
-COPY frontend/packages/solution/package.json packages/solution/
+COPY frontend/packages/frames/package.json packages/frames/
+COPY frontend/packages/shots/package.json packages/shots/
+COPY frontend/packages/scenes/package.json packages/scenes/
 COPY frontend/packages/theme/package.json packages/theme/
 RUN npm ci --workspace @cinedex/docs-site --include-workspace-root
 

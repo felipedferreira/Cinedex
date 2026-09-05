@@ -1,0 +1,70 @@
+# @cinedex/scenes
+
+Cinedex's own screens, assembled from `@cinedex/shots`. The top of the three component tiers, and the only one that knows the product exists.
+
+Private and **source-consumed** like the other two. Depends on `@cinedex/shots` and `@cinedex/frames`.
+
+One of four packages in the `frontend/` npm workspace — see [`../../CLAUDE.md`](../../CLAUDE.md).
+
+## Commands (from `frontend/`, the workspace root)
+
+```bash
+npm run test -w @cinedex/scenes    # watch mode
+npm run coverage -w @cinedex/scenes
+```
+
+## The two hard rules
+
+**1. Presentational only. No router import, no `fetch`.**
+
+The screens _do_ know Cinedex's route paths — `/login`, `/register`, `/forgot-password` are Cinedex facts and belong here. What they do not know is how to navigate. Only the link component is injected:
+
+```tsx
+// cinedex-app/src/routes/__root.tsx
+<SceneProvider linkComponent={RouterLink}>
+```
+
+`SceneLink` is the single component that reads `LinkContext`; everything else goes through it or through `AuthLink`. With no provider the default is a plain `<a>`, which is what Storybook and the tests get — **a full screen renders with no router and no mock.** That is the whole reason these live in a package rather than in the app.
+
+Submit handlers arrive as optional props (`onSubmit`, `onResend`, …) defaulting to no-ops. Wiring them to `/movies-svc/auth/*` is the app's job — "Lane E: Frontend Runtime" in the auth execution plan.
+
+**2. This is the only tier allowed to draw the brand.** `Brand` is the mark (a camera iris forming a "C", inline SVG built from `Brand/mark.ts`'s geometry) plus the text wordmark; `CinedexAuthCard` (internal, not exported) pre-fills `AuthCard`'s `brand` slot so no screen repeats it. Swap `Brand` and every screen rebrands.
+
+Two more exports, `BrandApertureAnimation` and `BrandFocusRingsAnimation`, play the mark's two 1.2s intro sequences once on mount and settle into the exact same static state `Brand` renders — built from the same `MarkBody`, so all three stay pixel-identical at rest. `HomeScreen` is the only current consumer of either, passing `brand={<BrandApertureAnimation />}` to `CinedexAuthCard` (which otherwise defaults to plain `Brand`) since it's the app's one landing moment; `BrandFocusRingsAnimation` ships fully built and exported as the alternate sequence, reviewable in Storybook's `Scenes/Brand` stories. The mark's colour is intentionally independent of `@cinedex/theme`'s `--accent` — it's an achromatic material study (metal on dark, flat ink on light, via `light-dark()` gradient stops), not a brand-colour study, so a theme rebrand and a mark rebrand are two separate changes.
+
+## Layout
+
+```
+src/
+├── index.ts
+├── Brand/
+│   ├── Brand.tsx                       # the static mark + wordmark — a fragment, since AuthCard's row is a flex parent
+│   ├── BrandApertureAnimation.tsx      # Brand, plus the "lens aperture" intro
+│   ├── BrandFocusRingsAnimation.tsx    # Brand, plus the "focus rings" intro
+│   ├── MarkBody.tsx                    # the shared <svg> all three render — single source of truth for the geometry
+│   ├── MarkDefs.tsx                    # the shared gradients/clip path, keyed per instance via useId()
+│   ├── Wordmark.tsx                    # the text half of the lockup
+│   ├── mark.ts                         # path data and colour constants MarkBody/MarkDefs build from
+│   ├── brandSize.ts                    # the XS–XL scale and its resolver
+│   ├── timelines.ts                    # both sequences as GSAP timelines, built paused
+│   └── useMarkTimeline.ts              # plays one on mount, honours prefers-reduced-motion
+├── link/
+│   ├── linkTypes.ts             # SceneLinkProps / SceneLinkComponent
+│   ├── AnchorLink.tsx           # the default: maps `to` → `href`
+│   ├── linkContext.ts           # LinkContext + useLinkComponent
+│   ├── SceneLink.tsx         # THE only reader of LinkContext
+│   ├── SceneProvider.tsx
+│   └── AuthLink.tsx             # AuthLink (navigates) + AuthActionLink (a real <button>)
+└── screens/                     # one file per screen + CinedexAuthCard + formatCountdown
+```
+
+## Notes
+
+- **`HomeScreen` is the app's index** — a directory of every screen, and the only way to reach three of them by clicking. The two-factor step, the signed-out panel and the locked-out sign-in all need backend support that does not exist, so nothing in the app links to them. Adding a screen means adding a row to its `SCREENS` list.
+- **`to` is pathname-only; query state goes in `search`.** Router link components match `to` against their own route table, so `to="/login?state=locked"` would not resolve — `SceneLinkProps` carries `search?: Record<string, string>` instead, which `AnchorLink` serialises back onto the href and a router link passes to its own search prop. The locked-out sign-in is the one entry that needs it.
+- **`SceneLink.tsx` carries a file-level `eslint-disable react-hooks/static-components`.** A component read from context is stable by construction — `SceneProvider`'s prop and the `AnchorLink` default are both module-level — but the rule cannot tell a constant context value from one built inline. The file exists to hold that one exemption instead of repeating it at every call site. Do not add a second reader of `LinkContext`.
+- **`TwoFactorScreen` and `SignedOutScreen` are presentational on purpose** — the backend has no MFA and no session-listing/revoke-all endpoint (`docs/auth-security-model.md`, "Known gaps"). `SignInScreen`'s `locked` state is likewise unreachable through normal use; the app exposes it at `/login?state=locked`.
+- Screen tests are plain `render()` — no memory router, no `renderAuthScreen` helper. The app keeps `login-routing.test.tsx`, which mounts the real route tree and is what verifies the paths these screens hardcode are real routes.
+- **`Brand/` is the first inline-`<svg>`-in-JSX in this repo** — `frames` and `shots` have no icons yet and no `vite-plugin-svgr`. Nothing else needed adding for it: no build step, no new Vite plugin, consistent with every tier being source-consumed.
+- **All animation in this package is GSAP, and every sequence is a pure builder returning a `paused` timeline.** `Brand/timelines.ts` is the one that follows it today, with a thin hook owning only the React lifecycle around the timeline. The shape is not decorative: a paused timeline can be driven to any instant with `progress(p)` and flushes its writes synchronously, with no ticker and no rAF — which is the only reason a 1.2s logo intro is unit-testable at all. Keep new sequences in that shape; anything that animates inside a component is unassertable.
+- **jsdom has no `matchMedia`, and `test/setup.ts`'s stub defaults `matches` to `true`** — so **every test in this package takes the reduced-motion path unless it says otherwise**. That is the right default (nothing waits on an animation it does not assert about) and a live trap: a full-motion test that forgets to override the stub passes for the wrong reason. `apps/cinedex-app` carries the same stub for the same reason, since its index screen renders `BrandApertureAnimation`.

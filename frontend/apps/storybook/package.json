@@ -8,9 +8,9 @@
     "storybook": "storybook dev -p 9001"
   },
   "dependencies": {
-    "@cinedex/atoms": "*",
-    "@cinedex/compounds": "*",
-    "@cinedex/solution": "*",
+    "@cinedex/frames": "*",
+    "@cinedex/shots": "*",
+    "@cinedex/scenes": "*",
     "@cinedex/theme": "*",
     "react": "^19.2.6",
     "react-dom": "^19.2.6"

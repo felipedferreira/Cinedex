@@ -2,30 +2,30 @@
 
 npm **workspace root** for the Cinedex frontend. The lockfile and all shared tooling config live here; the packages hold only what is specific to them.
 
-| Package                                              | Path                  | What it is                                                                                 |
-| ---------------------------------------------------- | --------------------- | ------------------------------------------------------------------------------------------ |
-| [`cinedex-app`](apps/cinedex-app/README.md)          | `apps/cinedex-app/`   | The React 19 + Vite SPA, served by Nginx behind Compose's Caddy HTTPS/API edge.            |
-| [`@cinedex/storybook`](apps/storybook/README.md)     | `apps/storybook/`     | Storybook for all three component tiers. Owns the stories; served on port 9001 in Compose. |
-| [`@cinedex/docs-site`](apps/docs-site/README.md)     | `apps/docs-site/`     | Branded Docusaurus site; Compose publishes it through Caddy at `/documentation/`.          |
-| [`@cinedex/theme`](packages/theme/README.md)         | `packages/theme/`     | The design system — tokens, base element styling, the Tailwind theme. **No React.**        |
-| [`@cinedex/atoms`](packages/atoms/README.md)         | `packages/atoms/`     | Primitives — Radix-backed, Tailwind-styled, one job each.                                  |
-| [`@cinedex/compounds`](packages/compounds/README.md) | `packages/compounds/` | Templates — brand-agnostic assemblies of atoms.                                            |
-| [`@cinedex/solution`](packages/solution/README.md)   | `packages/solution/`  | Cinedex's own screens. Presentational: no router, no data fetching.                        |
+| Package                                          | Path                | What it is                                                                                 |
+| ------------------------------------------------ | ------------------- | ------------------------------------------------------------------------------------------ |
+| [`cinedex-app`](apps/cinedex-app/README.md)      | `apps/cinedex-app/` | The React 19 + Vite SPA, served by Nginx behind Compose's Caddy HTTPS/API edge.            |
+| [`@cinedex/storybook`](apps/storybook/README.md) | `apps/storybook/`   | Storybook for all three component tiers. Owns the stories; served on port 9001 in Compose. |
+| [`@cinedex/docs-site`](apps/docs-site/README.md) | `apps/docs-site/`   | Branded Docusaurus site; Compose publishes it through Caddy at `/documentation/`.          |
+| [`@cinedex/theme`](packages/theme/README.md)     | `packages/theme/`   | The design system — tokens, base element styling, the Tailwind theme. **No React.**        |
+| [`@cinedex/frames`](packages/frames/README.md)   | `packages/frames/`  | Primitives — Radix-backed, Tailwind-styled, one job each.                                  |
+| [`@cinedex/shots`](packages/shots/README.md)     | `packages/shots/`   | Templates — brand-agnostic assemblies of frames.                                           |
+| [`@cinedex/scenes`](packages/scenes/README.md)   | `packages/scenes/`  | Cinedex's own screens. Presentational: no router, no data fetching.                        |
 
 ```mermaid
 flowchart BT
     THEME["<b>@cinedex/theme</b><br/><i>tokens · base.css · tailwind.css</i>"]
-    ATOMS["<b>@cinedex/atoms</b><br/><i>Radix + Tailwind primitives</i>"]
-    COMPOUNDS["<b>@cinedex/compounds</b><br/><i>brand-agnostic templates</i>"]
-    SOLUTION["<b>@cinedex/solution</b><br/><i>Cinedex screens, router-free</i>"]
+    FRAMES["<b>@cinedex/frames</b><br/><i>Radix + Tailwind primitives</i>"]
+    SHOTS["<b>@cinedex/shots</b><br/><i>brand-agnostic templates</i>"]
+    SCENES["<b>@cinedex/scenes</b><br/><i>Cinedex screens, router-free</i>"]
     APP["<b>cinedex-app</b><br/><i>routes · router · API</i>"]
     SB["<b>@cinedex/storybook</b><br/><i>stories for all three tiers</i>"]
 
-    ATOMS --> THEME
-    COMPOUNDS --> ATOMS
-    SOLUTION --> COMPOUNDS
-    APP --> SOLUTION
-    SB --> SOLUTION
+    FRAMES --> THEME
+    SHOTS --> FRAMES
+    SCENES --> SHOTS
+    APP --> SCENES
+    SB --> SCENES
 ```
 
 Nothing depends on an app.
@@ -58,20 +58,20 @@ All run from this directory.
 | `npm run lint`         | Lint every package with ESLint                          |
 | `npm run format:check` | Check formatting without writing (CI-friendly)          |
 
-Scope any of them to one package with `-w cinedex-app`, `-w @cinedex/atoms`, `-w @cinedex/compounds`, `-w @cinedex/solution`, `-w @cinedex/storybook` or `-w @cinedex/docs-site` — for example `npm run test -w @cinedex/atoms` for watch mode. `@cinedex/theme` has no scripts; it ships CSS.
+Scope any of them to one package with `-w cinedex-app`, `-w @cinedex/frames`, `-w @cinedex/shots`, `-w @cinedex/scenes`, `-w @cinedex/storybook` or `-w @cinedex/docs-site` — for example `npm run test -w @cinedex/frames` for watch mode. `@cinedex/theme` has no scripts; it ships CSS.
 
 ## 🧩 Three tiers, and where a component goes
 
-- **atoms** — one job, no internal arrangement: `Button`, `Input`, `Checkbox`, `PasswordInput`.
-- **compounds** — a named layout assembled from atoms, **with no brand in it**: `AuthCard`, `PasswordField`, `StatPair`.
-- **solution** — Cinedex-specific: the screens, the copy, the `Brand`. The only tier that names the product.
+- **frames** — the smallest indivisible unit; one job, no internal arrangement: `Button`, `Input`, `Checkbox`, `PasswordInput`.
+- **shots** — a composition independent of its content: a named layout assembled from frames, **with no brand in it**: `AuthCard`, `PasswordField`, `StatPair`.
+- **scenes** — the dramatic content of _this_ film; Cinedex-specific: the screens, the copy, the `Brand`. The only tier that names the product.
 
-The clearest illustration is `AuthCard`. It takes `brand` as a prop and never draws the wordmark; `@cinedex/solution`'s `Brand` supplies it. **Compounds know where a brand goes; solution knows which.**
+The clearest illustration is `AuthCard`. It takes `brand` as a prop and never draws the wordmark; `@cinedex/scenes`'s `Brand` supplies it. **Shots know where a brand goes; scenes know which.**
 
-`@cinedex/solution`'s screens are the same idea applied to navigation. They know Cinedex's route paths — those are Cinedex facts — but not how to navigate them, so the host injects a link component:
+`@cinedex/scenes`'s screens are the same idea applied to navigation. They know Cinedex's route paths — those are Cinedex facts — but not how to navigate them, so the host injects a link component:
 
 ```tsx
-<SolutionProvider linkComponent={RouterLink}>
+<SceneProvider linkComponent={RouterLink}>
 ```
 
 With no provider, links fall back to plain anchors. That is why a full sign-in screen renders in Storybook with **no router and no mock**.
@@ -89,11 +89,11 @@ All four library packages are **source-consumed**: `exports` point at `src/`, no
 That buys three things and costs one:
 
 - No build step for the libraries, so nothing to sequence in Docker or CI.
-- HMR crosses package boundaries — editing an atom refreshes the running app.
+- HMR crosses package boundaries — editing a frame refreshes the running app.
 - Storybook, Vitest and the SPA all compile the exact same source.
 - The cost: `tsc -b` in a consumer also typechecks library source under that consumer's compiler flags, so the tsconfigs should stay in step — four sets now, not two.
 
-Each library exports nothing but its barrel, and the Storybook app is a consumer like any other: its stories `import { Button } from '@cinedex/atoms'` rather than reaching into `packages/atoms/src`. A component missing from a barrel fails the workspace build.
+Each library exports nothing but its barrel, and the Storybook app is a consumer like any other: its stories `import { Button } from '@cinedex/frames'` rather than reaching into `packages/frames/src`. A component missing from a barrel fails the workspace build.
 
 ## 🎨 Styling
 
@@ -109,7 +109,7 @@ Three things here fail **silently** rather than erroring; see [`packages/theme/R
 
 - A new library package needs an `@source` line in `theme/src/tailwind.css`, or none of its classes generate.
 - `base.css` must stay `layer(base)` and after `@import 'tailwindcss'` — unlayered CSS outranks every Tailwind layer.
-- A new `--type-*`/`--track-*` step needs registering in `packages/atoms/src/utils/cn.ts`, or `tailwind-merge` misfiles it as a colour.
+- A new `--type-*`/`--track-*` step needs registering in `packages/frames/src/utils/cn.ts`, or `tailwind-merge` misfiles it as a colour.
 
 ## 🎨 Linting & Formatting
 

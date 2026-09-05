@@ -5,8 +5,8 @@ import Link from '@docusaurus/Link';
 import useDocusaurusContext from '@docusaurus/useDocusaurusContext';
 import { useColorMode } from '@docusaurus/theme-common';
 import Layout from '@theme/Layout';
-import { Button, Separator } from '@cinedex/atoms';
-import { Brand, BrandApertureAnimation } from '@cinedex/solution';
+import { Button, Separator } from '@cinedex/frames';
+import { Brand, BrandApertureAnimation } from '@cinedex/scenes';
 import HomepageFeatures from '@site/src/components/HomepageFeatures';
 
 /**
@@ -16,7 +16,7 @@ import HomepageFeatures from '@site/src/components/HomepageFeatures';
  * `window.matchMedia` in a `useState` initializer, which runs during render, and
  * Docusaurus prerenders every page at build time. `<BrowserOnly>` is the
  * supported seam for that, and it keeps the fix on this site rather than in
- * `@cinedex/solution`, whose other two consumers never server-render.
+ * `@cinedex/scenes`, whose other two consumers never server-render.
  *
  * The fallback is the static `Brand` — the same mark at rest, and SSR-clean —
  * so the prerendered HTML carries the logo, a viewer with JavaScript off still

@@ -2,25 +2,25 @@
 
 npm **workspace root** for the Cinedex frontend. The lockfile lives here — there is no lockfile inside the packages.
 
-| Package              | Path                  | What it is                                                                                                                   |
-| -------------------- | --------------------- | ---------------------------------------------------------------------------------------------------------------------------- |
-| `cinedex-app`        | `apps/cinedex-app/`   | The React 19 + Vite SPA. Nginx serves its static bundle over internal HTTP; Compose's Caddy edge owns HTTPS and API routing. |
-| `@cinedex/storybook` | `apps/storybook/`     | Storybook for all three component tiers. Owns the stories. Served on 9001 in compose.                                        |
-| `@cinedex/docs-site` | `apps/docs-site/`     | Cinedex-branded Docusaurus site. Renders the root `CHANGELOG.md`; Compose publishes it through Caddy at `/documentation/`.   |
-| `@cinedex/theme`     | `packages/theme/`     | The design system: tokens, base element styling, the Tailwind theme. **No React** — four stylesheets.                        |
-| `@cinedex/atoms`     | `packages/atoms/`     | Primitives — Radix-backed, Tailwind-styled, one job each.                                                                    |
-| `@cinedex/compounds` | `packages/compounds/` | Templates — brand-agnostic assemblies of atoms.                                                                              |
-| `@cinedex/solution`  | `packages/solution/`  | Cinedex's own screens. Presentational: no router, no data fetching.                                                          |
+| Package              | Path                | What it is                                                                                                                   |
+| -------------------- | ------------------- | ---------------------------------------------------------------------------------------------------------------------------- |
+| `cinedex-app`        | `apps/cinedex-app/` | The React 19 + Vite SPA. Nginx serves its static bundle over internal HTTP; Compose's Caddy edge owns HTTPS and API routing. |
+| `@cinedex/storybook` | `apps/storybook/`   | Storybook for all three component tiers. Owns the stories. Served on 9001 in compose.                                        |
+| `@cinedex/docs-site` | `apps/docs-site/`   | Cinedex-branded Docusaurus site. Renders the root `CHANGELOG.md`; Compose publishes it through Caddy at `/documentation/`.   |
+| `@cinedex/theme`     | `packages/theme/`   | The design system: tokens, base element styling, the Tailwind theme. **No React** — four stylesheets.                        |
+| `@cinedex/frames`    | `packages/frames/`  | Primitives — Radix-backed, Tailwind-styled, one job each.                                                                    |
+| `@cinedex/shots`     | `packages/shots/`   | Templates — brand-agnostic assemblies of frames.                                                                             |
+| `@cinedex/scenes`    | `packages/scenes/`  | Cinedex's own screens. Presentational: no router, no data fetching.                                                          |
 
 All four packages are **source-consumed** — `exports` point at `src/`, so there is no build step and no `dist/`.
 
 ```mermaid
 flowchart BT
-    ATOMS["@cinedex/atoms"] --> THEME["@cinedex/theme"]
-    COMPOUNDS["@cinedex/compounds"] --> ATOMS
-    SOLUTION["@cinedex/solution"] --> COMPOUNDS
-    APP["cinedex-app"] --> SOLUTION
-    SB["@cinedex/storybook"] --> SOLUTION
+    FRAMES["@cinedex/frames"] --> THEME["@cinedex/theme"]
+    SHOTS["@cinedex/shots"] --> FRAMES
+    SCENES["@cinedex/scenes"] --> SHOTS
+    APP["cinedex-app"] --> SCENES
+    SB["@cinedex/storybook"] --> SCENES
 ```
 
 ## Commands (all from `frontend/`)
@@ -38,17 +38,17 @@ npm run lint             # eslint . — one pass across all packages
 npm run format:check     # prettier — run `npm run format` before pushing
 ```
 
-Target one package with `-w cinedex-app`, `-w @cinedex/atoms`, `-w @cinedex/compounds`, `-w @cinedex/solution`, `-w @cinedex/storybook` or `-w @cinedex/docs-site`, e.g. `npm run test -w @cinedex/atoms` for watch mode. `@cinedex/theme` has no scripts at all — it ships CSS.
+Target one package with `-w cinedex-app`, `-w @cinedex/frames`, `-w @cinedex/shots`, `-w @cinedex/scenes`, `-w @cinedex/storybook` or `-w @cinedex/docs-site`, e.g. `npm run test -w @cinedex/frames` for watch mode. `@cinedex/theme` has no scripts at all — it ships CSS.
 
 ## Where does a component go?
 
-- **atoms** — one job, no internal arrangement. `Button`, `Input`, `Checkbox`, `PasswordInput`.
-- **compounds** — a named layout assembled from atoms, **with no brand in it**. `AuthCard`, `PasswordField`, `StatPair`.
-- **solution** — Cinedex-specific: the screens, the copy, the `Brand`. The only tier that names the product.
+- **frames** — the smallest indivisible unit; one job, no internal arrangement. `Button`, `Input`, `Checkbox`, `PasswordInput`.
+- **shots** — a composition independent of its content: a named layout assembled from frames, **with no brand in it**. `AuthCard`, `PasswordField`, `StatPair`.
+- **scenes** — the dramatic content of _this_ film; Cinedex-specific: the screens, the copy, the `Brand`. The only tier that names the product.
 
-The sharpest illustration is `AuthCard`: it takes `brand` as a prop and never draws the wordmark, while `@cinedex/solution`'s `Brand` supplies it. Compounds know _where_ a brand goes; solution knows _which_.
+The sharpest illustration is `AuthCard`: it takes `brand` as a prop and never draws the wordmark, while `@cinedex/scenes`'s `Brand` supplies it. Shots know _where_ a brand goes; scenes know _which_.
 
-**That injection is the exception, not the house style — see [`packages/compounds/CLAUDE.md`](packages/compounds/CLAUDE.md#prop-apis) for the three rules on prop APIs.** The short form: a `ReactNode` slot needs the parent to own the arrangement _and_ the content to be unable to be `children`; type a node prop by what callers actually pass (`string`, not `ReactNode`, unless someone really passes markup); and a story may only demo a prop a screen already passes. There are exactly **8** `ReactNode` props and **one** `ComponentType` across all three tiers, and that is the point — every one is a deliberate port, not a convenience.
+**That injection is the exception, not the house style — see [`packages/shots/CLAUDE.md`](packages/shots/CLAUDE.md#prop-apis) for the three rules on prop APIs.** The short form: a `ReactNode` slot needs the parent to own the arrangement _and_ the content to be unable to be `children`; type a node prop by what callers actually pass (`string`, not `ReactNode`, unless someone really passes markup); and a story may only demo a prop a screen already passes. There are exactly **8** `ReactNode` props and **one** `ComponentType` across all three tiers, and that is the point — every one is a deliberate port, not a convenience.
 
 ## Styling
 
@@ -56,7 +56,7 @@ The sharpest illustration is `AuthCard`: it takes `brand` as a prop and never dr
 
 - A new library package needs an `@source` line in `theme/src/tailwind.css`, or none of its classes generate.
 - `base.css` must stay `layer(base)` and after `@import 'tailwindcss'`, or unlayered CSS outranks every utility.
-- A new `--type-*`/`--track-*` step needs registering in `packages/atoms/src/utils/cn.ts` too, or `tailwind-merge` misfiles it as a colour.
+- A new `--type-*`/`--track-*` step needs registering in `packages/frames/src/utils/cn.ts` too, or `tailwind-merge` misfiles it as a colour.
 
 ## Notes
 

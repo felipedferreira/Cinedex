@@ -1,7 +1,7 @@
 import type { FC, ReactNode } from 'react';
 import Link from '@docusaurus/Link';
 import Heading from '@theme/Heading';
-import { Card } from '@cinedex/atoms';
+import { Card } from '@cinedex/frames';
 
 interface FeatureItem {
   kicker: string;

@@ -81,7 +81,7 @@ The one-shot database migrator applies pending migrations for both `FilmDbContex
    ```bash
    npm run test:run    # single pass across all packages
    ```
-   Watch mode is per-package: `npm run test -w cinedex-app`, `-w @cinedex/atoms`, `-w @cinedex/compounds` or `-w @cinedex/solution`.
+   Watch mode is per-package: `npm run test -w cinedex-app`, `-w @cinedex/frames`, `-w @cinedex/shots` or `-w @cinedex/scenes`.
 
 ## Development Workflow
 
@@ -219,7 +219,7 @@ Key rules:
   green and renders correctly. `AuthCard.kickerTone` survived a release that way.
 
 Full rules and the worked examples live in
-[`frontend/packages/compounds/CLAUDE.md`](frontend/packages/compounds/CLAUDE.md#prop-apis).
+[`frontend/packages/shots/CLAUDE.md`](frontend/packages/shots/CLAUDE.md#prop-apis).
 `frontend/eslint.config.js`'s `no-restricted-syntax` block enforces the shape rules;
 `node scripts/check-speculative-props.mjs` (or `npm run check:props` from `frontend/`) enforces the
 story rule. Both run in CI.
@@ -276,7 +276,7 @@ All error responses are RFC 7807 Problem Details and carry the request's correla
 
 ### GitHub Actions
 
-The project has automated CI/CD configured in `.github/workflows/continuous-integration.yml`:
+The project has automated CI/CD configured in `.github/workflows/ci.yml`:
 
 - Runs on every push to main and on all pull requests
 - **Backend job** — Release build and tests

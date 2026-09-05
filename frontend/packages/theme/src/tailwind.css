@@ -27,7 +27,7 @@
  *
  * ─────────────────────────────────────────────────────────────────────────────
  * The `@source` lines are load-bearing. Tailwind never scans `node_modules`, and
- * npm workspaces symlink `node_modules/@cinedex/atoms` → `packages/atoms`. Without
+ * npm workspaces symlink `node_modules/@cinedex/frames` → `packages/frames`. Without
  * these, a class used *only* inside a library package generates no CSS — and it
  * fails silently: no error, no warning, just an unstyled component. Any new
  * library package needs a line here.
@@ -38,6 +38,6 @@
 @import './base.css' layer(base);
 @import './theme.css';
 
-@source "../../atoms/src";
-@source "../../compounds/src";
-@source "../../solution/src";
+@source "../../frames/src";
+@source "../../shots/src";
+@source "../../scenes/src";

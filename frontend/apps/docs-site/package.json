@@ -15,8 +15,8 @@
     "typecheck": "tsc"
   },
   "dependencies": {
-    "@cinedex/atoms": "*",
-    "@cinedex/solution": "*",
+    "@cinedex/frames": "*",
+    "@cinedex/scenes": "*",
     "@cinedex/theme": "*",
     "@docusaurus/core": "3.10.2",
     "@docusaurus/faster": "3.10.2",

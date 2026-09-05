@@ -31,7 +31,7 @@ flowchart LR
         APP["apps/cinedex-app/<br/><i>the SPA</i>"]
         SB["apps/storybook/<br/><i>component workbench</i>"]
         DS["apps/docs-site/<br/><i>this site</i>"]
-        COMP["packages/<br/><i>theme · atoms · compounds · solution</i>"]
+        COMP["packages/<br/><i>theme · frames · shots · scenes</i>"]
     end
 
     FE --> APP

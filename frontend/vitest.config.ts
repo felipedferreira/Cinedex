@@ -4,9 +4,9 @@ export default defineConfig({
   test: {
     projects: [
       'apps/cinedex-app/vite.config.ts',
-      'packages/atoms/vite.config.ts',
-      'packages/compounds/vite.config.ts',
-      'packages/solution/vite.config.ts',
+      'packages/frames/vite.config.ts',
+      'packages/shots/vite.config.ts',
+      'packages/scenes/vite.config.ts',
     ],
   },
 });

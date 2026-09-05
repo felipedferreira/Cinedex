@@ -125,8 +125,8 @@ shot:
    lockstep with the product version: the workspace root
    `frontend/package.json`; the three apps (`apps/cinedex-app`,
    `apps/storybook`, `apps/docs-site`); and the three component-library
-   packages plus the design system (`packages/atoms`, `packages/compounds`,
-   `packages/solution`, `packages/theme`).
+   packages plus the design system (`packages/frames`, `packages/shots`,
+   `packages/scenes`, `packages/theme`).
 
 Run it from the repo root (the default `--repo-root` is the current directory).
 

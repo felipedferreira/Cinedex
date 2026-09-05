@@ -75,7 +75,7 @@ const config: Config = {
         theme: {
           // Order matters. `custom.css` points Infima's variables at
           // @cinedex/theme's tokens; `tailwind.css` brings the tokens themselves
-          // and the utility classes @cinedex/atoms and @cinedex/solution are
+          // and the utility classes @cinedex/frames and @cinedex/scenes are
           // built from. Utilities go last so that, unlayered, they win ties
           // against Infima's own classes on source order — see the comment in
           // `tailwind.css` for why they are unlayered in the first place.

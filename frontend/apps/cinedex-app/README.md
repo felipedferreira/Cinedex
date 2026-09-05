@@ -2,7 +2,7 @@
 
 The SPA for Cinedex. In Docker Compose, Nginx serves its static bundle over internal HTTP and Caddy publishes the SPA plus backend under the single `https://localhost:9000` origin.
 
-One of seven packages in the [`frontend/` npm workspace](../../README.md). Its auth screens come from [`@cinedex/solution`](../../packages/solution/README.md), primitives from [`@cinedex/atoms`](../../packages/atoms/README.md), and the design system from [`@cinedex/theme`](../../packages/theme/README.md).
+One of seven packages in the [`frontend/` npm workspace](../../README.md). Its auth screens come from [`@cinedex/scenes`](../../packages/scenes/README.md), primitives from [`@cinedex/frames`](../../packages/frames/README.md), and the design system from [`@cinedex/theme`](../../packages/theme/README.md).
 
 ## 📁 Layout
 
@@ -11,7 +11,7 @@ flowchart LR
     FE["<b>frontend/</b><br/><i>workspace root — lockfile and<br/>shared config live here</i>"]
 
     FE --> CFG["eslint.config.js · .prettierrc.json<br/>.gitignore · .dockerignore"]
-    FE --> COMP["packages/<br/><i>@cinedex/theme · atoms · compounds · solution</i>"]
+    FE --> COMP["packages/<br/><i>@cinedex/theme · frames · shots · scenes</i>"]
     FE --> SB["apps/storybook/<br/><i>@cinedex/storybook — its workbench, a separate app</i>"]
     FE --> APP["<b>apps/cinedex-app/</b><br/><i>this package</i>"]
 
@@ -21,7 +21,7 @@ flowchart LR
     APP --> VITE["vite.config.ts"]
     APP --> PKG["package.json"]
 
-    SRC --> S1["routes/<br/><i>file-based routes; each one mounts<br/>a screen from @cinedex/solution</i>"]
+    SRC --> S1["routes/<br/><i>file-based routes; each one mounts<br/>a screen from @cinedex/scenes</i>"]
     SRC --> S2["test/<br/><i>global test setup (jest-dom, jsdom cleanup)</i>"]
     SRC --> S3["login-routing.test.tsx<br/><i>mounts the real route tree</i>"]
     SRC --> S4["routeTree.gen.ts<br/><i>generated — do not edit</i>"]

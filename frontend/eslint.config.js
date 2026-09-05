@@ -102,7 +102,7 @@ export default defineConfig([
           selector:
             'TSPropertySignature > TSTypeAnnotation > TSTypeReference[typeName.name=/^(ComponentType|ElementType)$/]',
           message:
-            'Passing a component *type* makes the library instantiate a caller-supplied component. Prefer a `ReactNode` slot (the caller builds the element) or Radix `asChild`. The one legitimate port is `SolutionLinkComponent`, which carries a documented eslint-disable.',
+            'Passing a component *type* makes the library instantiate a caller-supplied component. Prefer a `ReactNode` slot (the caller builds the element) or Radix `asChild`. The one legitimate port is `SceneLinkComponent`, which carries a documented eslint-disable.',
         },
         {
           selector: 'TSPropertySignature[key.name=/^render[A-Z]/]',

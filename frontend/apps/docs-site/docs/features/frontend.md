@@ -7,15 +7,15 @@ sidebar_position: 4
 `frontend/` is an npm workspace holding seven packages: the SPA, its Storybook, this docs site, and
 four library packages — a design system plus three component tiers.
 
-| Package              | Path                  | What it is                                                                          |
-| -------------------- | --------------------- | ----------------------------------------------------------------------------------- |
-| `cinedex-app`        | `apps/cinedex-app/`   | The React 19 + Vite SPA, served by Nginx behind Compose's Caddy HTTPS/API edge.     |
-| `@cinedex/storybook` | `apps/storybook/`     | Storybook for all three component tiers — served on port 9001.                      |
-| `@cinedex/docs-site` | `apps/docs-site/`     | This site.                                                                          |
-| `@cinedex/theme`     | `packages/theme/`     | The design system — tokens, base element styling, the Tailwind theme. **No React.** |
-| `@cinedex/atoms`     | `packages/atoms/`     | Primitives — Radix-backed, Tailwind-styled, one job each.                           |
-| `@cinedex/compounds` | `packages/compounds/` | Templates — brand-agnostic assemblies of atoms.                                     |
-| `@cinedex/solution`  | `packages/solution/`  | Cinedex own screens. Presentational: no router, no data fetching.                   |
+| Package              | Path                | What it is                                                                          |
+| -------------------- | ------------------- | ----------------------------------------------------------------------------------- |
+| `cinedex-app`        | `apps/cinedex-app/` | The React 19 + Vite SPA, served by Nginx behind Compose's Caddy HTTPS/API edge.     |
+| `@cinedex/storybook` | `apps/storybook/`   | Storybook for all three component tiers — served on port 9001.                      |
+| `@cinedex/docs-site` | `apps/docs-site/`   | This site.                                                                          |
+| `@cinedex/theme`     | `packages/theme/`   | The design system — tokens, base element styling, the Tailwind theme. **No React.** |
+| `@cinedex/frames`    | `packages/frames/`  | Primitives — Radix-backed, Tailwind-styled, one job each.                           |
+| `@cinedex/shots`     | `packages/shots/`   | Templates — brand-agnostic assemblies of frames.                                    |
+| `@cinedex/scenes`    | `packages/scenes/`  | Cinedex own screens. Presentational: no router, no data fetching.                   |
 
 ## The SPA
 
@@ -31,16 +31,16 @@ with relative paths such as `/movies-svc/auth/login`.
 
 Components are split by how fast they change, and each tier is bounded by what it is allowed to know:
 
-- **`@cinedex/atoms`** — one job, no internal arrangement: `Button`, `Input`, `Checkbox`,
+- **`@cinedex/frames`** — the smallest indivisible unit; one job, no internal arrangement: `Button`, `Input`, `Checkbox`,
   `PasswordInput`, `OtpInput`. Built on Radix primitives wherever real interaction semantics are
   involved, styled with Tailwind, variants expressed with [cva](https://cva.style/).
-- **`@cinedex/compounds`** — a named layout assembled from atoms, **with no brand in it**:
+- **`@cinedex/shots`** — a composition independent of its content: a named layout assembled from frames, **with no brand in it**:
   `AuthCard`, `PasswordField`, `StatPair`.
-- **`@cinedex/solution`** — Cinedex-specific: the auth screens, the copy, the `Brand`. The only tier
+- **`@cinedex/scenes`** — the dramatic content of _this_ film; Cinedex-specific: the auth screens, the copy, the `Brand`. The only tier
   that names the product.
 
 The clearest illustration is `AuthCard`. It takes `brand` as a prop and never draws the wordmark;
-`@cinedex/solution`’s `Brand` supplies it. Compounds know _where_ a brand goes; solution knows
+`@cinedex/scenes`’s `Brand` supplies it. Shots know _where_ a brand goes; scenes know
 _which_. The same idea covers navigation: the screens know the route paths, but not how to navigate
 them, so the host injects a link component — which is why a full sign-in screen renders in Storybook
 with no router and no mock.
@@ -54,7 +54,7 @@ built `dist/`:
 }
 ```
 
-That means no build step, HMR that crosses package boundaries (editing an atom refreshes the running
+That means no build step, HMR that crosses package boundaries (editing a frame refreshes the running
 app), and Storybook, Vitest, and the SPA all compiling the exact same source.
 
 Every component below has a live, interactive story — with the theme toolbar and the accessibility
@@ -62,7 +62,7 @@ panel — in [the Storybook workbench](#the-storybook-workbench). If the stack i
 it's at **[http://localhost:9001](http://localhost:9001)**; otherwise `npm run storybook` from
 `frontend/`.
 
-A selection of the atoms:
+A selection of the frames:
 
 | Component       | What it does                                                                                                                                                           |
 | --------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
@@ -94,10 +94,10 @@ render with matching chrome.
 ## The Storybook workbench
 
 `@cinedex/storybook` is its own app, not part of any library — it depends on all three tiers and
-imports every story through their public exports (`import { Button } from '@cinedex/atoms'`), never
+imports every story through their public exports (`import { Button } from '@cinedex/frames'`), never
 by relative path into a package's source. That keeps those public surfaces honest: a component
 missing from a barrel export fails the Storybook build rather than going unnoticed. Stories are
-grouped **Atoms**, **Compounds** and **Solution**, so the sidebar mirrors the tiers.
+grouped **Frames**, **Shots** and **Scenes**, so the sidebar mirrors the tiers.
 
 ```bash
 npm run storybook    # from frontend/ → http://localhost:9001

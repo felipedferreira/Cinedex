@@ -4,7 +4,7 @@ import type { Preview } from '@storybook/react-vite';
 // does also proves that export entry resolves. One import: `tailwind.css` pulls in the tokens and
 // the base element styling itself, in the cascade-layer order they have to be in.
 import '@cinedex/theme/tailwind.css';
-import { SolutionProvider } from '@cinedex/solution';
+import { SceneProvider } from '@cinedex/scenes';
 
 const preview: Preview = {
   parameters: {
@@ -47,7 +47,7 @@ const preview: Preview = {
       const scheme = typeof theme === 'string' ? theme : 'light dark';
       document.documentElement.style.colorScheme = scheme;
 
-      // No `linkComponent`, so @cinedex/solution's screens fall back to plain
+      // No `linkComponent`, so @cinedex/scenes's screens fall back to plain
       // anchors. That is the point of injecting navigation rather than importing
       // it: a full screen renders here with no router and no mock.
       //
@@ -58,9 +58,9 @@ const preview: Preview = {
       // the element is recreated. A page that simply loads under a theme is
       // unaffected; this only makes the toolbar honest.
       return (
-        <SolutionProvider key={scheme}>
+        <SceneProvider key={scheme}>
           <Story />
-        </SolutionProvider>
+        </SceneProvider>
       );
     },
   ],

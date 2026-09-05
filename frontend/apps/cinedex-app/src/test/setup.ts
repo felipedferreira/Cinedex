@@ -22,12 +22,12 @@ globalThis.ResizeObserver = ResizeObserverStub;
 
 /**
  * jsdom has no `matchMedia` either, and `HomeScreen` renders
- * `@cinedex/solution`'s `BrandApertureAnimation`, which checks
+ * `@cinedex/scenes`'s `BrandApertureAnimation`, which checks
  * `prefers-reduced-motion` before starting its intro. Without this a test
  * landing on the index throws inside a layout effect.
  *
  * `matches` defaults to `true` for the same reason it does in
- * `packages/solution/src/test/setup.ts`: it keeps these tests on the
+ * `packages/scenes/src/test/setup.ts`: it keeps these tests on the
  * "settle immediately" branch, so nothing here waits on an animation it does
  * not assert about. The sequence itself is covered by `Brand/timelines.test.ts`
  * upstream.

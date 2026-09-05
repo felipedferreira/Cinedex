@@ -1,6 +1,6 @@
 # Cinedex
 
-[![Continuous Integration](https://github.com/felipedferreira/Cinedex/actions/workflows/continuous-integration.yml/badge.svg)](https://github.com/felipedferreira/Cinedex/actions/workflows/continuous-integration.yml)
+[![Continuous Integration](https://github.com/felipedferreira/Cinedex/actions/workflows/ci.yml/badge.svg)](https://github.com/felipedferreira/Cinedex/actions/workflows/ci.yml)
 
 A full-stack portfolio application for cataloging movie titles and their genres — inspired by IMDB — with JWT-based authentication in front of a members-only catalog.
 
@@ -20,7 +20,7 @@ flowchart LR
 
 - **[Getting Started](docs/getting-started.md)** — new here? Clone-to-running-app in 5 minutes via Docker Compose
 - **[Backend](backend/README.md)** — hexagonal (ports & adapters) .NET solution: architecture guide, build/test/migration instructions
-- **[Frontend](frontend/README.md)** — npm workspace: the React + TypeScript + Vite SPA (`cinedex-app`), the design system and three component tiers (`@cinedex/theme`, `atoms`, `compounds`, `solution`), their Storybook (`@cinedex/storybook`), and a branded Docusaurus docs site (`@cinedex/docs-site`) that renders the changelog at `/changelog`
+- **[Frontend](frontend/README.md)** — npm workspace: the React + TypeScript + Vite SPA (`cinedex-app`), the design system and three component tiers (`@cinedex/theme`, `frames`, `shots`, `scenes`), their Storybook (`@cinedex/storybook`), and a branded Docusaurus docs site (`@cinedex/docs-site`) that renders the changelog at `/changelog`
 - **[Design docs](docs/README.md)** — why the system is shaped this way (auth & security model, planned ADRs)
 - **[Changelog](CHANGELOG.md)** — version history and release notes
 

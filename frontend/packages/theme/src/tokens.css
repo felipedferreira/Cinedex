@@ -1,7 +1,7 @@
 /**
  * Design tokens for the Cinedex UI — the whole design system, in one file.
  *
- * `@cinedex/atoms`, `@cinedex/compounds` and `@cinedex/solution` all resolve
+ * `@cinedex/frames`, `@cinedex/shots` and `@cinedex/scenes` all resolve
  * their colours, type, spacing and radii through these custom properties and
  * nothing else, so a rebrand is a change to this file alone. Components reach
  * them as Tailwind utilities (`bg-bg`, `text-label`, `tracking-eyebrow`) via the

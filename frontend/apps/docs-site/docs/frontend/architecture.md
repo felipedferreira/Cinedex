@@ -13,32 +13,32 @@ tests, and component workbench always compile one implementation.
 ```mermaid
 flowchart BT
     THEME["@cinedex/theme<br/>tokens and Tailwind bridge"]
-    ATOMS["@cinedex/atoms<br/>focused primitives"]
-    COMPOUNDS["@cinedex/compounds<br/>brand-neutral layouts"]
-    SOLUTION["@cinedex/solution<br/>Cinedex screens and Brand"]
+    FRAMES["@cinedex/frames<br/>focused primitives"]
+    SHOTS["@cinedex/shots<br/>brand-neutral layouts"]
+    SCENES["@cinedex/scenes<br/>Cinedex screens and Brand"]
     APP["cinedex-app<br/>routes, data, and navigation"]
     STORYBOOK["@cinedex/storybook<br/>interactive component reference"]
 
-    ATOMS --> THEME
-    COMPOUNDS --> ATOMS
-    SOLUTION --> COMPOUNDS
-    APP --> SOLUTION
-    STORYBOOK --> ATOMS
-    STORYBOOK --> COMPOUNDS
-    STORYBOOK --> SOLUTION
+    FRAMES --> THEME
+    SHOTS --> FRAMES
+    SCENES --> SHOTS
+    APP --> SCENES
+    STORYBOOK --> FRAMES
+    STORYBOOK --> SHOTS
+    STORYBOOK --> SCENES
 ```
 
 ## Component tiers
 
 The tiers express responsibility, not merely component size:
 
-- **Atoms** have one job and no internal arrangement. `Button`, `Input`,
-  `Checkbox`, `PasswordInput`, and `OtpInput` live here. Interactive atoms use
+- **Frames** are the smallest indivisible unit — one job, no internal arrangement. `Button`, `Input`,
+  `Checkbox`, `PasswordInput`, and `OtpInput` live here. Interactive frames use
   Radix where it supplies valuable behavior and accessibility semantics.
-- **Compounds** compose atoms into named, reusable layouts without knowing the
+- **Shots** are compositions independent of their content: they compose frames into named, reusable layouts without knowing the
   Cinedex brand. `AuthCard`, `PasswordField`, and `StatPair` are examples.
-- **Solution** is the product layer: Cinedex copy, the `Brand`, and complete
-  presentational screens. It may know product route paths, but it does not
+- **Scenes** are the dramatic content of _this_ film — the product layer: Cinedex copy, the `Brand`, and complete
+  presentational screens. They may know product route paths, but they do not
   import a router or fetch data. The host injects navigation and submit
   handlers instead.
 
@@ -54,7 +54,7 @@ library: routing, API integration, and page-level state. It consumes the three
 component tiers through their public exports.
 
 [@cinedex/storybook](http://localhost:9001) is the companion workbench. Its
-stories are grouped as **Atoms**, **Compounds**, and **Solution**, matching the
+stories are grouped as **Frames**, **Shots**, and **Scenes**, matching the
 architecture above. It imports only public package exports, so a missing barrel
 export fails the Storybook build instead of becoming an undocumented component.
 Use it to review a component in isolation, switch between System, Light, and

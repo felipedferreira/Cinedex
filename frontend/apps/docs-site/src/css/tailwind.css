@@ -9,8 +9,8 @@
  * margins. Everything on this site that is not the homepage is rendered by
  * Docusaurus through Infima, which styles those same bare elements, so importing
  * the full entry would restyle every documentation page as the price of styling
- * three components. Composing the parts keeps `@cinedex/atoms` and
- * `@cinedex/solution` renderable here while Infima keeps the docs.
+ * three components. Composing the parts keeps `@cinedex/frames` and
+ * `@cinedex/scenes` renderable here while Infima keeps the docs.
  *
  * `@cinedex/theme/theme.css` is the same `@theme inline` bridge the SPA and
  * Storybook get; it lives in its own file in that package precisely so this
@@ -28,8 +28,8 @@
  *
  * ─────────────────────────────────────────────────────────────────────────────
  * The `@source` lines are load-bearing and fail SILENTLY. Tailwind never scans
- * `node_modules`, and npm workspaces symlink `node_modules/@cinedex/atoms` →
- * `packages/atoms` — without registration, a class used only inside a library
+ * `node_modules`, and npm workspaces symlink `node_modules/@cinedex/frames` →
+ * `packages/frames` — without registration, a class used only inside a library
  * generates no CSS at all: no error, no warning, a green build and an unstyled
  * component. This site needs its own `src/` listed too, which the design system's
  * entry does not cover. Paths resolve relative to this file.
@@ -41,6 +41,6 @@
 @import '@cinedex/theme/theme.css';
 
 @source '../';
-@source '../../../../packages/atoms/src';
-@source '../../../../packages/compounds/src';
-@source '../../../../packages/solution/src';
+@source '../../../../packages/frames/src';
+@source '../../../../packages/shots/src';
+@source '../../../../packages/scenes/src';

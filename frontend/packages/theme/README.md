@@ -1,6 +1,6 @@
 # @cinedex/theme
 
-The Cinedex design system: **three stylesheets and no JavaScript.** Everything visual in `@cinedex/atoms`, `@cinedex/compounds` and `@cinedex/solution` resolves through this package, so a rebrand touches one file.
+The Cinedex design system: **three stylesheets and no JavaScript.** Everything visual in `@cinedex/frames`, `@cinedex/shots` and `@cinedex/scenes` resolves through this package, so a rebrand touches one file.
 
 Part of the [`frontend/` workspace](../../README.md).
 
@@ -45,19 +45,19 @@ The used `color-scheme` picks a side, so the default follows the OS while a host
 
 None of these produce an error. All three produce a page that is subtly or completely wrong with a green build.
 
-**1. A new library package needs an `@source` line.** Tailwind never scans `node_modules`, and npm workspaces symlink `node_modules/@cinedex/atoms` → `packages/atoms`. Without registration, a class used _only_ inside a library generates no CSS at all:
+**1. A new library package needs an `@source` line.** Tailwind never scans `node_modules`, and npm workspaces symlink `node_modules/@cinedex/frames` → `packages/frames`. Without registration, a class used _only_ inside a library generates no CSS at all:
 
 ```css
-@source "../../atoms/src";
-@source "../../compounds/src";
-@source "../../solution/src";
+@source "../../frames/src";
+@source "../../shots/src";
+@source "../../scenes/src";
 ```
 
 (`@source` paths resolve relative to the CSS file that declares them — verified empirically — which is why they can live here and serve every consumer instead of being duplicated into each app.)
 
 **2. `base.css` must arrive `layer(base)`, after `tailwindcss`.** Tailwind v4 puts everything it emits into cascade layers, and **unlayered CSS outranks every layer** regardless of source order or specificity. Imported bare, `base.css`'s `h1 { font-size: 56px }` beats `text-title` on the same element — which is exactly what happened, and why every auth card rendered its heading at the landing page's size. Inside `layer(base)` it lands after preflight (so its typography still reaches bare markup) but below `layer(utilities)` (so a component's own classes win).
 
-**3. A new `--text-*`/`--tracking-*` step needs registering in `cn()`.** `tailwind-merge` classifies an unrecognised `text-*` class as a _colour_, so `text-label text-accent` would be treated as two conflicting colours and one silently dropped. [`packages/atoms/src/utils/cn.ts`](../atoms/src/utils/cn.ts) extends the `font-size` and `tracking` class groups; that list and the `@theme inline` block must stay in step.
+**3. A new `--text-*`/`--tracking-*` step needs registering in `cn()`.** `tailwind-merge` classifies an unrecognised `text-*` class as a _colour_, so `text-label text-accent` would be treated as two conflicting colours and one silently dropped. [`packages/frames/src/utils/cn.ts`](../frames/src/utils/cn.ts) extends the `font-size` and `tracking` class groups; that list and the `@theme inline` block must stay in step.
 
 ## Notes
 

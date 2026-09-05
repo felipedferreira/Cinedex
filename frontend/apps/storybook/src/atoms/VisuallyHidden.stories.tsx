@@ -38,7 +38,7 @@ export const Default: Story = {
 export const NamingAnIconButton: Story = {
   args: { children: 'Dismiss notice' },
   render: (args) => (
-    <button type="button" className={buttonVariants({ variant: 'ghost' })}>
+    <button type="button" className={buttonVariants({ variant: 'primary' })}>
       <span aria-hidden="true">×</span>
       <VisuallyHidden {...args} />
     </button>

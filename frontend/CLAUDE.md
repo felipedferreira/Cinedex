@@ -48,6 +48,8 @@ Target one package with `-w cinedex-app`, `-w @cinedex/atoms`, `-w @cinedex/comp
 
 The sharpest illustration is `AuthCard`: it takes `brand` as a prop and never draws the wordmark, while `@cinedex/solution`'s `Brand` supplies it. Compounds know _where_ a brand goes; solution knows _which_.
 
+**That injection is the exception, not the house style — see [`packages/compounds/CLAUDE.md`](packages/compounds/CLAUDE.md#prop-apis) for the three rules on prop APIs.** The short form: a `ReactNode` slot needs the parent to own the arrangement _and_ the content to be unable to be `children`; type a node prop by what callers actually pass (`string`, not `ReactNode`, unless someone really passes markup); and a story may only demo a prop a screen already passes. There are exactly **8** `ReactNode` props and **one** `ComponentType` across all three tiers, and that is the point — every one is a deliberate port, not a convenience.
+
 ## Styling
 
 **Tailwind v4 everywhere, resolved through `@cinedex/theme`'s tokens.** There are no CSS Modules left. Three traps, all of which fail silently — details in [`packages/theme/CLAUDE.md`](packages/theme/CLAUDE.md):

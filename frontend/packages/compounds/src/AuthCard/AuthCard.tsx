@@ -1,7 +1,5 @@
 import type { FC, PropsWithChildren, ReactNode } from 'react';
-import { Card, cn } from '@cinedex/atoms';
-
-export type AuthCardKickerTone = 'neutral' | 'warning' | 'success' | 'accent';
+import { Card } from '@cinedex/atoms';
 
 export interface AuthCardProps {
   /**
@@ -9,6 +7,10 @@ export interface AuthCardProps {
    * card. Injected rather than hardcoded — that is the line between this package
    * and `@cinedex/solution`: this component knows *where* a brand goes,
    * `@cinedex/solution`'s `Brand` knows *which* brand.
+   *
+   * The one `ReactNode` on this component, and deliberately so: a brand is
+   * markup, and the alternative is importing Cinedex into a brand-agnostic
+   * package. Everything else here is typed by what callers actually pass.
    */
   brand?: ReactNode;
   /**
@@ -18,22 +20,21 @@ export interface AuthCardProps {
   eyebrow?: string;
   /**
    * Small uppercase mono label above the heading, e.g. "Catalog · Screens".
-   * Optional for the same reason, and worth omitting rather than filling: on a
-   * screen whose title already says it, it is a second copy of the heading.
+   * Optional, and most screens omit it: on a screen whose title already says it,
+   * it is a second copy of the heading. `HomeScreen` is the case it exists for —
+   * its title is the bare product name, so the kicker is the only thing saying
+   * what the page lists.
    */
   kicker?: string;
-  kickerTone?: AuthCardKickerTone;
   title: string;
-  description?: ReactNode;
-  footnote?: ReactNode;
+  /**
+   * The sentence under the heading. `string`, not `ReactNode`: it renders into a
+   * `<p>` and every caller passes text.
+   */
+  description?: string;
+  /** The line below the card. `string` for the same reason as `description`. */
+  footnote?: string;
 }
-
-const kickerToneClass: Record<AuthCardKickerTone, string> = {
-  neutral: 'text-text',
-  warning: 'text-warning',
-  success: 'text-success',
-  accent: 'text-accent',
-};
 
 /**
  * The panel every auth screen is built on: a brand row, then a card whose header
@@ -44,7 +45,6 @@ export const AuthCard: FC<PropsWithChildren<AuthCardProps>> = ({
   brand,
   eyebrow,
   kicker,
-  kickerTone = 'neutral',
   title,
   description,
   children,
@@ -64,12 +64,7 @@ export const AuthCard: FC<PropsWithChildren<AuthCardProps>> = ({
       <Card className="flex flex-col gap-4 px-[22px] py-5">
         <div className="border-b-2 border-text-h pb-3">
           {kicker ? (
-            <p
-              className={cn(
-                'm-0 mb-2 font-mono text-label font-semibold tracking-eyebrow uppercase',
-                kickerToneClass[kickerTone],
-              )}
-            >
+            <p className="m-0 mb-2 font-mono text-label font-semibold tracking-eyebrow text-text uppercase">
               {kicker}
             </p>
           ) : null}

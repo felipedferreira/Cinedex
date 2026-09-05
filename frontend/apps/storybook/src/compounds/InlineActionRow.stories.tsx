@@ -41,11 +41,7 @@ export const BackToSignIn: Story = {
 export const WithButtonAction: Story = {
   args: {
     children: 'Code not arrived?',
-    action: (
-      <Button variant="ghost" size="sm">
-        Send again
-      </Button>
-    ),
+    action: <Button variant="outline">Send again</Button>,
   },
 };
 

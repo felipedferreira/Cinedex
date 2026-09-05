@@ -22,7 +22,7 @@ npm run coverage -w @cinedex/compounds
 **Up to solution** — if it names Cinedex, it does not belong here. `AuthCard` takes `brand` as a `ReactNode`:
 
 ```tsx
-<AuthCard brand={<Brand />} eyebrow="Step 1 of 2" kicker="Session · Sign in" title="Sign in">
+<AuthCard brand={<Brand />} eyebrow="Step 1 of 2" title="Sign in">
 ```
 
 It knows _where_ a brand goes; `@cinedex/solution`'s `Brand` knows _which_. `AuthCard.test.tsx` asserts it renders an injected brand and no Cinedex text — keep it that way. The `Compounds/AuthCard` stories show the same card unbranded and wearing a made-up "Acme" mark, which is the boundary made visible.

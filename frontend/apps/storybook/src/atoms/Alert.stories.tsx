@@ -11,7 +11,7 @@ const meta = {
   argTypes: {
     tone: {
       control: 'inline-radio',
-      options: ['neutral', 'warning', 'success'],
+      options: ['neutral', 'warning'],
     },
   },
 } satisfies Meta<typeof Alert>;
@@ -22,7 +22,3 @@ type Story = StoryObj<typeof meta>;
 export const Neutral: Story = { args: { tone: 'neutral' } };
 
 export const Warning: Story = { args: { tone: 'warning' } };
-
-export const Success: Story = {
-  args: { tone: 'success', children: 'Password updated. You are signed in.' },
-};

@@ -92,6 +92,29 @@ export default defineConfig([
           message:
             'Annotate the component with `FC<Props>` (or `FC<PropsWithChildren<Props>>` when it takes children).',
         },
+        // The next three keep component APIs narrow. They are ratchets: all
+        // three match zero occurrences today, so they cost nothing now and stop
+        // the shapes appearing later. They live here rather than in a local
+        // plugin because they are pure syntax — a plugin would be three new
+        // files and a test harness that `test:run` could not reach, since
+        // `frontend/` is not a workspace.
+        {
+          selector:
+            'TSPropertySignature > TSTypeAnnotation > TSTypeReference[typeName.name=/^(ComponentType|ElementType)$/]',
+          message:
+            'Passing a component *type* makes the library instantiate a caller-supplied component. Prefer a `ReactNode` slot (the caller builds the element) or Radix `asChild`. The one legitimate port is `SolutionLinkComponent`, which carries a documented eslint-disable.',
+        },
+        {
+          selector: 'TSPropertySignature[key.name=/^render[A-Z]/]',
+          message:
+            'No render props in the component tiers. If the parent owns the arrangement, take a `ReactNode` slot; a function is only warranted when laziness or a re-invocation key is load-bearing.',
+        },
+        {
+          selector:
+            'TSInterfaceDeclaration[id.name=/Props$/] TSPropertySignature[key.name="children"]',
+          message:
+            'Declare children with `FC<PropsWithChildren<Props>>` rather than a `children` member on the Props interface.',
+        },
       ],
     },
   },

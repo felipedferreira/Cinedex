@@ -1,7 +1,7 @@
 name: Deploy docs-site
 
 # A thin caller: it names the service and hands off. The deploy body lives in
-# deploy.yml—see that file for what actually happens.
+# _deploy-template.yml—see that file for what actually happens.
 on:
   workflow_dispatch:
     inputs:
@@ -27,7 +27,7 @@ permissions:
 
 jobs:
   deploy:
-    uses: ./.github/workflows/deploy.yml
+    uses: ./.github/workflows/_deploy-template.yml
     secrets: inherit
     with:
       service-name: docs-site

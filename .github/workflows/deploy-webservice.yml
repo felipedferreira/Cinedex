@@ -1,7 +1,7 @@
 name: Deploy Cinedex.WebService
 
 # A thin caller: it names the service and hands off. The deploy body lives in
-# deploy.yml—see that file for what actually happens.
+# _deploy-template.yml—see that file for what actually happens.
 #
 # The pin step also flips this application from sourceType "github" to "docker",
 # so after the first successful run Dokploy stops compiling .NET on the server
@@ -31,7 +31,7 @@ permissions:
 
 jobs:
   deploy:
-    uses: ./.github/workflows/deploy.yml
+    uses: ./.github/workflows/_deploy-template.yml
     secrets: inherit
     with:
       service-name: Cinedex.WebService

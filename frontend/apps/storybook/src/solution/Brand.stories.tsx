@@ -51,7 +51,6 @@ const ReplayableBrand: FC<{ children: () => ReactNode }> = ({ children }) => {
       <BrandRow key={run}>{children()}</BrandRow>
       <Button
         variant="outline"
-        size="sm"
         onClick={() => {
           setRun((n) => n + 1);
         }}

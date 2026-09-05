@@ -203,6 +203,27 @@ Key rules:
 - One type per file (enforced by SA1402)
 - Blank lines between property groups (enforced by ReSharper rules)
 
+### Component APIs (frontend)
+
+- **Type a node prop by what callers actually pass.** `ReactNode` only when a call site genuinely
+  needs inline markup; `string` otherwise. `AuthCard`'s `description` is `string` because all seven
+  callers pass text; `apps/docs-site`'s `FeatureItem.description` is `ReactNode` because its values
+  carry `<Link>` and `<code>`.
+- **A `ReactNode` slot needs the parent to own the arrangement *and* the content to be unable to be
+  `children`.** One hole means `children`. A second named hole is earned only by a component whose
+  job is a two-position layout.
+- **A story may only demo a prop a screen already passes.** A Storybook `argTypes` matrix that lists
+  values no screen uses pulls dead surface into the component — the failure mode that produced
+  `AuthCard.kickerTone`. Like the diagram rule, this is a **checked rule rather than a convention**
+  because the failure is invisible: a story demoing an option no screen uses builds green, tests
+  green and renders correctly. `AuthCard.kickerTone` survived a release that way.
+
+Full rules and the worked examples live in
+[`frontend/packages/compounds/CLAUDE.md`](frontend/packages/compounds/CLAUDE.md#prop-apis).
+`frontend/eslint.config.js`'s `no-restricted-syntax` block enforces the shape rules;
+`node scripts/check-speculative-props.mjs` (or `npm run check:props` from `frontend/`) enforces the
+story rule. Both run in CI.
+
 ### Writing Tests
 
 - Write integration tests for endpoint behavior

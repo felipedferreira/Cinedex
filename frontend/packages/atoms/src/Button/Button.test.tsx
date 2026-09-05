@@ -63,7 +63,7 @@ describe('Button', () => {
   });
 
   it.each([
-    ['primary', 'ghost'],
+    ['primary', 'solid'],
     ['solid', 'outline'],
   ] as const)('renders %s and %s differently', (first, second) => {
     const { rerender } = render(<Button variant={first}>Go</Button>);

@@ -1,5 +1,5 @@
 export { AuthCard } from './AuthCard/AuthCard';
-export type { AuthCardKickerTone, AuthCardProps } from './AuthCard/AuthCard';
+export type { AuthCardProps } from './AuthCard/AuthCard';
 
 export { AuthLayout } from './AuthLayout/AuthLayout';
 export type { AuthLayoutProps } from './AuthLayout/AuthLayout';

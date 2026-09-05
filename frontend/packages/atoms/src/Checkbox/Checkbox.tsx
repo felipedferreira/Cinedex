@@ -1,5 +1,5 @@
 import { useId } from 'react';
-import type { FC, ComponentProps, ReactNode } from 'react';
+import type { FC, ComponentProps } from 'react';
 import { Checkbox as CheckboxPrimitive } from 'radix-ui';
 import { cn } from '../utils/cn';
 
@@ -7,7 +7,12 @@ export interface CheckboxProps extends Omit<
   ComponentProps<typeof CheckboxPrimitive.Root>,
   'id' | 'asChild'
 > {
-  label: ReactNode;
+  /**
+   * The checkbox's accessible name, wired through `aria-labelledby`. `string`
+   * rather than `ReactNode`: this text *is* the accessible name, so a non-text
+   * node would degrade it, and every caller passes a plain string.
+   */
+  label: string;
 }
 
 /**

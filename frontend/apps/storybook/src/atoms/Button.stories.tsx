@@ -13,9 +13,9 @@ const meta = {
   argTypes: {
     variant: {
       control: 'inline-radio',
-      options: ['primary', 'ghost', 'solid', 'outline'],
+      options: ['primary', 'solid', 'outline'],
     },
-    size: { control: 'inline-radio', options: ['sm', 'md', 'block'] },
+    size: { control: 'inline-radio', options: ['md', 'block'] },
     onClick: { action: 'clicked' },
   },
 } satisfies Meta<typeof Button>;
@@ -24,14 +24,6 @@ export default meta;
 type Story = StoryObj<typeof meta>;
 
 export const Primary: Story = {};
-
-export const Ghost: Story = {
-  args: { variant: 'ghost', children: 'Learn more' },
-};
-
-export const Small: Story = {
-  args: { size: 'sm', children: 'Small' },
-};
 
 /** The auth flow's call to action: `solid` at `block`. */
 export const SolidBlock: Story = {

@@ -9,12 +9,9 @@ describe('Alert', () => {
     expect(screen.getByRole('status')).toHaveTextContent('Locked at 14:02 UTC');
   });
 
-  it.each(['neutral', 'warning', 'success'] as const)(
-    'renders the %s tone',
-    (tone) => {
-      render(<Alert tone={tone}>Message</Alert>);
+  it.each(['neutral', 'warning'] as const)('renders the %s tone', (tone) => {
+    render(<Alert tone={tone}>Message</Alert>);
 
-      expect(screen.getByRole('status')).toBeVisible();
-    },
-  );
+    expect(screen.getByRole('status')).toBeVisible();
+  });
 });

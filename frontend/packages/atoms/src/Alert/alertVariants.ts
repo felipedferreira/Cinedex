@@ -13,8 +13,6 @@ export const alertVariants = cva(
         neutral: 'border-border border-l-text-h bg-bg text-text',
         warning:
           'border-warning-border border-l-warning bg-warning-bg text-warning',
-        success:
-          'border-success-border border-l-success bg-success-bg text-success',
       },
     },
     defaultVariants: {

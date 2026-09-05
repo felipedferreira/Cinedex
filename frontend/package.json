@@ -16,6 +16,7 @@
     "test:run": "npm run test:run --workspaces --if-present",
     "test:ui": "vitest --ui --coverage.enabled",
     "coverage": "npm run coverage --workspaces --if-present",
+    "check:props": "node ../scripts/check-speculative-props.mjs",
     "lint": "eslint .",
     "lint:fix": "eslint . --fix",
     "format": "prettier --write .",

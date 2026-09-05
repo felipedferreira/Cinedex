@@ -17,12 +17,6 @@ const meta = {
       </Button>
     ),
   },
-  argTypes: {
-    kickerTone: {
-      control: 'inline-radio',
-      options: ['neutral', 'warning', 'success', 'accent'],
-    },
-  },
   decorators: [
     (Story) => (
       <AuthLayout>
@@ -58,13 +52,18 @@ export const WithBrand: Story = {
   },
 };
 
-export const WarningKicker: Story = {
+/**
+ * The full header — kicker, title, description — with a `footnote` under the
+ * card. This is `HomeScreen`'s shape, which is the only screen that passes a
+ * kicker: its title is the bare product name, so the kicker is the only thing
+ * saying what the page lists.
+ */
+export const WithFootnote: Story = {
   args: {
-    kicker: 'Session · Locked',
-    kickerTone: 'warning',
-    title: 'Too many attempts',
-    description:
-      'Sign-in for this account is paused. Nothing is wrong with your password.',
-    footnote: 'Lockout applies per account and per IP.',
+    kicker: 'Catalog · Screens',
+    title: 'Cinedex',
+    description: 'Every screen in the auth flow, in one place.',
+    footnote:
+      'Screens live in @cinedex/solution and render without a router; this app supplies the navigation.',
   },
 };

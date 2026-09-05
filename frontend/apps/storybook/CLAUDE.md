@@ -34,6 +34,7 @@ Dockerfile  nginx.conf    # static bundle on Nginx, port 9001 in compose
 - Stories are CSF3 with `satisfies Meta<typeof X>` and `tags: ['autodocs']`.
 - **One component per file, named after it, with `component` set** — `Card.stories.tsx` holds `Atoms/Card` and nothing else. A meta without `component` gets no props table and no controls for anything in it, which is what made the old catch-all `Atoms/Primitives` and `Compounds/Assemblies` files worth splitting. Two components exported from one source folder still get a file each (`PasswordStrengthMeter`, `PasswordChecklist`).
 - **Title by tier** — `Atoms/…`, `Compounds/…`, `Solution/…` — and put the file in the matching `src/` subfolder.
+- **A story may only demo a prop a screen already passes.** A story that enumerates a complete matrix pulls the component into growing surface to fill it, and this app is where that defect gets introduced. `AuthCard.kickerTone` was a four-member union and a class map whose only consumers in the entire repo were an `argTypes` inline-radio here and one story; it has been deleted. Before adding an `argTypes.options` list, check that production passes each value — see [`packages/compounds/CLAUDE.md`](../../packages/compounds/CLAUDE.md#prop-apis).
 - Global styles come from one import in `preview.tsx`: `@cinedex/theme/tailwind.css`, which pulls in the tokens and base styling itself. Same single import the SPA's `main.tsx` uses.
 
 ## Notes

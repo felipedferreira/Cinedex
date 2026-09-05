@@ -5,8 +5,8 @@ on:
     branches: [main]
   pull_request:
     branches: [main]
-  # Lets the images job be re-run by hand against main without waiting for a
-  # new commit. Dispatching from any other branch still skips the images job.
+  # Lets images and deploys be run by hand from the selected ref without waiting
+  # for a new commit. Manual runs deploy that ref's sha-* image tag.
   workflow_dispatch:
 
 permissions:
@@ -122,14 +122,40 @@ jobs:
           name: "@cinedex/scenes"
           working-directory: frontend/packages/scenes
 
+  resolve_deploy_image_tag:
+    name: Resolve deploy image tag
+    needs: [backend, frontend]
+    # Publish only after both test jobs are green: automatically for pushes to
+    # main, or manually for the selected dispatch ref. Never on a pull request.
+    if: >
+      github.event_name == 'workflow_dispatch' ||
+      (github.event_name == 'push' && github.ref == 'refs/heads/main')
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    outputs:
+      image_tag: ${{ steps.image_tag.outputs.image_tag }}
+    steps:
+      - id: image_tag
+        run: |
+          image_tag="sha-${GITHUB_SHA::7}"
+          echo "image_tag=$image_tag" >> "$GITHUB_OUTPUT"
+          {
+            echo "### Deployment image tag"
+            echo ""
+            echo "- Ref: \`${GITHUB_REF_NAME:-$GITHUB_REF}\`"
+            echo "- SHA: \`$GITHUB_SHA\`"
+            echo "- Image tag: \`$image_tag\`"
+          } >> "$GITHUB_STEP_SUMMARY"
+
   images:
     name: Build & push ${{ matrix.name }}
     needs: [backend, frontend]
-    # Publish only from main, once both test jobs are green: a push that lands
-    # there, or a manual re-run of that same ref. Never on a pull request.
+    # Publish only after both test jobs are green: automatically for pushes to
+    # main, or manually for the selected dispatch ref. Never on a pull request.
     if: >
-      github.ref == 'refs/heads/main' &&
-      (github.event_name == 'push' || github.event_name == 'workflow_dispatch')
+      github.event_name == 'workflow_dispatch' ||
+      (github.event_name == 'push' && github.ref == 'refs/heads/main')
     runs-on: ubuntu-latest
     permissions:
       contents: read
@@ -273,14 +299,14 @@ jobs:
 
   deploy-all-services:
     name: Deploy all services
-    needs: images
+    needs: [images, resolve_deploy_image_tag]
     if: >
-      github.ref == 'refs/heads/main' &&
-      (github.event_name == 'push' || github.event_name == 'workflow_dispatch')
+      github.event_name == 'workflow_dispatch' ||
+      (github.event_name == 'push' && github.ref == 'refs/heads/main')
     uses: ./.github/workflows/deploy-all-services.yml
     secrets: inherit
     permissions:
       contents: read
       packages: read
     with:
-      image-tag: latest
+      image-tag: ${{ needs.resolve_deploy_image_tag.outputs.image_tag }}

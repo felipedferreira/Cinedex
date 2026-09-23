@@ -36,6 +36,10 @@ COPY . .
 RUN npm run build -w cinedex-app
 
 FROM nginx:alpine AS final
+LABEL app.service="cinedex-app"
+LABEL app.type="Frontend"
+LABEL app.platform="cinedex"
+LABEL org.opencontainers.image.title="Cinedex React Application"
 COPY --from=build /app/apps/cinedex-app/dist /usr/share/nginx/html
 COPY apps/cinedex-app/nginx.conf /etc/nginx/conf.d/default.conf
 EXPOSE 8080

@@ -23,6 +23,10 @@ ARG BUILD_CONFIGURATION=Release
 RUN dotnet publish "./Cinedex.DatabaseMigrator.csproj" -c $BUILD_CONFIGURATION -o /app/publish /p:UseAppHost=false
 
 FROM base AS final
+LABEL app.service="cinedex-db-migrator"
+LABEL app.type="Infrastructure"
+LABEL app.platform="cinedex"
+LABEL org.opencontainers.image.title="Cinedex Database Migrator"
 WORKDIR /app
 COPY --from=publish /app/publish .
 ENTRYPOINT ["dotnet", "Cinedex.DatabaseMigrator.dll"]

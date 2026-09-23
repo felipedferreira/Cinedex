@@ -24,6 +24,10 @@ ARG BUILD_CONFIGURATION=Release
 RUN dotnet publish "./Cinedex.SchedulerWorker.csproj" -c $BUILD_CONFIGURATION -o /app/publish /p:UseAppHost=false
 
 FROM base AS final
+LABEL app.service="cinedex-scheduler"
+LABEL app.type="Backend"
+LABEL app.platform="cinedex"
+LABEL org.opencontainers.image.title="Cinedex Scheduler Worker"
 WORKDIR /app
 COPY --from=publish /app/publish .
 ENTRYPOINT ["dotnet", "Cinedex.SchedulerWorker.dll"]

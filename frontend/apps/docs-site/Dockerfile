@@ -26,6 +26,10 @@ ENV STORYBOOK_BASE_URL=${STORYBOOK_BASE_URL}
 RUN npm run build -w @cinedex/docs-site
 
 FROM nginx:alpine AS final
+LABEL app.service="cinedex-docs"
+LABEL app.type="Frontend"
+LABEL app.platform="cinedex"
+LABEL org.opencontainers.image.title="Cinedex Documentation Site"
 COPY --from=build /app/frontend/apps/docs-site/build /usr/share/nginx/html
 COPY frontend/apps/docs-site/nginx.conf /etc/nginx/conf.d/default.conf
 EXPOSE 80

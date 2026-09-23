@@ -30,6 +30,10 @@ COPY . .
 RUN npm run build -w @cinedex/storybook
 
 FROM nginx:alpine AS final
+LABEL app.service="cinedex-storybook"
+LABEL app.type="Frontend"
+LABEL app.platform="cinedex"
+LABEL org.opencontainers.image.title="Cinedex Component Storybook"
 # Plain HTTP: unlike the SPA image, this container is not the stack's reverse proxy and Storybook
 # makes no API calls, so there is nothing to terminate TLS for.
 COPY --from=build /app/apps/storybook/storybook-static /usr/share/nginx/html

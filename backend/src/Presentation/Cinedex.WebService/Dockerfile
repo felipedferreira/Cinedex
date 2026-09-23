@@ -27,6 +27,10 @@ ARG BUILD_CONFIGURATION=Release
 RUN dotnet publish "./Cinedex.WebService.csproj" -c $BUILD_CONFIGURATION -o /app/publish /p:UseAppHost=false
 
 FROM base AS final
+LABEL app.service="cinedex-api"
+LABEL app.type="Backend"
+LABEL app.platform="cinedex"
+LABEL org.opencontainers.image.title="Cinedex Web Service"
 USER root
 RUN apt-get update && apt-get install -y --no-install-recommends curl && rm -rf /var/lib/apt/lists/*
 USER $APP_UID

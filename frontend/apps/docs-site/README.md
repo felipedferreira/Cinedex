@@ -2,10 +2,10 @@
 
 A [Docusaurus](https://docusaurus.io/) site for Cinedex, branded with the same purple accent, favicon and typography as the SPA and Storybook.
 
-It is a real app in the [`frontend/` workspace](../../README.md), with two doc sections —
-**Features** (the movie catalog, architecture, frontend, and dev workflow) and **Security**
-(authentication/authorization) — plus a changelog page generated from the repo's root
-`CHANGELOG.md`.
+It is a real app in the [`frontend/` workspace](../../README.md), with curated doc sections for
+**Features** (the movie catalog, architecture, frontend, and dev workflow), **Security**
+(authentication/authorization), **Frontend**, and **Operations** - plus a changelog page generated
+from the repo's root `CHANGELOG.md`.
 
 ```bash
 npm run docs-site        # from frontend/ → http://localhost:9004
@@ -37,6 +37,8 @@ flowchart LR
 
     DOCS --> D1["features/<br/><i>product/architecture docs</i>"]
     DOCS --> D2["security/<br/><i>auth/authz docs</i>"]
+    DOCS --> D3["frontend/<br/><i>frontend architecture and docs-site setup</i>"]
+    DOCS --> D4["operations/<br/><i>build and deploy pipelines</i>"]
 ```
 
 ## 📜 Scripts
@@ -54,15 +56,14 @@ Run from `frontend/`; `docs-site` delegates here with `-w @cinedex/docs-site`.
 
 **Edit only the root `CHANGELOG.md`.** `src/pages/changelog.md` is generated and git-ignored — never edit it directly.
 
-## 📚 Features & Security docs
+## 📚 Curated docs
 
-`docs/features/` and `docs/security/` are curated, one-time adaptations of the repo's own
-documentation (root `README.md`, `backend/README.md`, the frontend package READMEs,
-`docs/auth-security-model.md`, and the auth design specs) — not a live sync like `/changelog`.
-That means the site can drift from those source docs over time; there's no automated re-sync.
-`docs/security/how-this-was-built.md` also ships without a live Linear issue list, since the
-Linear connector wasn't authorized when this content was written — see its own note for how to
-extend it.
+`docs/features/`, `docs/security/`, `docs/frontend/`, and `docs/operations/` are curated, one-time
+adaptations of the repo's own documentation and implementation files - not a live sync like
+`/changelog`. That means the site can drift from those sources over time; there's no automated
+re-sync. `docs/security/how-this-was-built.md` also ships without a live Linear issue list, since the
+Linear connector wasn't authorized when this content was written - see its own note for how to extend
+it.
 
 ## 🎨 Branding
 

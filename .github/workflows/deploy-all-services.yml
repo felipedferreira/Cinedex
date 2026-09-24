@@ -1,4 +1,5 @@
 name: Deploy all services
+run-name: Deploy all services from ${{ github.ref_name }}
 
 # Fans out through the same thin per-service callers used for manual deploys, so
 # service-specific image names and Dokploy secret names stay in one place.
@@ -6,16 +7,14 @@ on:
   workflow_dispatch:
     inputs:
       image-tag:
-        description: Image tag to deploy to every service, e.g. sha-abc1234. Defaults to latest.
+        description: Image tag to deploy to every service, e.g. sha-abc1234. Leave blank to use this ref's sha-* tag.
         required: false
-        default: latest
         type: string
   workflow_call:
     inputs:
       image-tag:
-        description: Image tag to deploy to every service, e.g. sha-abc1234. Defaults to latest.
+        description: Image tag to deploy to every service, e.g. sha-abc1234. Leave blank to use this ref's sha-* tag.
         required: false
-        default: latest
         type: string
 
 permissions:
@@ -25,30 +24,61 @@ permissions:
   packages: read
 
 jobs:
+  resolve_image_tag:
+    name: Resolve image tag
+    runs-on: ubuntu-latest
+    outputs:
+      image_tag: ${{ steps.image_tag.outputs.image_tag }}
+    steps:
+      - id: image_tag
+        env:
+          REQUESTED_IMAGE_TAG: ${{ inputs.image-tag }}
+        run: |
+          image_tag="${REQUESTED_IMAGE_TAG#"${REQUESTED_IMAGE_TAG%%[![:space:]]*}"}"
+          image_tag="${image_tag%"${image_tag##*[![:space:]]}"}"
+          if [ -z "$image_tag" ]; then
+            image_tag="sha-${GITHUB_SHA::7}"
+          fi
+
+          echo "image_tag=$image_tag" >> "$GITHUB_OUTPUT"
+          {
+            echo "### Deploying image tag"
+            echo ""
+            echo "- Ref: \`${GITHUB_REF_NAME:-$GITHUB_REF}\`"
+            echo "- SHA: \`$GITHUB_SHA\`"
+            echo "- Image tag: \`$image_tag\`"
+          } >> "$GITHUB_STEP_SUMMARY"
+
   deploy-app:
-    name: Deploy cinedex-app
+    # Keep the caller label short: GitHub shows nested reusable workflow jobs as
+    # a path, and long repeated prefixes hide the distinct service name.
+    name: cinedex-app
+    needs: resolve_image_tag
     uses: ./.github/workflows/deploy-app.yml
     secrets: inherit
     with:
-      image-tag: ${{ inputs.image-tag || 'latest' }}
+      image-tag: ${{ needs.resolve_image_tag.outputs.image_tag }}
 
   deploy-docs-site:
-    name: Deploy docs-site
+    name: docs-site
+    needs: resolve_image_tag
     uses: ./.github/workflows/deploy-docs-site.yml
     secrets: inherit
     with:
-      image-tag: ${{ inputs.image-tag || 'latest' }}
+      image-tag: ${{ needs.resolve_image_tag.outputs.image_tag }}
 
   deploy-storybook:
-    name: Deploy storybook
+    name: storybook
+    needs: resolve_image_tag
     uses: ./.github/workflows/deploy-storybook.yml
     secrets: inherit
     with:
-      image-tag: ${{ inputs.image-tag || 'latest' }}
+      image-tag: ${{ needs.resolve_image_tag.outputs.image_tag }}
 
   deploy-webservice:
-    name: Deploy Cinedex.WebService
+    name: Cinedex.WebService
+    needs: resolve_image_tag
     uses: ./.github/workflows/deploy-webservice.yml
     secrets: inherit
     with:
-      image-tag: ${{ inputs.image-tag || 'latest' }}
+      image-tag: ${{ needs.resolve_image_tag.outputs.image_tag }}

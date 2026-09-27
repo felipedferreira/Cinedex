@@ -203,7 +203,7 @@ dotnet run --project src/Presentation/Cinedex.WebService
 ## 🐳 Docker Compose
 
 The project uses a single `compose.yaml` containing PostgreSQL, the one-shot database migrator, the
-web service, the frontend, a [Seq](https://datalust.co/seq) instance for logs and traces, and a
+web service, the frontend, a [Seq](https://datalust.co/seq) instance for logs, traces and metrics, and a
 [Mailpit](https://mailpit.axllent.org/) dev mail sink.
 
 **First time running the stack?** Start with **[docs/getting-started.md](../docs/getting-started.md)**
@@ -220,7 +220,7 @@ troubleshooting all live there.
 | `cinedex-app` | cinedex-app | 8080 internal | React SPA static bundle (Nginx) |
 | `cinedex-edge` | caddy:2.11.4-alpine | 9000 HTTPS | Local TLS termination and same-origin routing for the SPA and API |
 | `cinedex-storybook` | cinedex-storybook | 9001 HTTP | Storybook for the `@cinedex/*` component libraries — static bundle on Nginx, calls no backend |
-| `seq` | datalust/seq | 5341 | Structured logs + distributed traces (OpenTelemetry/OTLP) |
+| `seq` | datalust/seq | 5341 | Structured logs, distributed traces and metrics (OpenTelemetry/OTLP) |
 | `mailpit` | axllent/mailpit:v1.30.0 | 8025 UI, 1025 SMTP | Dev mail sink — captures outgoing email in a web UI (see [Email](#-email-mailpit-dev-mail-sink)) |
 
 Postgres and Seq data persist across restarts via the `postgres_data` and `seq_data` named
@@ -251,22 +251,102 @@ curl -k -s https://localhost:9000/movies-svc/health/ready
 The public Compose path goes through the Caddy HTTPS edge; use `-k` with curl unless you have trusted
 Caddy's local development CA.
 
-## 📈 Observability (Seq)
+## 📈 Observability
 
-The web service emits **structured logs** and **distributed traces** through OpenTelemetry,
-exporting both over OTLP to the `seq` container. Inside the Compose network the app targets
-`http://seq/ingest/otlp` (configured via the `OTEL_EXPORTER_OTLP_*` environment variables on
-`movies.webservice`); from your machine the Seq UI is at **http://localhost:5341**.
+All three hosts — the web service, the scheduler worker and the database migrator — emit
+**structured logs**, **distributed traces** and **metrics** through OpenTelemetry, exported over
+OTLP by the shared `AddObservability` extension
+([`FoundryOceanus.Observability.OpenTelemetry`](NuGetLibraries/Observability/FoundryOceanus.Observability.OpenTelemetry/README.md)).
+No code names a backend: `OTEL_EXPORTER_OTLP_ENDPOINT` decides where it all goes, and when it is
+unset nothing is exported at all — a bare `dotnet run` with no telemetry configured makes no
+network calls for it.
 
-Traces cover incoming HTTP requests (ASP.NET Core), outbound `HttpClient` calls, and PostgreSQL
-queries (the `Npgsql` activity source). Every request's `CorrelationId` is attached to its log
-events and to the trace as a `correlation_id` tag, so you can pivot between logs and traces for
-the same request.
+What's collected:
 
-Seq needs a one-time API key registration before it starts accepting logs, plus how to reset a
-forgotten admin password — see
+- **Traces** — incoming HTTP requests (ASP.NET Core), outbound `HttpClient` calls, and PostgreSQL
+  queries (the `Npgsql` activity source). Every request's `CorrelationId` is attached to its log
+  events and to the trace as a `correlation_id` tag, so you can pivot between logs and traces for
+  the same request.
+- **Metrics** — the .NET runtime meter (`dotnet.gc.*`, `dotnet.jit.*`, thread pool, exceptions) on
+  every host, plus the `Npgsql` meter (connection pool and command metrics). The web service adds
+  ASP.NET Core and Kestrel (`http.server.request.duration`, `http.server.active_requests`) and
+  outbound `HttpClient` metrics.
+- **Logs** — correlated with the trace they were written under.
+
+### Where telemetry goes
+
+The hosts commit `"OTEL_EXPORTER_OTLP_PROTOCOL": "grpc"` at the root of their base config
+(`appsettings.json` for the web service, `application.json` for the worker and the migrator):
+Cinedex's own transport is gRPC, even though the library's default stays `http/protobuf`. So
+pointing a host at a gRPC backend takes one key — the endpoint — and anything that targets an
+HTTP-only receiver has to override the protocol too.
+
+| How you run it | Backend | Set by |
+|---|---|---|
+| `docker compose up` | Seq, **http://localhost:5341** | `compose.yaml`: endpoint `http://seq/ingest/otlp`, protocol `http/protobuf`, and the `X-Seq-ApiKey` header |
+| Aspire AppHost | The Aspire dashboard | Aspire, which injects the endpoint and `grpc` itself |
+| Bare `dotnet run` | SigNoz on `odin`, once you opt in (below) | Your User Secrets |
+| Bare `dotnet run`, nothing set | None — export is off | — |
+| Production (Dokploy) | SigNoz on `odin` | Dokploy's environment for each application |
+
+**Keep the explicit `http/protobuf` line in `compose.yaml`.** Seq accepts OTLP over gRPC only on
+HTTPS, and Compose reaches it over plain HTTP — without that line the committed `grpc` would apply
+and every export to Seq would fail. Seq still needs a one-time API key registration, plus how to
+reset a forgotten admin password — see
 **[First-run setup: Seq](../docs/getting-started.md#3-one-time-setup-seq)** in the Getting
 Started guide.
+
+**Aspire needs nothing.** It injects `OTEL_EXPORTER_OTLP_ENDPOINT` and
+`OTEL_EXPORTER_OTLP_PROTOCOL=grpc` as environment variables, which beat User Secrets — so an Aspire
+run keeps reporting to its dashboard even with the SigNoz secret below in place.
+
+### SigNoz from a local run
+
+SigNoz runs on `odin`, a machine on the tailnet: OTLP gRPC on port 4317, OTLP HTTP on 4318, UI on
+**http://odin:8080**. Ingestion is plaintext and unauthenticated — **the tailnet is the security
+boundary**, so never publish those ports. With the protocol already committed, opting in is one
+secret (from `backend/`):
+
+```bash
+dotnet user-secrets set "OTEL_EXPORTER_OTLP_ENDPOINT" "http://odin:4317" \
+  --project src/Presentation/Cinedex.WebService
+```
+
+- **One secret covers all three hosts.** The web service, the scheduler worker and the migrator
+  share one `UserSecretsId`, so they share the store. User Secrets load only in `Development`: the
+  web service's launch profiles set it, but the worker and the migrator have none — run them with
+  `DOTNET_ENVIRONMENT=Development`.
+- **Tests don't follow it.** `WebApplicationFixture` runs in `Development` too, so it loads the same
+  store; it sets `OTEL_SDK_DISABLED=true` so test traffic never reaches SigNoz.
+- **To use OTLP/HTTP instead**, set the endpoint to `http://odin:4318` *and*
+  `OTEL_EXPORTER_OTLP_PROTOCOL` to `http/protobuf` — always change the two as a pair.
+- **To stop**, `dotnet user-secrets remove "OTEL_EXPORTER_OTLP_ENDPOINT" --project src/Presentation/Cinedex.WebService`.
+
+### Production
+
+Production runs under Dokploy, whose environment is managed there rather than in this repo. Every
+.NET host deployed there needs `OTEL_EXPORTER_OTLP_ENDPOINT=http://odin:4317` in its application's
+environment; the protocol comes from the committed config, and setting
+`OTEL_EXPORTER_OTLP_PROTOCOL=grpc` explicitly as well does no harm. Remove any `OTEL_EXPORTER_OTLP_HEADERS=X-Seq-ApiKey=…` line left
+over from Seq. If `odin` does not resolve inside the containers, use its tailnet IP
+(`tailscale ip -4 odin`) instead.
+
+### Checking what a host exports
+
+Every host logs one line at startup saying exactly what it exports, where, and over which
+transport:
+
+```text
+OpenTelemetry OTLP export: traces, metrics, logs over grpc to http://odin:4317/.
+OpenTelemetry OTLP export: disabled (OTEL_EXPORTER_OTLP_ENDPOINT is not set).
+```
+
+A likely mistake — `grpc` aimed at port 4318, `http/protobuf` at 4317 — is logged as a warning
+right after it, and a malformed endpoint (`odin:4317`, with no scheme) or an unknown protocol stops
+the host at startup with a message naming the key. To switch one signal off without touching the
+rest, set `OTEL_TRACES_EXPORTER`, `OTEL_METRICS_EXPORTER` or `OTEL_LOGS_EXPORTER` to `none`. The
+full key reference is in the
+[library README](NuGetLibraries/Observability/FoundryOceanus.Observability.OpenTelemetry/README.md).
 
 ## 📬 Email (Mailpit dev mail sink)
 

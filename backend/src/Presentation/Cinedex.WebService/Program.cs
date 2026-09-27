@@ -1,5 +1,6 @@
 using Cinedex.WebService.Extensions;
 using FoundryOceanus.Observability.OpenTelemetry.Extensions;
+using OpenTelemetry.Metrics;
 using OpenTelemetry.Trace;
 
 namespace Cinedex.WebService;
@@ -15,7 +16,11 @@ public class Program
             configureTracing: tracing => tracing
                 .AddAspNetCoreInstrumentation()
                 .AddHttpClientInstrumentation()
-                .AddSource("Npgsql")); // EF Core/Npgsql emit DB spans on this ActivitySource
+                .AddSource("Npgsql"), // EF Core/Npgsql emit DB spans on this ActivitySource
+            configureMetrics: metrics => metrics
+                .AddAspNetCoreInstrumentation()
+                .AddHttpClientInstrumentation()
+                .AddMeter("Npgsql")); // connection pool and command metrics
 
         builder
             .ConfigureWebServer()

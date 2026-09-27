@@ -103,6 +103,11 @@ public class WebApplicationFixture : WebApplicationFactory<Program>, IAsyncLifet
                 ["Smtp:FromAddress"] = "no-reply@cinedex.test",
                 ["Smtp:FromName"] = "Cinedex Tests",
                 ["Smtp:SecureSocketOptions"] = "None",
+
+                // The fixture runs in Development, so it loads the shared user secrets; a developer who
+                // points them at a real OTLP backend would otherwise export test traffic there. The SDK
+                // reads this lazily from the final configuration, so an in-memory value is early enough.
+                ["OTEL_SDK_DISABLED"] = "true",
             });
         });
 

@@ -24,7 +24,7 @@ services:
       timeout: 5s
       retries: 5
 
-  # Structured logs + traces are ingested by Seq over OTLP.
+  # Logs, traces and metrics are ingested by Seq over OTLP.
   # First-run setup: sign in to the UI at http://localhost:5341 as `admin` with the
   # SEQ_ADMIN_PASSWORD from your .env. Seq will require you to choose a permanent
   # password on first login. Create an API key under Settings -> API Keys, set its
@@ -90,7 +90,9 @@ services:
     environment:
       DOTNET_ENVIRONMENT: Production
       ConnectionStrings__DefaultConnection: "${DB_CONNECTION_STRING}"
-      # OpenTelemetry -> Seq OTLP ingestion (Seq listens on container port 80)
+      # OpenTelemetry -> Seq OTLP ingestion (Seq listens on container port 80). Keep PROTOCOL explicit:
+      # the hosts commit OTEL_EXPORTER_OTLP_PROTOCOL=grpc in their base config (for SigNoz), and Seq only
+      # accepts gRPC over HTTPS, so without this line they would send gRPC here and it would fail.
       OTEL_EXPORTER_OTLP_ENDPOINT: "http://seq/ingest/otlp"
       OTEL_EXPORTER_OTLP_PROTOCOL: "http/protobuf"
       OTEL_EXPORTER_OTLP_HEADERS: "X-Seq-ApiKey=${SEQ_API_KEY}"
@@ -126,7 +128,9 @@ services:
       Authentication__RefreshTokenCookie__Secure: "true"
       ConnectionStrings__DefaultConnection: "${DB_CONNECTION_STRING}"
       Kestrel__Endpoints__Http__Url: "http://0.0.0.0:8080"
-      # OpenTelemetry -> Seq OTLP ingestion (Seq listens on container port 80)
+      # OpenTelemetry -> Seq OTLP ingestion (Seq listens on container port 80). Keep PROTOCOL explicit:
+      # the hosts commit OTEL_EXPORTER_OTLP_PROTOCOL=grpc in their base config (for SigNoz), and Seq only
+      # accepts gRPC over HTTPS, so without this line they would send gRPC here and it would fail.
       OTEL_EXPORTER_OTLP_ENDPOINT: "http://seq/ingest/otlp"
       OTEL_EXPORTER_OTLP_PROTOCOL: "http/protobuf"
       OTEL_EXPORTER_OTLP_HEADERS: "X-Seq-ApiKey=${SEQ_API_KEY}"
@@ -156,7 +160,9 @@ services:
     environment:
       DOTNET_ENVIRONMENT: Production
       ConnectionStrings__DefaultConnection: "${DB_CONNECTION_STRING}"
-      # OpenTelemetry -> Seq OTLP ingestion (Seq listens on container port 80)
+      # OpenTelemetry -> Seq OTLP ingestion (Seq listens on container port 80). Keep PROTOCOL explicit:
+      # the hosts commit OTEL_EXPORTER_OTLP_PROTOCOL=grpc in their base config (for SigNoz), and Seq only
+      # accepts gRPC over HTTPS, so without this line they would send gRPC here and it would fail.
       OTEL_EXPORTER_OTLP_ENDPOINT: "http://seq/ingest/otlp"
       OTEL_EXPORTER_OTLP_PROTOCOL: "http/protobuf"
       OTEL_EXPORTER_OTLP_HEADERS: "X-Seq-ApiKey=${SEQ_API_KEY}"

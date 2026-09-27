@@ -1,4 +1,5 @@
 using Cinedex.Auth.Identity;
+using FoundryOceanus.Observability.OpenTelemetry.Constants;
 using FoundryOceanus.Observability.OpenTelemetry.Extensions;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
@@ -33,7 +34,8 @@ public sealed class Program
 
         builder.AddObservability(
             defaultServiceName: "Cinedex.SchedulerWorker",
-            configureTracing: tracing => tracing.AddSource("Npgsql"));
+            configureTracing: tracing => tracing.AddSource("Npgsql"),
+            configureMetrics: metrics => metrics.AddMeter("Npgsql"));
 
         builder.Services.AddAuthenticationPersistence();
         builder.Services.AddRefreshTokenCleanup();
@@ -51,7 +53,7 @@ public sealed class Program
 
         var logger = host.Services.GetRequiredService<ILogger<Program>>();
 
-        var telemetryExport = string.IsNullOrWhiteSpace(builder.Configuration["OTEL_EXPORTER_OTLP_ENDPOINT"])
+        var telemetryExport = string.IsNullOrWhiteSpace(builder.Configuration[ConfigurationConstants.OtlpEndpoint])
             ? "disabled (no OTLP endpoint configured)"
             : "enabled";
 
@@ -70,7 +72,7 @@ public sealed class Program
         catch (Exception exception)
         {
             // Without this the process exits 1 with the reason visible only in the framework's own
-            // "Hosting failed to start" line — and never reaches Seq if startup died before the
+            // "Hosting failed to start" line — and never reaches the OTLP backend if startup died before the
             // exporter was running.
             logger.LogCritical(exception, "Cinedex scheduler worker terminated unexpectedly.");
             return 1;

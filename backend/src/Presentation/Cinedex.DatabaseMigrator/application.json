@@ -5,6 +5,7 @@
       "Microsoft.EntityFrameworkCore": "Information"
     }
   },
+  "OTEL_EXPORTER_OTLP_PROTOCOL": "grpc",
   "ConnectionStrings": {
     "DefaultConnection": "<SECRETS>"
   }

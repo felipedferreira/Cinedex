@@ -33,7 +33,8 @@ public sealed class Program
 
         builder.AddObservability(
             defaultServiceName: "Cinedex.DatabaseMigrator",
-            configureTracing: tracing => tracing.AddSource("Npgsql"));
+            configureTracing: tracing => tracing.AddSource("Npgsql"),
+            configureMetrics: metrics => metrics.AddMeter("Npgsql"));
 
         builder.Services
             .AddPersistenceAdapter()
